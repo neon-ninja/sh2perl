@@ -106,6 +106,8 @@ pub enum Token {
     BraceOpen,
     #[token("}")]
     BraceClose,
+    #[token("==", priority = 1)]
+    Equality,
     #[token("=")]
     Assign,
     #[token("%=", priority = 3)]

@@ -725,11 +725,55 @@ impl Parser {
                     expression_parts.push("-L".to_string());
                     self.lexer.next();
                 }
-                                 Some(Token::Identifier) => {
-                     let identifier = self.lexer.get_identifier_text()?;
-                     expression_parts.push(identifier);
-                     self.lexer.next(); // consume the identifier token
-                 }
+                Some(Token::Equality) => {
+                    expression_parts.push("==".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::RegexMatch) => {
+                    expression_parts.push("=~".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Star) => {
+                    expression_parts.push("*".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Dot) => {
+                    expression_parts.push(".".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Bang) => {
+                    expression_parts.push("!".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::ParenOpen) => {
+                    expression_parts.push("(".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::ParenClose) => {
+                    expression_parts.push(")".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::CasePattern) => {
+                    expression_parts.push(self.lexer.get_raw_token_text()?);
+                    self.lexer.next();
+                }
+                Some(Token::Caret) => {
+                    expression_parts.push("^".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Plus) => {
+                    expression_parts.push("+".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Escape) => {
+                    expression_parts.push("\\".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Identifier) => {
+                    let identifier = self.lexer.get_identifier_text()?;
+                    expression_parts.push(identifier);
+                    self.lexer.next(); // consume the identifier token
+                }
                  Some(Token::DoubleQuotedString) | Some(Token::SingleQuotedString) => {
                      let string_text = self.lexer.get_string_text()?;
                      expression_parts.push(string_text);

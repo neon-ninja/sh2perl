@@ -1110,6 +1110,50 @@ fn parse_test_expression(lexer: &mut Lexer) -> Result<Command, ParserError> {
                 expression_parts.push("-ne".to_string());
                 lexer.next();
             }
+            Some(Token::Equality) => {
+                expression_parts.push("==".to_string());
+                lexer.next();
+            }
+            Some(Token::RegexMatch) => {
+                expression_parts.push("=~".to_string());
+                lexer.next();
+            }
+            Some(Token::Star) => {
+                expression_parts.push("*".to_string());
+                lexer.next();
+            }
+            Some(Token::Dot) => {
+                expression_parts.push(".".to_string());
+                lexer.next();
+            }
+            Some(Token::Bang) => {
+                expression_parts.push("!".to_string());
+                lexer.next();
+            }
+            Some(Token::ParenOpen) => {
+                expression_parts.push("(".to_string());
+                lexer.next();
+            }
+            Some(Token::ParenClose) => {
+                expression_parts.push(")".to_string());
+                lexer.next();
+            }
+            Some(Token::CasePattern) => {
+                expression_parts.push(lexer.get_raw_token_text()?);
+                lexer.next();
+            }
+            Some(Token::Caret) => {
+                expression_parts.push("^".to_string());
+                lexer.next();
+            }
+            Some(Token::Plus) => {
+                expression_parts.push("+".to_string());
+                lexer.next();
+            }
+            Some(Token::Escape) => {
+                expression_parts.push("\\".to_string());
+                lexer.next();
+            }
             Some(Token::Space) | Some(Token::Tab) => {
                 lexer.next(); // skip whitespace
             }

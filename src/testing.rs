@@ -862,6 +862,15 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
                         println!("SUMMARY: {} out of {} tests passed before first failure", passed_tests, total_tests);
                         println!("{}", "=".repeat(80));
                         
+                        // Write the passed test count to first_n_tests_passed.txt
+                        println!("Writing test count {} to first_n_tests_passed.txt", passed_tests);
+                        println!("Current working directory: {:?}", std::env::current_dir().unwrap_or_default());
+                        if let Err(e) = std::fs::write("first_n_tests_passed.txt", passed_tests.to_string()) {
+                            println!("Warning: Failed to write test count to first_n_tests_passed.txt: {}", e);
+                        } else {
+                            println!("Successfully wrote test count to first_n_tests_passed.txt");
+                        }
+                        
                         // Show how to run the test again
                         println!("\nTo run test again: ./fail {}", current_test);
                         
@@ -904,6 +913,15 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
                         println!();
                     }
                     
+                    // Write the passed test count to first_n_tests_passed.txt even for parsing errors
+                    println!("Writing test count {} to first_n_tests_passed.txt (parsing error)", passed_tests);
+                    println!("Current working directory: {:?}", std::env::current_dir().unwrap_or_default());
+                    if let Err(e) = std::fs::write("first_n_tests_passed.txt", passed_tests.to_string()) {
+                        println!("Warning: Failed to write test count to first_n_tests_passed.txt: {}", e);
+                    } else {
+                        println!("Successfully wrote test count to first_n_tests_passed.txt");
+                    }
+                    
                     // Show how to run the test again
                     println!("To run test again: ./fail {}", current_test);
                     
@@ -921,5 +939,14 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
         println!("ALL TESTS PASSED! 🎉");
         println!("Total tests: {}", total_tests);
         println!("Passed: {} (100%)", passed_tests);
+        
+        // Write the total passed test count to first_n_tests_passed.txt
+        println!("Writing total test count {} to first_n_tests_passed.txt", passed_tests);
+        println!("Current working directory: {:?}", std::env::current_dir().unwrap_or_default());
+        if let Err(e) = std::fs::write("first_n_tests_passed.txt", passed_tests.to_string()) {
+            println!("Warning: Failed to write test count to first_n_tests_passed.txt: {}", e);
+        } else {
+            println!("Successfully wrote total test count to first_n_tests_passed.txt");
+        }
     }
 }
