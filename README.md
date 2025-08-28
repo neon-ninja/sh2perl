@@ -388,3 +388,18 @@ This project is licensed under the GPLv3 License - see the LICENSE file for deta
 - [ ] Shell script to other language converters
 - [ ] Test more examples
 
+## NOTES
+- The binary is currently debashc. If you see references to sh2perl, well in the future I might have seperate sh2perl, sh2rust etc. Alas not yet../f
+
+- We are trying to generate the same output as `LANG=C bash` on Linux/WSL would generate
+
+## WASM Optimization
+
+The project includes several optimizations to reduce WASM file size:
+- Release mode builds with size optimization (`opt-level = "z"`)
+- Link-time optimization (LTO)
+- wasm-opt post-processing with `-O4` optimization level
+- Panic abort to remove unwinding code
+- Symbol stripping
+
+Expected size reduction: 60-80% (from ~776KB to ~150-300KB)

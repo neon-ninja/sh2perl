@@ -155,42 +155,28 @@ impl Parser {
                     self.parse_pipeline()?
                 }
             } else {
-                // Check if this is an associative array assignment: identifier[key]=value
+                // Check if this is a standalone variable assignment: identifier=value or identifier[subscript]=value
                 let mut pos = 1;
                 while pos < 10 && matches!(self.lexer.peek_n(pos), Some(Token::Space | Token::Tab | Token::Comment | Token::Newline)) {
                     pos += 1;
                 }
-                if matches!(self.lexer.peek_n(pos), Some(Token::CasePattern)) && matches!(self.lexer.peek_n(pos + 1), Some(Token::Assign)) {
-                                    // This is an array assignment, parse it directly
-                let var_name = self.lexer.get_identifier_text()?;
-                // get_identifier_text() already advanced past the identifier
-                self.lexer.next(); // consume the =
-                self.lexer.next(); // consume the (
-                // Now parse the array elements (the lexer should be at the first element)
-                let elements = parse_array_elements(&mut self.lexer)?;
-                // The closing ) should already be consumed by parse_array_elements
-                    
-                    // Create a simple command with environment variables
-                    let mut env_vars = HashMap::new();
-                    env_vars.insert(var_name.clone(), Word::Array(var_name, elements));
-                    
-                    Command::Simple(SimpleCommand {
-                        name: Word::Literal("true".to_string()),
-                        args: Vec::new(),
-                        redirects: Vec::new(),
-                        env_vars,
-                    })
-                } else {
-                    // Check if this is a standalone variable assignment: identifier=value
-                    let mut pos = 1;
-                    while pos < 10 && matches!(self.lexer.peek_n(pos), Some(Token::Space | Token::Tab | Token::Comment | Token::Newline)) {
-                        pos += 1;
+                
+                // Check for simple assignment: identifier=value
+                if matches!(self.lexer.peek_n(pos), Some(Token::Assign | Token::PlusAssign | Token::MinusAssign | Token::StarAssign | Token::SlashAssign | Token::PercentAssign)) {
+                    self.parse_standalone_assignment()?
+                } else if matches!(self.lexer.peek_n(pos), Some(Token::CasePattern)) {
+                    // Check for array subscript assignment: identifier[subscript]=value
+                    let mut next_pos = pos + 1;
+                    while next_pos < 15 && matches!(self.lexer.peek_n(next_pos), Some(Token::Space | Token::Tab | Token::Comment | Token::Newline)) {
+                        next_pos += 1;
                     }
-                    if matches!(self.lexer.peek_n(pos), Some(Token::Assign | Token::PlusAssign | Token::MinusAssign | Token::StarAssign | Token::SlashAssign | Token::PercentAssign)) {
+                    if matches!(self.lexer.peek_n(next_pos), Some(Token::Assign | Token::PlusAssign | Token::MinusAssign | Token::StarAssign | Token::SlashAssign | Token::PercentAssign)) {
                         self.parse_standalone_assignment()?
                     } else {
                         self.parse_pipeline()?
                     }
+                } else {
+                    self.parse_pipeline()?
                 }
             }
         } else {
@@ -273,7 +259,7 @@ impl Parser {
         self.parse_pipeline_from_command(first_command)
     }
 
-    fn parse_pipeline_from_command(&mut self, first_command: Command) -> Result<Command, ParserError> {
+    pub fn parse_pipeline_from_command(&mut self, first_command: Command) -> Result<Command, ParserError> {
         let mut commands = Vec::new();
         let mut operators = Vec::new();
         
@@ -395,14 +381,15 @@ impl Parser {
                 Token::CasePattern => {
                     // This might be an array subscript assignment like map[foo]=bar
                     // We need to look ahead to see if this is followed by = and a value
-                    let array_access = parse_word(&mut self.lexer)?;
-                    if let Some(Token::Assign) = self.lexer.peek() {
-                        self.lexer.next(); // consume =
-                        let value_word = parse_word(&mut self.lexer)?;
-                        // Convert array access to a string representation for the environment variable key
-                        let key = array_access.to_string();
-                        env_vars.insert(key, value_word);
-                        self.lexer.skip_whitespace_and_comments();
+                    if let Some(Token::Assign) = self.lexer.peek_n(1) {
+                        // This is an array assignment, parse it properly
+                        // We need to construct the full array access key
+                        // First, get the array name (which should be the previous identifier)
+                        // But we need to be careful about the lexer state
+                        
+                        // Since we're in the middle of parsing assignments, we need to handle this differently
+                        // Let's break out and let the main assignment parsing logic handle it
+                        break;
                     } else {
                         // Not an assignment, break out of assignment parsing
                         break;
@@ -413,9 +400,20 @@ impl Parser {
             }
         }
         
-        // Check for double-bracket test [[ ... ]]
-        let is_double_bracket = matches!(self.lexer.peek(), Some(Token::TestBracket)) 
-            && matches!(self.lexer.peek_n(1), Some(Token::TestBracket));
+        // Check for double-bracket test [[ ... ]] - must handle this BEFORE parsing command name
+        eprintln!("DEBUG: Checking for double brackets at position {}", self.lexer.current_position());
+        eprintln!("DEBUG: Current token: {:?}", self.lexer.peek());
+        eprintln!("DEBUG: Next token: {:?}", self.lexer.peek_n(1));
+        if matches!(self.lexer.peek(), Some(Token::TestBracket)) 
+            && matches!(self.lexer.peek_n(1), Some(Token::TestBracket)) {
+            eprintln!("DEBUG: Found double brackets, capturing expression");
+            let expr = self.lexer.capture_double_bracket_expression()?;
+            eprintln!("DEBUG: Captured expression: '{}'", expr);
+            return Ok(Command::TestExpression(TestExpression {
+                expression: expr,
+                modifiers: self.get_current_shopt_state(),
+            }));
+        }
 
         // Parse the command name first
         let name = parse_word(&mut self.lexer)?;
@@ -462,15 +460,6 @@ impl Parser {
                     env_vars,
                 }));
             }
-        }
-        
-        // Special handling for Bash double-bracket test: capture everything until closing ']]'
-        if is_double_bracket {
-            let expr = self.lexer.capture_double_bracket_expression()?;
-            return Ok(Command::TestExpression(TestExpression {
-                expression: expr,
-                modifiers: self.get_current_shopt_state(),
-            }));
         }
 
         // Special handling for Bash single-bracket test: capture everything until closing ']'
@@ -565,8 +554,16 @@ impl Parser {
     }
 
     fn parse_standalone_assignment(&mut self) -> Result<Command, ParserError> {
-        // Get the variable name
-        let var_name = self.lexer.get_identifier_text()?;
+        // Get the variable name - this could be a simple identifier or an array access like map[foo]
+        let mut var_name = self.lexer.get_identifier_text()?;
+        
+        // Check if the next token is a CasePattern (array subscript like [foo])
+        if let Some(Token::CasePattern) = self.lexer.peek() {
+            // This is an array assignment like map[foo]=bar
+            let case_pattern = self.lexer.get_current_text().unwrap_or_default();
+            var_name = format!("{}{}", var_name, case_pattern);
+            self.lexer.next(); // consume the CasePattern token
+        }
         
         // Consume the assignment token (=, +=, -=, etc.)
         let assignment_op = self.lexer.peek().cloned().unwrap();

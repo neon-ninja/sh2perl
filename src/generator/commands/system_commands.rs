@@ -40,9 +40,23 @@ pub fn generate_command_string_for_system_impl(generator: &mut Generator, cmd: &
                         .collect();
                     commands.join(" | ")
                 }
-                _ => format!("{:?}", cmd)
+                Command::For(for_loop) => {
+                    // For loops need to be handled as Perl code, not system commands
+                    generator.generate_for_loop(for_loop)
+                }
+                _ => {
+                    // For complex commands, generate proper Perl code instead of debug representation
+                    generator.generate_command(cmd)
+                }
             }
         }
-        _ => format!("{:?}", cmd)
+        Command::For(for_loop) => {
+            // For loops need to be handled as Perl code, not system commands
+            generator.generate_for_loop(for_loop)
+        }
+        _ => {
+            // For complex commands, generate proper Perl code instead of debug representation
+            generator.generate_command(cmd)
+        }
     }
 }

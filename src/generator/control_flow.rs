@@ -229,6 +229,20 @@ pub fn generate_for_loop_impl(generator: &mut Generator, for_loop: &ForLoop) -> 
                                 "*" => "@ARGV".to_string(),  // $* -> @ARGV (no quotes)
                                 _ => generator.word_to_perl(word)
                             }
+                        } else if let StringPart::ParameterExpansion(pe) = &interp.parts[0] {
+                            // Handle ${arr[@]} -> @arr for array iteration or ${!map[@]} -> keys %map for map keys
+                            if pe.operator == ParameterExpansionOperator::ArraySlice("@".to_string(), None) {
+                                if pe.variable.starts_with('!') {
+                                    // ${!map[@]} -> keys %map (map keys iteration)
+                                    let map_name = &pe.variable[1..]; // Remove ! prefix
+                                    format!("keys %{}", map_name)
+                                } else {
+                                    // ${arr[@]} -> @arr (array iteration)
+                                    format!("@{}", pe.variable)
+                                }
+                            } else {
+                                generator.word_to_perl(word)
+                            }
                         } else {
                             generator.word_to_perl(word)
                         }

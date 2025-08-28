@@ -366,6 +366,66 @@ pub fn parse_variable_expansion(lexer: &mut Lexer) -> Result<Word, ParserError> 
             lexer.next();
             if let Some(Token::Identifier) = lexer.peek() {
                 let var_name = lexer.get_identifier_text()?;
+                
+                // Check if this is followed by a bracket for array/map access like $map[key]
+                if let Some(Token::TestBracket) = lexer.peek() {
+                    // This is $map[key] syntax - parse the array/map access
+                    lexer.next(); // consume the [
+                    
+                    // Parse the array index content until we find the closing ]
+                    let mut index_content = String::new();
+                    let mut bracket_depth = 1;
+                    
+                    while bracket_depth > 0 {
+                        if let Some((start, end)) = lexer.get_span() {
+                            let token = lexer.peek();
+                            
+                            match token {
+                                Some(Token::TestBracket) => {
+                                    bracket_depth += 1;
+                                    let text = lexer.get_text(start, end);
+                                    index_content.push_str(&text);
+                                    lexer.next();
+                                }
+                                Some(Token::TestBracketClose) => {
+                                    bracket_depth -= 1;
+                                    if bracket_depth == 0 {
+                                        // Consume the closing ]
+                                        lexer.next();
+                                        break;
+                                    } else {
+                                        let text = lexer.get_text(start, end);
+                                        index_content.push_str(&text);
+                                        lexer.next();
+                                    }
+                                }
+                                Some(Token::Dollar) => {
+                                    // Handle variable references in the key like $k
+                                    let text = lexer.get_text(start, end);
+                                    index_content.push_str(&text);
+                                    lexer.next();
+                                    
+                                    // If followed by an identifier, consume it too
+                                    if let Some(Token::Identifier) = lexer.peek() {
+                                        let var_text = lexer.get_identifier_text()?;
+                                        index_content.push_str(&var_text);
+                                    }
+                                }
+                                _ => {
+                                    let text = lexer.get_text(start, end);
+                                    index_content.push_str(&text);
+                                    lexer.next();
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Return the map access
+                    return Ok(Word::MapAccess(var_name, index_content));
+                }
+                
                 Ok(Word::Variable(var_name))
             } else {
                 Err(ParserError::InvalidSyntax("Expected identifier after $".to_string()))
@@ -387,280 +447,149 @@ pub fn parse_variable_expansion(lexer: &mut Lexer) -> Result<Word, ParserError> 
             // Parse ${...} expansions
             lexer.next(); // consume the token
             
-            // Check if this is an array access pattern like ${matrix[$i,$j]}
-            if let Some(Token::Identifier) = lexer.peek() {
-                let array_name = lexer.get_identifier_text()?;
-                
-                // Look ahead to see if this is followed by [
-                if let Some(Token::TestBracket) = lexer.peek_n(1) {
-                    // This is an array access, parse it properly
-                    lexer.next(); // consume the identifier
-                    lexer.next(); // consume the [
-                    
-                    // Parse the array index content until we find the closing ]
-                    let mut index_content = String::new();
-                    let mut bracket_depth = 1;
-                    
-                    while bracket_depth > 0 {
-                        if let Some((start, end)) = lexer.get_span() {
-                            let token = lexer.peek();
-                            
-                            match token {
-                                Some(Token::TestBracket) => {
-                                    bracket_depth += 1;
-                                    let text = lexer.get_text(start, end);
-                                    index_content.push_str(&text);
-                                    lexer.next();
-                                }
-                                Some(Token::TestBracketClose) => {
-                                    bracket_depth -= 1;
-                                    if bracket_depth == 0 {
-                                        // Don't consume the closing ] yet, let parse_braced_variable_name handle it
-                                        break;
-                                    } else {
-                                        let text = lexer.get_text(start, end);
-                                        index_content.push_str(&text);
-                                        lexer.next();
-                                    }
-                                }
-                                _ => {
-                                    let text = lexer.get_text(start, end);
-                                    index_content.push_str(&text);
-                                    lexer.next();
-                                }
-                            }
-                        } else {
-                            break;
-                        }
+            // Parse the entire braced content first, then analyze it
+            let braced_content = parse_braced_variable_name(lexer)?;
+            
+            // Check if this is array syntax first
+            if braced_content.starts_with('#') && braced_content.contains('[') && braced_content.contains(']') {
+                // This is ${#arr[@]} - array length
+                if let Some(bracket_start) = braced_content.find('[') {
+                    if let Some(_bracket_end) = braced_content.rfind(']') {
+                        let array_name = &braced_content[1..bracket_start]; // Remove # prefix
+                        return Ok(Word::MapLength(array_name.to_string()));
                     }
-                    
-                    // Now parse the rest of the braced expression to get to the closing }
-                    let rest_content = parse_braced_variable_name(lexer)?;
-                    
-                    // Combine the array name, index, and rest content
-                    let full_content = format!("{}[{}]{}", array_name, index_content, rest_content);
-                    
-                    // Check if this is array syntax first
-                    if full_content.starts_with('#') && full_content.contains('[') && full_content.contains(']') {
-                        // This is ${#arr[@]} - array length
-                        if let Some(bracket_start) = full_content.find('[') {
-                            if let Some(_bracket_end) = full_content.rfind(']') {
-                                let array_name = &full_content[1..bracket_start]; // Remove # prefix
-                                return Ok(Word::MapLength(array_name.to_string()));
-                            }
-                        }
-                    } else if full_content.starts_with('!') && full_content.contains('[') && full_content.contains(']') {
-                        // This is ${!map[@]} - get keys of associative array
-                        if let Some(bracket_start) = full_content.find('[') {
-                            if let Some(_bracket_end) = full_content.rfind(']') {
-                                let map_name = &full_content[1..bracket_start]; // Remove ! prefix
-                                return Ok(Word::MapKeys(map_name.to_string()));
-                            }
-                        }
-                    } else if full_content.contains('[') && full_content.contains(']') {
-                        // This is a map/array access like ${map[foo]} or ${arr[1]}
-                        if let Some(bracket_start) = full_content.find('[') {
-                            if let Some(bracket_end) = full_content.rfind(']') {
-                                let map_name = &full_content[..bracket_start];
-                                let key = &full_content[bracket_start + 1..bracket_end];
-                                
-                                // Special case: if key is "@", this is array iteration
-                                if key == "@" {
-                                    // Check if there's array slicing after the closing brace
-                                    // Look ahead for :offset:length syntax
-                                    if let Some(Token::Colon) = lexer.peek() {
-                                        // This is array slicing like ${arr[@]:start:length}
-                                        return parse_array_slicing(lexer, map_name.to_string());
-                                    }
-                                    return Ok(Word::MapAccess(map_name.to_string(), "@".to_string()));
-                                }
-                                
-                                return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
-                            }
-                        }
+                }
+            } else if braced_content.starts_with('!') && braced_content.contains('[') && braced_content.contains(']') {
+                // This is ${!map[@]} - get keys of associative array
+                if let Some(bracket_start) = braced_content.find('[') {
+                    if let Some(_bracket_end) = braced_content.rfind(']') {
+                        let map_name = &braced_content[1..bracket_start]; // Remove ! prefix
+                        return Ok(Word::MapKeys(map_name.to_string()));
                     }
-                    
-                    // Check for parameter expansion operators
-                    if full_content.contains(":") {
-                        // Handle array slicing syntax like ${var:offset} or ${var:start:length}
-                        if let Some(colon_pos) = full_content.find(':') {
-                            let var_name = &full_content[..colon_pos];
-                            let slice_part = &full_content[colon_pos + 1..];
-                            
-                            if let Some(second_colon) = slice_part.find(':') {
-                                // This is ${var:start:length} syntax
-                                let offset = &slice_part[..second_colon];
-                                let length = &slice_part[second_colon + 1..];
-                                return Ok(Word::ParameterExpansion(ParameterExpansion {
-                                    variable: var_name.to_string(),
-                                    operator: ParameterExpansionOperator::ArraySlice(offset.to_string(), Some(length.to_string())),
-                                }));
-                            } else {
-                                // This is ${var:offset} syntax
-                                return Ok(Word::ParameterExpansion(ParameterExpansion {
-                                    variable: var_name.to_string(),
-                                    operator: ParameterExpansionOperator::ArraySlice(slice_part.to_string(), None),
-                                }));
+                }
+            } else if braced_content.contains('[') && braced_content.contains(']') {
+                // This is a map/array access like ${map[foo]} or ${arr[1]} or ${map[$k]}
+                if let Some(bracket_start) = braced_content.find('[') {
+                    if let Some(bracket_end) = braced_content.rfind(']') {
+                        let map_name = &braced_content[..bracket_start];
+                        let key = &braced_content[bracket_start + 1..bracket_end];
+                        
+                        // Special case: if key is "@", this is array iteration
+                        if key == "@" {
+                            // Check if there's array slicing after the closing brace
+                            // Look ahead for :offset:length syntax
+                            if let Some(Token::Colon) = lexer.peek() {
+                                // This is array slicing like ${arr[@]:start:length}
+                                return parse_array_slicing(lexer, map_name.to_string());
                             }
+                            return Ok(Word::MapAccess(map_name.to_string(), "@".to_string()));
                         }
+                        
+                        return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
                     }
-                    
-                    return Ok(Word::Variable(full_content));
                 }
             }
             
-            // Try to parse as a parameter expansion first
-            if let Ok(pe) = parse_parameter_expansion(lexer) {
-                Ok(pe)
-            } else {
-                // Fall back to the old method
-                let var_name = parse_braced_variable_name(lexer)?;
-                
-                // Check if this is array syntax first
-                if var_name.starts_with('#') && var_name.contains('[') && var_name.contains(']') {
-                    // This is ${#arr[@]} - array length
-                    if let Some(bracket_start) = var_name.find('[') {
-                        if let Some(_bracket_end) = var_name.rfind(']') {
-                            let array_name = &var_name[1..bracket_start]; // Remove # prefix
-                            return Ok(Word::MapLength(array_name.to_string()));
-                        }
-                    }
-                } else if var_name.starts_with('!') && var_name.contains('[') && var_name.contains(']') {
-                    // This is ${!map[@]} - get keys of associative array
-                    if let Some(bracket_start) = var_name.find('[') {
-                        if let Some(_bracket_end) = var_name.rfind(']') {
-                            let map_name = &var_name[1..bracket_start]; // Remove ! prefix
-                            return Ok(Word::MapKeys(map_name.to_string()));
-                        }
-                    }
-                } else if var_name.contains('[') && var_name.contains(']') {
-                    // This is a map/array access like ${map[foo]} or ${arr[1]}
-                    if let Some(bracket_start) = var_name.find('[') {
-                        if let Some(bracket_end) = var_name.rfind(']') {
-                            let map_name = &var_name[..bracket_start];
-                            let key = &var_name[bracket_start + 1..bracket_end];
-                            
-                            // Special case: if key is "@", this is array iteration
-                            if key == "@" {
-                                // Check if there's array slicing after the closing brace
-                                // Look ahead for :offset:length syntax
-                                if let Some(Token::Colon) = lexer.peek() {
-                                    // This is array slicing like ${arr[@]:start:length}
-                                    return parse_array_slicing(lexer, map_name.to_string());
-                                }
-                                return Ok(Word::MapAccess(map_name.to_string(), "@".to_string()));
-                            }
-                            
-                            return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
-                        }
+            // Check for parameter expansion operators
+            if braced_content.contains(":") {
+                // Handle array slicing syntax like ${var:offset} or ${var:start:length}
+                if let Some(colon_pos) = braced_content.find(':') {
+                    let var_name = &braced_content[..colon_pos];
+                    let slice_part = &braced_content[colon_pos + 1..];
+                    
+                    if let Some(second_colon) = slice_part.find(':') {
+                        // This is ${var:start:length} syntax
+                        let offset = &slice_part[..second_colon];
+                        let length = &slice_part[second_colon + 1..];
+                        return Ok(Word::ParameterExpansion(ParameterExpansion {
+                            variable: var_name.to_string(),
+                            operator: ParameterExpansionOperator::ArraySlice(offset.to_string(), Some(length.to_string())),
+                        }));
+                    } else {
+                        // This is ${var:offset} syntax
+                        return Ok(Word::ParameterExpansion(ParameterExpansion {
+                            variable: var_name.to_string(),
+                            operator: ParameterExpansionOperator::ArraySlice(slice_part.to_string(), None),
+                        }));
                     }
                 }
-                
-                // Check if this is a parameter expansion with operators
-                // Check longer patterns first to avoid partial matches
-                if var_name.ends_with("^^") {
-                    let base_var = var_name.trim_end_matches("^^");
+            }
+            
+            // Check if this is a parameter expansion with operators
+            // Check longer patterns first to avoid partial matches
+            if braced_content.ends_with("^^") {
+                let base_var = braced_content.trim_end_matches("^^");
+                Ok(Word::ParameterExpansion(ParameterExpansion {
+                    variable: base_var.to_string(),
+                    operator: ParameterExpansionOperator::UppercaseAll,
+                }))
+            } else if braced_content.ends_with(",,") {
+                let base_var = braced_content.trim_end_matches(",,");
+                Ok(Word::ParameterExpansion(ParameterExpansion {
+                    variable: base_var.to_string(),
+                    operator: ParameterExpansionOperator::LowercaseAll,
+                }))
+            } else if braced_content.ends_with("^") && !braced_content.ends_with("^^") {
+                let base_var = braced_content.trim_end_matches("^");
+                Ok(Word::ParameterExpansion(ParameterExpansion {
+                    variable: base_var.to_string(),
+                    operator: ParameterExpansionOperator::UppercaseFirst,
+                }))
+            } else if braced_content.ends_with("##*/") {
+                let base_var = braced_content.trim_end_matches("##*/");
+                Ok(Word::ParameterExpansion(ParameterExpansion {
+                    variable: base_var.to_string(),
+                    operator: ParameterExpansionOperator::Basename,
+                }))
+            } else if braced_content.ends_with("%/*") {
+                let base_var = braced_content.trim_end_matches("%/*");
+                Ok(Word::ParameterExpansion(ParameterExpansion {
+                    variable: base_var.to_string(),
+                    operator: ParameterExpansionOperator::Dirname,
+                }))
+            } else if braced_content.contains("##") && !braced_content.ends_with("##*/") {
+                let parts: Vec<&str> = braced_content.split("##").collect();
+                if parts.len() == 2 {
                     Ok(Word::ParameterExpansion(ParameterExpansion {
-                        variable: base_var.to_string(),
-                        operator: ParameterExpansionOperator::UppercaseAll,
+                        variable: parts[0].to_string(),
+                        operator: ParameterExpansionOperator::RemoveLongestPrefix(parts[1].to_string()),
                     }))
-                } else if var_name.ends_with(",,") {
-                    let base_var = var_name.trim_end_matches(",,");
-                    Ok(Word::ParameterExpansion(ParameterExpansion {
-                        variable: base_var.to_string(),
-                        operator: ParameterExpansionOperator::LowercaseAll,
-                    }))
-                } else if var_name.ends_with("^") && !var_name.ends_with("^^") {
-                    let base_var = var_name.trim_end_matches("^");
-                    Ok(Word::ParameterExpansion(ParameterExpansion {
-                        variable: base_var.to_string(),
-                        operator: ParameterExpansionOperator::UppercaseFirst,
-                    }))
-                } else if var_name.ends_with("##*/") {
-                    let base_var = var_name.trim_end_matches("##*/");
-                    Ok(Word::ParameterExpansion(ParameterExpansion {
-                        variable: base_var.to_string(),
-                        operator: ParameterExpansionOperator::Basename,
-                    }))
-                } else if var_name.ends_with("%/*") {
-                    let base_var = var_name.trim_end_matches("%/*");
-                    Ok(Word::ParameterExpansion(ParameterExpansion {
-                        variable: base_var.to_string(),
-                        operator: ParameterExpansionOperator::Dirname,
-                    }))
-                } else if var_name.contains("##") && !var_name.ends_with("##*/") {
-                    let parts: Vec<&str> = var_name.split("##").collect();
-                    if parts.len() == 2 {
-                        Ok(Word::ParameterExpansion(ParameterExpansion {
-                            variable: parts[0].to_string(),
-                            operator: ParameterExpansionOperator::RemoveLongestPrefix(parts[1].to_string()),
-                        }))
-                    } else {
-                        Ok(Word::Variable(var_name))
-                    }
-                } else if var_name.contains("%%") && !var_name.ends_with("%/*") {
-                    let parts: Vec<&str> = var_name.split("%%").collect();
-                    if parts.len() == 2 {
-                        Ok(Word::ParameterExpansion(ParameterExpansion {
-                            variable: parts[0].to_string(),
-                            operator: ParameterExpansionOperator::RemoveLongestSuffix(parts[1].to_string()),
-                        }))
-                    } else {
-                        Ok(Word::Variable(var_name))
-                    }
-                } else if var_name.contains("//") {
-                    let parts: Vec<&str> = var_name.split("//").collect();
-                    if parts.len() == 3 {
-                        Ok(Word::ParameterExpansion(ParameterExpansion {
-                            variable: parts[0].to_string(),
-                            operator: ParameterExpansionOperator::SubstituteAll(parts[1].to_string(), parts[2].to_string()),
-                        }))
-                    } else {
-                        // Check if this is a map access pattern like map[foo]
-                        if var_name.contains('[') && var_name.contains(']') {
-                            if let Some(bracket_start) = var_name.find('[') {
-                                if let Some(bracket_end) = var_name.rfind(']') {
-                                    let map_name = &var_name[..bracket_start];
-                                    let key = &var_name[bracket_start + 1..bracket_end];
-                                    return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
-                                }
-                            }
-                        }
-                        Ok(Word::Variable(var_name))
-                    }
-                } else if var_name.contains("/") && !var_name.contains("//") {
-                    let parts: Vec<&str> = var_name.split("/").collect();
-                    if parts.len() == 3 {
-                        Ok(Word::ParameterExpansion(ParameterExpansion {
-                            variable: parts[0].to_string(),
-                            operator: ParameterExpansionOperator::SubstituteAll(parts[1].to_string(), parts[2].to_string()),
-                        }))
-                    } else {
-                        // Check if this is a map access pattern like map[foo]
-                        if var_name.contains('[') && var_name.contains(']') {
-                            if let Some(bracket_start) = var_name.find('[') {
-                                if let Some(bracket_end) = var_name.rfind(']') {
-                                    let map_name = &var_name[..bracket_start];
-                                    let key = &var_name[bracket_start + 1..bracket_end];
-                                    return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
-                                }
-                            }
-                        }
-                        Ok(Word::Variable(var_name))
-                    }
                 } else {
-                    // Check if this is a map access pattern like map[foo]
-                    if var_name.contains('[') && var_name.contains(']') {
-                        if let Some(bracket_start) = var_name.find('[') {
-                            if let Some(bracket_end) = var_name.rfind(']') {
-                                let map_name = &var_name[..bracket_start];
-                                let key = &var_name[bracket_start + 1..bracket_end];
-                                return Ok(Word::MapAccess(map_name.to_string(), key.to_string()));
-                            }
-                        }
-                    }
-                    Ok(Word::Variable(var_name))
+                    Ok(Word::Variable(braced_content))
                 }
+            } else if braced_content.contains("%%") && !braced_content.ends_with("%/*") {
+                let parts: Vec<&str> = braced_content.split("%%").collect();
+                if parts.len() == 2 {
+                    Ok(Word::ParameterExpansion(ParameterExpansion {
+                        variable: parts[0].to_string(),
+                        operator: ParameterExpansionOperator::RemoveLongestSuffix(parts[1].to_string()),
+                    }))
+                } else {
+                    Ok(Word::Variable(braced_content))
+                }
+            } else if braced_content.contains("//") {
+                let parts: Vec<&str> = braced_content.split("//").collect();
+                if parts.len() == 3 {
+                    Ok(Word::ParameterExpansion(ParameterExpansion {
+                        variable: parts[0].to_string(),
+                        operator: ParameterExpansionOperator::SubstituteAll(parts[1].to_string(), parts[2].to_string()),
+                    }))
+                } else {
+                    Ok(Word::Variable(braced_content))
+                }
+            } else if braced_content.contains("/") && !braced_content.contains("//") {
+                let parts: Vec<&str> = braced_content.split("/").collect();
+                if parts.len() == 3 {
+                    Ok(Word::ParameterExpansion(ParameterExpansion {
+                        variable: parts[0].to_string(),
+                        operator: ParameterExpansionOperator::SubstituteAll(parts[1].to_string(), parts[2].to_string()),
+                    }))
+                } else {
+                    Ok(Word::Variable(braced_content))
+                }
+            } else {
+                // If it's not a special case, return as a variable
+                Ok(Word::Variable(braced_content))
             }
         }
         Some(Token::DollarParen) => {
@@ -712,35 +641,70 @@ fn parse_string_interpolation(lexer: &mut Lexer) -> Result<Word, ParserError> {
                 current_literal.clear();
             }
             
-            // Parse the variable name
-            i += 1; // skip the $
-            if i < content.len() {
-                let var_start = i;
+            // Check if this is a parameter expansion like ${var} or ${var[key]}
+            if i + 1 < content.len() && content[i + 1..].starts_with('{') {
+                // This is a parameter expansion ${...}
+                i += 2; // skip $ and {
+                let expansion_start = i;
                 
-                // Handle special shell variables like $#, $@, $*
+                // Find the closing brace
+                let mut brace_count = 1;
+                while i < content.len() && brace_count > 0 {
+                    match content[i..].chars().next() {
+                        Some('{') => brace_count += 1,
+                        Some('}') => brace_count -= 1,
+                        _ => {}
+                    }
+                    i += 1;
+                }
+                
+                if brace_count == 0 {
+                    // We found a complete parameter expansion
+                    let expansion_content = &content[expansion_start..i-1]; // -1 to exclude the closing }
+                    
+                    // Parse the parameter expansion content
+                    if let Ok(expansion_word) = parse_parameter_expansion_content(expansion_content) {
+                        parts.push(StringPart::ParameterExpansion(expansion_word));
+                    } else {
+                        // Fall back to treating it as a literal
+                        parts.push(StringPart::Literal(format!("${{{}}}", expansion_content)));
+                    }
+                } else {
+                    // Unmatched braces, treat as literal
+                    parts.push(StringPart::Literal("${".to_string()));
+                    i = expansion_start;
+                }
+            } else {
+                // Simple variable reference like $var
+                i += 1; // skip the $
                 if i < content.len() {
-                    let next_char = content[i..].chars().next().unwrap();
-                    if next_char == '#' || next_char == '@' || next_char == '*' {
-                        // Special shell variable
-                        parts.push(StringPart::Variable(next_char.to_string()));
-                        i += 1;
-                    } else if next_char.is_alphanumeric() || next_char == '_' {
-                        // Regular variable name
-                        while i < content.len() {
-                            let next_char = content[i..].chars().next();
-                            if let Some(c) = next_char {
-                                if c.is_alphanumeric() || c == '_' {
-                                    i += 1;
+                    let var_start = i;
+                    
+                    // Handle special shell variables like $#, $@, $*
+                    if i < content.len() {
+                        let next_char = content[i..].chars().next().unwrap();
+                        if next_char == '#' || next_char == '@' || next_char == '*' {
+                            // Special shell variable
+                            parts.push(StringPart::Variable(next_char.to_string()));
+                            i += 1;
+                        } else if next_char.is_alphanumeric() || next_char == '_' {
+                            // Regular variable name
+                            while i < content.len() {
+                                let next_char = content[i..].chars().next();
+                                if let Some(c) = next_char {
+                                    if c.is_alphanumeric() || c == '_' {
+                                        i += 1;
+                                    } else {
+                                        break;
+                                    }
                                 } else {
                                     break;
                                 }
-                            } else {
-                                break;
                             }
-                        }
-                        let var_name = &content[var_start..i];
-                        if !var_name.is_empty() {
-                            parts.push(StringPart::Variable(var_name.to_string()));
+                            let var_name = &content[var_start..i];
+                            if !var_name.is_empty() {
+                                parts.push(StringPart::Variable(var_name.to_string()));
+                            }
                         }
                     }
                 }
@@ -763,6 +727,69 @@ fn parse_string_interpolation(lexer: &mut Lexer) -> Result<Word, ParserError> {
     }
     
     Ok(Word::StringInterpolation(StringInterpolation { parts }))
+}
+
+fn parse_parameter_expansion_content(content: &str) -> Result<ParameterExpansion, ParserError> {
+    // Parse parameter expansion content like "arr[1]", "map[foo]", "#arr[@]", etc.
+    
+    // Check for array length: #arr[@]
+    if content.starts_with('#') && content.contains('[') && content.contains(']') {
+        if let Some(bracket_start) = content.find('[') {
+            if let Some(_bracket_end) = content.rfind(']') {
+                // Keep the # prefix in the variable name so the generator can detect it
+                let array_name = &content[..bracket_start]; // Keep # prefix
+                return Ok(ParameterExpansion {
+                    variable: array_name.to_string(),
+                    operator: ParameterExpansionOperator::ArraySlice("@".to_string(), None),
+                });
+            }
+        }
+    }
+    
+    // Check for map keys: !map[@]
+    if content.starts_with('!') && content.contains('[') && content.contains(']') {
+        if let Some(bracket_start) = content.find('[') {
+            if let Some(_bracket_end) = content.rfind(']') {
+                let map_name = &content[1..bracket_start]; // Remove ! prefix
+                // This should return a Word::MapKeys, but we're in a ParameterExpansion context
+                // so we mark it with a special operator that the generator can recognize
+                return Ok(ParameterExpansion {
+                    variable: format!("!{}", map_name), // Keep the ! prefix to indicate map keys
+                    operator: ParameterExpansionOperator::ArraySlice("@".to_string(), None),
+                });
+            }
+        }
+    }
+    
+    // Check for array/map access: arr[1], map[foo]
+    if content.contains('[') && content.contains(']') {
+        if let Some(bracket_start) = content.find('[') {
+            if let Some(bracket_end) = content.rfind(']') {
+                let var_name = &content[..bracket_start];
+                let key = &content[bracket_start + 1..bracket_end];
+                
+                // Special case: if key is "@", this is array iteration
+                if key == "@" {
+                    return Ok(ParameterExpansion {
+                        variable: var_name.to_string(),
+                        operator: ParameterExpansionOperator::ArraySlice("@".to_string(), None),
+                    });
+                }
+                
+                // This is array/map access - we'll handle this in the generator
+                return Ok(ParameterExpansion {
+                    variable: format!("{}[{}]", var_name, key),
+                    operator: ParameterExpansionOperator::None,
+                });
+            }
+        }
+    }
+    
+    // Simple variable reference
+    Ok(ParameterExpansion {
+        variable: content.to_string(),
+        operator: ParameterExpansionOperator::None,
+    })
 }
 
 fn parse_ansic_quoted_string(_lexer: &mut Lexer) -> Result<Word, ParserError> {
@@ -923,9 +950,45 @@ fn parse_arithmetic_expression(lexer: &mut Lexer) -> Result<Word, ParserError> {
     }))
 }
 
-fn parse_braced_variable_name(_lexer: &mut Lexer) -> Result<String, ParserError> {
-    // TODO: Implement braced variable name parsing
-    Err(ParserError::InvalidSyntax("Braced variable names not yet implemented".to_string()))
+fn parse_braced_variable_name(lexer: &mut Lexer) -> Result<String, ParserError> {
+    // Parse the content inside ${...} until we find the closing }
+    let mut content = String::new();
+    let mut brace_depth = 1; // We're already inside one level of braces
+    
+    while brace_depth > 0 {
+        if let Some((start, end)) = lexer.get_span() {
+            let token = lexer.peek();
+            
+            match token {
+                Some(Token::BraceOpen) => {
+                    brace_depth += 1;
+                    let text = lexer.get_text(start, end);
+                    content.push_str(&text);
+                    lexer.next();
+                }
+                Some(Token::BraceClose) => {
+                    brace_depth -= 1;
+                    if brace_depth == 0 {
+                        // Don't consume the closing } yet, let the caller handle it
+                        break;
+                    } else {
+                        let text = lexer.get_text(start, end);
+                        content.push_str(&text);
+                        lexer.next();
+                    }
+                }
+                _ => {
+                    let text = lexer.get_text(start, end);
+                    content.push_str(&text);
+                    lexer.next();
+                }
+            }
+        } else {
+            break;
+        }
+    }
+    
+    Ok(content)
 }
 
 fn parse_parameter_expansion(_lexer: &mut Lexer) -> Result<Word, ParserError> {

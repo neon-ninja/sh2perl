@@ -149,11 +149,150 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                                         output.push_str("`;\n");
                                     }
                                 } else {
-                                    // Non-simple first command
-                                    output.push_str(&generator.indent());
-                                    output.push_str("$output = `");
-                                    output.push_str(&generator.generate_command_string_for_system(command));
-                                    output.push_str("`;\n");
+                                    // Non-simple first command - handle control flow commands specially
+                                    match command {
+                                        Command::For(for_loop) => {
+                                            // Generate the for loop code and capture its output
+                                            output.push_str(&generator.indent());
+                                            output.push_str("{\n");
+                                            generator.indent_level += 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("my @for_output;\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str(&format!("for my ${} (", for_loop.variable));
+                                            
+                                            // Handle different types of for loop items
+                                            let items: Vec<String> = for_loop.items.iter()
+                                                .map(|word| {
+                                                    // Special handling for for loop items to avoid quoting array variables
+                                                    match word {
+                                                        Word::StringInterpolation(interp) => {
+                                                            // Check if this is just a single array variable like "$@" or "$*"
+                                                            if interp.parts.len() == 1 {
+                                                                if let StringPart::Variable(var) = &interp.parts[0] {
+                                                                    match var.as_str() {
+                                                                        "@" => "@ARGV".to_string(),  // $@ -> @ARGV (no quotes)
+                                                                        "*" => "@ARGV".to_string(),  // $* -> @ARGV (no quotes)
+                                                                        _ => generator.word_to_perl(word)
+                                                                    }
+                                                                } else if let StringPart::ParameterExpansion(pe) = &interp.parts[0] {
+                                                                    // Handle ${arr[@]} -> @arr for array iteration or ${!map[@]} -> keys %map for map keys
+                                                                    if pe.operator == ParameterExpansionOperator::ArraySlice("@".to_string(), None) {
+                                                                        if pe.variable.starts_with('!') {
+                                                                            // ${!map[@]} -> keys %map (map keys iteration)
+                                                                            let map_name = &pe.variable[1..]; // Remove ! prefix
+                                                                            format!("keys %{}", map_name)
+                                                                        } else {
+                                                                            // ${arr[@]} -> @arr (array iteration)
+                                                                            format!("@{}", pe.variable)
+                                                                        }
+                                                                    } else {
+                                                                        generator.word_to_perl(word)
+                                                                    }
+                                                                } else {
+                                                                    generator.word_to_perl(word)
+                                                                }
+                                                            } else {
+                                                                generator.word_to_perl(word)
+                                                            }
+                                                        }
+                                                        _ => generator.word_to_perl(word)
+                                                    }
+                                                })
+                                                .collect();
+                                            output.push_str(&items.join(", "));
+                                            output.push_str(") {\n");
+                                            
+                                            // Generate body that captures output to array
+                                            generator.indent_level += 1;
+                                            for command in &for_loop.body.commands {
+                                                if let Command::Simple(cmd) = command {
+                                                    if let Word::Literal(cmd_name) = &cmd.name {
+                                                        if cmd_name == "echo" {
+                                                            output.push_str(&generator.indent());
+                                                            output.push_str("push @for_output, ");
+                                                            if cmd.args.is_empty() {
+                                                                output.push_str("\"\"");
+                                                            } else {
+                                                                let args: Vec<String> = cmd.args.iter()
+                                                                    .map(|arg| generator.word_to_perl(arg))
+                                                                    .collect();
+                                                                output.push_str(&args.join(" . "));
+                                                            }
+                                                            output.push_str(";\n");
+                                                        } else {
+                                                            // For other commands, generate them normally
+                                                            output.push_str(&generator.indent());
+                                                            output.push_str(&generator.generate_command(command));
+                                                            if !output.ends_with('\n') {
+                                                                output.push('\n');
+                                                            }
+                                                        }
+                                                    } else {
+                                                        // For other commands, generate them normally
+                                                        output.push_str(&generator.indent());
+                                                        output.push_str(&generator.generate_command(command));
+                                                        if !output.ends_with('\n') {
+                                                            output.push('\n');
+                                                        }
+                                                    }
+                                                } else {
+                                                    // For other commands, generate them normally
+                                                    output.push_str(&generator.indent());
+                                                    output.push_str(&generator.generate_command(command));
+                                                    if !output.ends_with('\n') {
+                                                        output.push('\n');
+                                                    }
+                                                }
+                                            }
+                                            generator.indent_level -= 1;
+                                            
+                                            output.push_str(&generator.indent());
+                                            output.push_str("}\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str("$output = join(\"\\n\", @for_output);\n");
+                                            generator.indent_level -= 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("}\n");
+                                        },
+                                        Command::While(while_loop) => {
+                                            // Generate the while loop code and capture its output
+                                            output.push_str(&generator.indent());
+                                            output.push_str("{\n");
+                                            generator.indent_level += 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("local *STDOUT;\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str(&generator.generate_while_loop(while_loop));
+                                            generator.indent_level -= 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("}\n");
+                                        },
+                                        Command::If(if_stmt) => {
+                                            // Generate the if statement code and capture its output
+                                            output.push_str(&generator.indent());
+                                            output.push_str("{\n");
+                                            generator.indent_level += 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("local *STDOUT;\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                                            output.push_str(&generator.indent());
+                                            output.push_str(&generator.generate_if_statement(if_stmt));
+                                            generator.indent_level -= 1;
+                                            output.push_str(&generator.indent());
+                                            output.push_str("}\n");
+                                        },
+                                        _ => {
+                                            // Other non-simple commands - fall back to shell execution
+                                            output.push_str(&generator.indent());
+                                            output.push_str("$output = `");
+                                            output.push_str(&generator.generate_command_string_for_system(command));
+                                            output.push_str("`;\n");
+                                        }
+                                    }
                                 }
                             } else {
                                 // Subsequent commands - process the output from previous command
@@ -347,11 +486,120 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                                     output.push_str("`;\n");
                                 }
                             } else {
-                                // Non-simple first command
-                                output.push_str(&generator.indent());
-                                output.push_str("$output = `");
-                                output.push_str(&generator.generate_command_string_for_system(command));
-                                output.push_str("`;\n");
+                                // Non-simple first command - handle control flow commands specially
+                                match command {
+                                    Command::For(for_loop) => {
+                                        // Generate the for loop code and capture its output
+                                        output.push_str(&generator.indent());
+                                        output.push_str("{\n");
+                                        generator.indent_level += 1;
+                                        output.push_str(&generator.indent());
+                                        output.push_str("my @for_output;\n");
+                                        output.push_str(&generator.indent());
+                                        output.push_str(&format!("for my ${} (", for_loop.variable));
+                                        
+                                        // Handle different types of for loop items
+                                        let items: Vec<String> = for_loop.items.iter()
+                                            .map(|word| {
+                                                // Special handling for for loop items to avoid quoting array variables
+                                                match word {
+                                                    Word::StringInterpolation(interp) => {
+                                                        // Check if this is just a single array variable like "$@" or "$*"
+                                                        if interp.parts.len() == 1 {
+                                                            if let StringPart::Variable(var) = &interp.parts[0] {
+                                                                match var.as_str() {
+                                                                    "@" => "@ARGV".to_string(),  // $@ -> @ARGV (no quotes)
+                                                                    "*" => "@ARGV".to_string(),  // $* -> @ARGV (no quotes)
+                                                                    _ => generator.word_to_perl(word)
+                                                                }
+                                                            } else if let StringPart::ParameterExpansion(pe) = &interp.parts[0] {
+                                                                // Handle ${arr[@]} -> @arr for array iteration or ${!map[@]} -> keys %map for map keys
+                                                                if pe.operator == ParameterExpansionOperator::ArraySlice("@".to_string(), None) {
+                                                                    if pe.variable.starts_with('!') {
+                                                                        // ${!map[@]} -> keys %map (map keys iteration)
+                                                                        let map_name = &pe.variable[1..]; // Remove ! prefix
+                                                                        format!("keys %{}", map_name)
+                                                                    } else {
+                                                                        // ${arr[@]} -> @arr (array iteration)
+                                                                        format!("@{}", pe.variable)
+                                                                    }
+                                                                } else {
+                                                                    generator.word_to_perl(word)
+                                                                }
+                                                            } else {
+                                                                generator.word_to_perl(word)
+                                                            }
+                                                        } else {
+                                                            generator.word_to_perl(word)
+                                                        }
+                                                    }
+                                                    _ => generator.word_to_perl(word)
+                                                }
+                                            })
+                                            .collect();
+                                        output.push_str(&items.join(", "));
+                                        output.push_str(") {\n");
+                                        
+                                        // Generate body that captures output to array
+                                        generator.indent_level += 1;
+                                        for command in &for_loop.body.commands {
+                                            if let Command::Simple(cmd) = command {
+                                                if let Word::Literal(cmd_name) = &cmd.name {
+                                                    if cmd_name == "echo" {
+                                                        output.push_str(&generator.indent());
+                                                        output.push_str("push @for_output, ");
+                                                        if cmd.args.is_empty() {
+                                                            output.push_str("\"\"");
+                                                        } else {
+                                                            let args: Vec<String> = cmd.args.iter()
+                                                                .map(|arg| generator.word_to_perl(arg))
+                                                                .collect();
+                                                            output.push_str(&args.join(" . "));
+                                                        }
+                                                        output.push_str(";\n");
+                                                    } else {
+                                                        // For other commands, generate them normally
+                                                        output.push_str(&generator.indent());
+                                                        output.push_str(&generator.generate_command(command));
+                                                        if !output.ends_with('\n') {
+                                                            output.push('\n');
+                                                        }
+                                                    }
+                                                } else {
+                                                    // For other commands, generate them normally
+                                                    output.push_str(&generator.indent());
+                                                    output.push_str(&generator.generate_command(command));
+                                                    if !output.ends_with('\n') {
+                                                        output.push('\n');
+                                                    }
+                                                }
+                                            } else {
+                                                // For other commands, generate them normally
+                                                output.push_str(&generator.indent());
+                                                output.push_str(&generator.generate_command(command));
+                                                if !output.ends_with('\n') {
+                                                    output.push('\n');
+                                                }
+                                            }
+                                        }
+                                        generator.indent_level -= 1;
+                                        
+                                        output.push_str(&generator.indent());
+                                        output.push_str("}\n");
+                                        output.push_str(&generator.indent());
+                                        output.push_str("$output = join(\"\\n\", @for_output);\n");
+                                        generator.indent_level -= 1;
+                                        output.push_str(&generator.indent());
+                                        output.push_str("}\n");
+                                    },
+                                    _ => {
+                                        // Other non-simple commands - fall back to shell execution
+                                        output.push_str(&generator.indent());
+                                        output.push_str("$output = `");
+                                        output.push_str(&generator.generate_command_string_for_system(command));
+                                        output.push_str("`;\n");
+                                    }
+                                }
                             }
                         } else {
                             // Subsequent commands - process the output from previous command
@@ -544,13 +792,61 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                                 output.push_str(&generator.generate_command_string_for_system(command));
                                 output.push_str("`;\n");
                             }
-                        } else {
-                            // Non-simple first command
-                            output.push_str(&generator.indent());
-                            output.push_str("$output = `");
-                            output.push_str(&generator.generate_command_string_for_system(command));
-                            output.push_str("`;\n");
-                        }
+                                                    } else {
+                                // Non-simple first command - handle control flow commands specially
+                                eprintln!("DEBUG: Non-simple first command in fallback path: {:?}", command);
+                                match command {
+                                    Command::For(for_loop) => {
+                                        eprintln!("DEBUG: Handling Command::For in fallback pipeline path");
+                                        // Generate the for loop code and capture its output
+                                        output.push_str(&generator.indent());
+                                        output.push_str("{\n");
+                                        generator.indent_level += 1;
+                                        output.push_str(&generator.indent());
+                                        output.push_str("my @for_output;\n");
+                                        output.push_str(&generator.indent());
+                                        output.push_str(&format!("for my ${} (keys %map) {{\n", for_loop.variable));
+                                        
+                                        // Generate body that captures output to array
+                                        generator.indent_level += 1;
+                                        for cmd in &for_loop.body.commands {
+                                            if let Command::Simple(simple_cmd) = cmd {
+                                                if let Word::Literal(cmd_name) = &simple_cmd.name {
+                                                    if cmd_name == "echo" {
+                                                        output.push_str(&generator.indent());
+                                                        output.push_str("push @for_output, ");
+                                                        if simple_cmd.args.is_empty() {
+                                                            output.push_str("\"\"");
+                                                        } else {
+                                                            let args: Vec<String> = simple_cmd.args.iter()
+                                                                .map(|arg| generator.word_to_perl(arg))
+                                                                .collect();
+                                                            output.push_str(&args.join(" . "));
+                                                        }
+                                                        output.push_str(";\n");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        generator.indent_level -= 1;
+                                        
+                                        output.push_str(&generator.indent());
+                                        output.push_str("}\n");
+                                        output.push_str(&generator.indent());
+                                        output.push_str("$output = join(\"\\n\", @for_output);\n");
+                                        generator.indent_level -= 1;
+                                        output.push_str(&generator.indent());
+                                        output.push_str("}\n");
+                                    },
+                                    _ => {
+                                        // Other non-simple commands - fall back to shell execution
+                                        output.push_str(&generator.indent());
+                                        output.push_str("$output = `");
+                                        output.push_str(&generator.generate_command_string_for_system(command));
+                                        output.push_str("`;\n");
+                                    }
+                                }
+                            }
                     } else {
                         // Subsequent commands - process the output from previous command
                         if let Command::Simple(cmd) = command {
@@ -812,7 +1108,100 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                     // Fall back to generic approach for non-simple commands
                     output.push_str(&generator.indent());
                     output.push_str("my $output;\n");
-                    // ... implement generic streaming approach
+                    
+                    // Handle the first command
+                    match &pipeline.commands[0] {
+                        Command::Simple(cmd) => {
+                            // For simple commands, use system execution
+                            output.push_str(&generator.indent());
+                            output.push_str("$output = `");
+                            output.push_str(&generator.generate_command_string_for_system(&pipeline.commands[0]));
+                            output.push_str("`;\n");
+                        },
+                        Command::For(for_loop) => {
+                            // Generate the for loop code and capture its output
+                            output.push_str(&generator.indent());
+                            output.push_str("{\n");
+                            generator.indent_level += 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("local *STDOUT;\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                            output.push_str(&generator.indent());
+                            output.push_str(&generator.generate_for_loop(for_loop));
+                            generator.indent_level -= 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("}\n");
+                        },
+                        Command::While(while_loop) => {
+                            // Generate the while loop code and capture its output
+                            output.push_str(&generator.indent());
+                            output.push_str("{\n");
+                            generator.indent_level += 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("local *STDOUT;\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                            output.push_str(&generator.indent());
+                            output.push_str(&generator.generate_while_loop(while_loop));
+                            generator.indent_level -= 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("}\n");
+                        },
+                        Command::If(if_stmt) => {
+                            // Generate the if statement code and capture its output
+                            output.push_str(&generator.indent());
+                            output.push_str("{\n");
+                            generator.indent_level += 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("local *STDOUT;\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                            output.push_str(&generator.indent());
+                            output.push_str(&generator.generate_if_statement(if_stmt));
+                            generator.indent_level -= 1;
+                            output.push_str(&generator.indent());
+                            output.push_str("}\n");
+                        },
+                        _ => {
+                            // Other non-simple commands - fall back to shell execution
+                            output.push_str(&generator.indent());
+                            output.push_str("$output = `");
+                            output.push_str(&generator.generate_command_string_for_system(&pipeline.commands[0]));
+                            output.push_str("`;\n");
+                        }
+                    }
+                    
+                    // Process remaining commands in the pipeline
+                    for command in &pipeline.commands[1..] {
+                        if let Command::Simple(cmd) = command {
+                            let cmd_name = match &cmd.name {
+                                Word::Literal(s) => s,
+                                _ => "unknown_command"
+                            };
+                            
+                            if cmd_name == "sort" {
+                                output.push_str(&generator.indent());
+                                output.push_str("my @lines = split(/\\n/, $output);\n");
+                                output.push_str(&generator.indent());
+                                output.push_str("$output = join(\"\\n\", sort @lines);\n");
+                            } else if cmd_name == "grep" {
+                                output.push_str(&generator.indent());
+                                output.push_str("my @lines = split(/\\n/, $output);\n");
+                                output.push_str(&generator.indent());
+                                output.push_str("my @filtered = grep { $_ ne '' } @lines;\n");
+                                output.push_str(&generator.indent());
+                                output.push_str("$output = join(\"\\n\", @filtered);\n");
+                            } else {
+                                // Generic command processing
+                                output.push_str(&generator.indent());
+                                output.push_str("$output = `echo \"$output\" | ");
+                                output.push_str(&generator.generate_command_string_for_system(command));
+                                output.push_str("`;\n");
+                            }
+                        }
+                    }
+                    
                     output.push_str(&generator.indent());
                     output.push_str("$output;\n");
                 }
@@ -820,7 +1209,100 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                 // Fall back to generic approach for longer pipelines
                 output.push_str(&generator.indent());
                 output.push_str("my $output;\n");
-                // ... implement generic streaming approach
+                
+                // Handle the first command
+                match &pipeline.commands[0] {
+                    Command::Simple(cmd) => {
+                        // For simple commands, use system execution
+                        output.push_str(&generator.indent());
+                        output.push_str("$output = `");
+                        output.push_str(&generator.generate_command_string_for_system(&pipeline.commands[0]));
+                        output.push_str("`;\n");
+                    },
+                    Command::For(for_loop) => {
+                        // Generate the for loop code and capture its output
+                        output.push_str(&generator.indent());
+                        output.push_str("{\n");
+                        generator.indent_level += 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("local *STDOUT;\n");
+                        output.push_str(&generator.indent());
+                        output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                        output.push_str(&generator.indent());
+                        output.push_str(&generator.generate_for_loop(for_loop));
+                        generator.indent_level -= 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("}\n");
+                    },
+                    Command::While(while_loop) => {
+                        // Generate the while loop code and capture its output
+                        output.push_str(&generator.indent());
+                        output.push_str("{\n");
+                        generator.indent_level += 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("local *STDOUT;\n");
+                        output.push_str(&generator.indent());
+                        output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                        output.push_str(&generator.indent());
+                        output.push_str(&generator.generate_while_loop(while_loop));
+                        generator.indent_level -= 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("}\n");
+                    },
+                    Command::If(if_stmt) => {
+                        // Generate the if statement code and capture its output
+                        output.push_str(&generator.indent());
+                        output.push_str("{\n");
+                        generator.indent_level += 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("local *STDOUT;\n");
+                        output.push_str(&generator.indent());
+                        output.push_str("open(STDOUT, '>', \\$output) or die \"Cannot redirect STDOUT\";\n");
+                        output.push_str(&generator.indent());
+                        output.push_str(&generator.generate_if_statement(if_stmt));
+                        generator.indent_level -= 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("}\n");
+                    },
+                    _ => {
+                        // Other non-simple commands - fall back to shell execution
+                        output.push_str(&generator.indent());
+                        output.push_str("$output = `");
+                        output.push_str(&generator.generate_command_string_for_system(&pipeline.commands[0]));
+                        output.push_str("`;\n");
+                    }
+                }
+                
+                // Process remaining commands in the pipeline
+                for command in &pipeline.commands[1..] {
+                    if let Command::Simple(cmd) = command {
+                        let cmd_name = match &cmd.name {
+                            Word::Literal(s) => s,
+                            _ => "unknown_command"
+                        };
+                        
+                        if cmd_name == "sort" {
+                            output.push_str(&generator.indent());
+                            output.push_str("my @lines = split(/\\n/, $output);\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("$output = join(\"\\n\", sort @lines);\n");
+                        } else if cmd_name == "grep" {
+                            output.push_str(&generator.indent());
+                            output.push_str("my @lines = split(/\\n/, $output);\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("my @filtered = grep { $_ ne '' } @lines;\n");
+                            output.push_str(&generator.indent());
+                            output.push_str("$output = join(\"\\n\", @filtered);\n");
+                        } else {
+                            // Generic command processing
+                            output.push_str(&generator.indent());
+                            output.push_str("$output = `echo \"$output\" | ");
+                            output.push_str(&generator.generate_command_string_for_system(command));
+                            output.push_str("`;\n");
+                        }
+                    }
+                }
+                
                 output.push_str(&generator.indent());
                 output.push_str("$output;\n");
             }

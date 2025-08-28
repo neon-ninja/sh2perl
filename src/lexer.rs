@@ -332,7 +332,7 @@ pub enum Token {
     Question,
     #[token(".")]
     Dot,
-    #[regex(r"\*[a-zA-Z0-9_*?.-]*|\[[a-zA-Z0-9\-]+\]|\[[a-zA-Z0-9\-]+\]\[[a-zA-Z0-9\-]+\]", priority = 1)]
+    #[regex(r"\*[a-zA-Z0-9_*?]*|\[[a-zA-Z0-9\-]+\]|\[[a-zA-Z0-9\-]+\]\[[a-zA-Z0-9\-]+\]", priority = 1)]
     CasePattern,
     #[token(":", priority = 1)]
     Colon,

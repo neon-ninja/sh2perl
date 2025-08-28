@@ -18,6 +18,45 @@ fn escape_js(content: &str) -> String {
     result
 }
 
+fn categorize_file(filename: &str) -> String {
+    let lower_filename = filename.to_lowercase();
+    
+    // Categorize based on filename patterns
+    if lower_filename.contains("control_flow") || lower_filename.contains("if") || lower_filename.contains("loop") || lower_filename.contains("function") || lower_filename.contains("case") {
+        "Control Flow".to_string()
+    } else if lower_filename.contains("pipeline") {
+        "Pipelines".to_string()
+    } else if lower_filename.contains("array") {
+        "Arrays".to_string()
+    } else if lower_filename.contains("parameter_expansion") {
+        "Parameter Expansion".to_string()
+    } else if lower_filename.contains("brace_expansion") {
+        "Brace Expansion".to_string()
+    } else if lower_filename.contains("pattern_matching") || lower_filename.contains("extglob") || lower_filename.contains("nocase") {
+        "Pattern Matching".to_string()
+    } else if lower_filename.contains("process_substitution") {
+        "Process Substitution".to_string()
+    } else if lower_filename.contains("ansi_quoting") {
+        "ANSI Quoting".to_string()
+    } else if lower_filename.contains("grep") {
+        "Grep Examples".to_string()
+    } else if lower_filename.contains("arithmetic") || lower_filename.contains("numeric") || lower_filename.contains("gcd") || lower_filename.contains("fibonacci") || lower_filename.contains("factorize") || lower_filename.contains("primes") {
+        "Arithmetic & Math".to_string()
+    } else if lower_filename.contains("find") || lower_filename.contains("home") {
+        "File Operations".to_string()
+    } else if lower_filename.contains("local") || lower_filename.contains("subprocess") || lower_filename.contains("cd") {
+        "Shell Operations".to_string()
+    } else if lower_filename.contains("hard_to_") || lower_filename.contains("complex") || lower_filename.contains("nested") {
+        "Advanced Examples".to_string()
+    } else if lower_filename.contains("issue") {
+        "Issue Examples".to_string()
+    } else if filename.ends_with(".txt") {
+        "Data Files".to_string()
+    } else {
+        "Basic Examples".to_string()
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let examples_dir = "examples";
     let output_file = "www/examples.js";
@@ -78,6 +117,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Close the examples object
     js_content.push_str("\n};\n\n");
     
+    // Generate categories automatically based on actual files
+    let mut categories: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    
+    for file_path in &files {
+        if let Some(filename) = file_path.file_name() {
+            if let Some(filename_str) = filename.to_str() {
+                let category = categorize_file(filename_str);
+                categories.entry(category).or_insert_with(Vec::new).push(filename_str.to_string());
+            }
+        }
+    }
+    
     // Add helper functions
     js_content.push_str("// Helper function to get all example names\n");
     js_content.push_str("export function getExampleNames() {\n");
@@ -92,18 +143,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     js_content.push_str("// Helper function to get examples grouped by category\n");
     js_content.push_str("export function getExamplesByCategory() {\n");
     js_content.push_str("  const categories = {\n");
-    js_content.push_str("    'Basic Examples': ['args.sh', 'simple.sh', 'simple_backup.sh', 'misc.sh', 'subprocess.sh', 'test_quoted.sh', 'cat_EOF.sh', 'file.txt', 'cd..sh', 'test_ls_star_dot_sh.sh'],\n");
-    js_content.push_str("    'Control Flow': ['control_flow.sh', 'control_flow_if.sh', 'control_flow_loops.sh', 'control_flow_function.sh'],\n");
-    js_content.push_str("    'Pipelines': ['pipeline.sh'],\n");
-    js_content.push_str("    'Variables': ['local.sh'],\n");
-    js_content.push_str("    'Parameter Expansion': ['parameter_expansion.sh', 'parameter_expansion_advanced.sh', 'parameter_expansion_case.sh', 'parameter_expansion_defaults.sh', 'parameter_expansion_more.sh'],\n");
-    js_content.push_str("    'Brace Expansion': ['brace_expansion.sh', 'brace_expansion_basic.sh', 'brace_expansion_advanced.sh', 'brace_expansion_practical.sh'],\n");
-    js_content.push_str("    'Arrays': ['arrays.sh', 'arrays_indexed.sh', 'arrays_associative.sh'],\n");
-    js_content.push_str("    'Pattern Matching': ['pattern_matching.sh', 'pattern_matching_basic.sh', 'pattern_matching_extglob.sh', 'pattern_matching_nocase.sh'],\n");
-    js_content.push_str("    'Process Substitution': ['process_substitution.sh', 'process_substitution_advanced.sh', 'process_substitution_comm.sh', 'process_substitution_mapfile.sh', 'process_substitution_here.sh'],\n");
-    js_content.push_str("    'ANSI Quoting': ['ansi_quoting.sh', 'ansi_quoting_basic.sh', 'ansi_quoting_escape.sh', 'ansi_quoting_practical.sh', 'ansi_quoting_unicode.sh'],\n");
-    js_content.push_str("    'Grep Examples': ['grep_basic.sh', 'grep_advanced.sh', 'grep_context.sh', 'grep_params.sh', 'grep_regex.sh']\n");
-    js_content.push_str("  };\n");
+    
+    // Write the auto-generated categories
+    let mut category_entries = Vec::new();
+    for (category, filenames) in &categories {
+        let filenames_str = filenames.iter()
+            .map(|f| format!("'{}'", f))
+            .collect::<Vec<_>>()
+            .join(", ");
+        category_entries.push(format!("    '{}': [{}]", category, filenames_str));
+    }
+    
+    // Sort categories for consistent output
+    category_entries.sort();
+    js_content.push_str(&category_entries.join(",\n"));
+    
+    js_content.push_str("\n  };\n");
     js_content.push_str("  \n");
     js_content.push_str("  return categories;\n");
     js_content.push_str("}\n\n");

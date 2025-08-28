@@ -1,11 +1,34 @@
 use crate::ast::*;
 use super::Generator;
 
-pub fn generate_parameter_expansion_impl(_generator: &mut Generator, pe: &ParameterExpansion) -> String {
+pub fn generate_parameter_expansion_impl(generator: &mut Generator, pe: &ParameterExpansion) -> String {
     match &pe.operator {
         ParameterExpansionOperator::None => {
             // ${var} - just the variable
-            format!("${{{}}}", pe.variable)
+            // Check if this contains array access patterns like arr[1] or map[foo]
+            if pe.variable.contains('[') && pe.variable.contains(']') {
+                if let Some(bracket_start) = pe.variable.find('[') {
+                    if let Some(bracket_end) = pe.variable.rfind(']') {
+                        let var_name = &pe.variable[..bracket_start];
+                        let key = &pe.variable[bracket_start + 1..bracket_end];
+                        
+                        // Check if the key is numeric (indexed array) or string (associative array)
+                        if key.parse::<usize>().is_ok() {
+                            // Indexed array access: arr[1] -> $arr[1]
+                            format!("${}[{}]", var_name, key)
+                        } else {
+                            // Associative array access: map[foo] -> $map{foo}
+                            format!("${}{{{}}}", var_name, key)
+                        }
+                    } else {
+                        format!("${{{}}}", pe.variable)
+                    }
+                } else {
+                    format!("${{{}}}", pe.variable)
+                }
+            } else {
+                format!("${{{}}}", pe.variable)
+            }
         }
         ParameterExpansionOperator::DefaultValue(default) => {
             // ${var:-default} - use default if var is empty
@@ -66,11 +89,28 @@ pub fn generate_parameter_expansion_impl(_generator: &mut Generator, pe: &Parame
             format!("dirname(${{{}}})", pe.variable)
         }
         ParameterExpansionOperator::ArraySlice(offset, length) => {
-            // ${var:offset:length} - array slice
-            if let Some(length_str) = length {
-                format!("@${{{}}}[{}..{}]", pe.variable, offset, length_str)
+            // Special case: ${#arr[@]} should be array length, not array slice
+            if pe.variable.starts_with('#') && offset == "@" && length.is_none() {
+                // ${#arr[@]} -> scalar(@arr)
+                let array_name = &pe.variable[1..]; // Remove the '#' prefix
+                format!("scalar(@{})", array_name)
+            } else if offset == "@" && length.is_none() {
+                // ${map[@]} or ${!map[@]} - this represents array/map values or keys
+                if pe.variable.starts_with('!') {
+                    // ${!map[@]} -> keys %map (map keys iteration)
+                    let map_name = &pe.variable[1..]; // Remove ! prefix
+                    format!("keys %{}", map_name)
+                } else {
+                    // ${map[@]} -> @map (array iteration)
+                    format!("@{}", pe.variable)
+                }
             } else {
-                format!("@${{{}}}[{}..]", pe.variable, offset)
+                // ${var:offset:length} - array slice
+                if let Some(length_str) = length {
+                    format!("@${{{}}}[{}..{}]", pe.variable, offset, length_str)
+                } else {
+                    format!("@${{{}}}[{}..]", pe.variable, offset)
+                }
             }
         }
     }

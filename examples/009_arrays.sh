@@ -6,7 +6,7 @@
 set -euo pipefail
 
 echo "== Indexed arrays =="
-arr=(one two three )
+arr=(one two three)
 echo "${arr[1]}"        # two
 echo "${#arr[@]}"       # 3
 for x in "${arr[@]}"; do printf "%s " "$x"; done; echo

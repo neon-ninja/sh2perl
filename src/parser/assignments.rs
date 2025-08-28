@@ -74,6 +74,12 @@ pub fn parse_array_elements(lexer: &mut Lexer) -> Result<Vec<String>, ParserErro
     
     println!("DEBUG: Starting parse_array_elements");
     
+    // Skip the opening parenthesis if it's the first token
+    if matches!(lexer.peek(), Some(Token::ParenOpen)) {
+        println!("DEBUG: Skipping opening parenthesis");
+        lexer.next(); // consume (
+    }
+    
     loop {
         loop_count += 1;
         if loop_count > 100 {

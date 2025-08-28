@@ -531,7 +531,7 @@ pub fn parse_for_loop(parser: &mut Parser) -> Result<Command, ParserError> {
     
     // If there's a pipe after 'done', parse the pipeline
     if let Some(Token::Pipe) = parser.lexer.peek() {
-        final_command = parse_pipeline_from_command(&mut parser.lexer, final_command)?;
+        final_command = parser.parse_pipeline_from_command(final_command)?;
     }
     
     Ok(final_command)
@@ -1165,7 +1165,4 @@ fn parse_assignment(parser: &mut Parser) -> Result<Command, ParserError> {
     }))
 }
 
-fn parse_pipeline_from_command(_lexer: &mut Lexer, _command: Command) -> Result<Command, ParserError> {
-    // TODO: Implement pipeline from command parsing
-    Err(ParserError::InvalidSyntax("Pipeline from command parsing not yet implemented".to_string()))
-}
+

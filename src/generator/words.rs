@@ -76,6 +76,33 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
                 _ => format!("${}", var)             // Regular variable
             }
         },
+        Word::MapAccess(map_name, key) => {
+            // Handle array/map access like arr[1] or map[foo]
+            // Check if the key is numeric (indexed array) or string (associative array)
+            if key.parse::<usize>().is_ok() {
+                // Indexed array access: arr[1] -> $arr[1]
+                format!("${}[{}]", map_name, key)
+            } else {
+                // Associative array access: map[foo] -> $map{foo}
+                format!("${}{{{}}}", map_name, key)
+            }
+        },
+        Word::MapKeys(map_name) => {
+            // Handle map keys like !map[@] -> keys %map
+            format!("keys %{}", map_name)
+        },
+        Word::MapLength(map_name) => {
+            // Handle array length like #arr[@] -> scalar(@arr)
+            format!("scalar(@{})", map_name)
+        },
+        Word::ArraySlice(array_name, offset, length) => {
+            // Handle array slicing like arr[@]:1:3 -> @arr[1..3]
+            if let Some(length_str) = length {
+                format!("@{}[{}..{}]", array_name, offset, length_str)
+            } else {
+                format!("@{}[{}..]", array_name, offset)
+            }
+        },
         _ => format!("{:?}", word)
     }
 }
@@ -168,6 +195,67 @@ pub fn convert_string_interpolation_to_perl_impl(generator: &Generator, interp: 
                     combined_string.push_str(&format!("$map{{{}}}", key));
                 } else {
                     combined_string.push_str(&format!("${}{{{}}}", map_name, key));
+                }
+            }
+            StringPart::ParameterExpansion(pe) => {
+                // Handle parameter expansions like ${arr[1]}, ${#arr[@]}, etc.
+                // We need to convert the ParameterExpansion to Perl code
+                // For now, let's handle the common cases directly
+                
+                // Check for special array operations first
+                match &pe.operator {
+                    ParameterExpansionOperator::ArraySlice(offset, length) => {
+                        if offset == "@" {
+                            // This is ${#arr[@]} or ${arr[@]} - array length or array iteration
+                            if pe.variable.starts_with('#') {
+                                // ${#arr[@]} -> scalar(@arr)
+                                let array_name = &pe.variable[1..];
+                                combined_string.push_str(&format!("scalar(@{})", array_name));
+                            } else if pe.variable.starts_with('!') {
+                                // ${!map[@]} -> keys %map (map keys iteration)
+                                let map_name = &pe.variable[1..]; // Remove ! prefix
+                                combined_string.push_str(&format!("keys %{}", map_name));
+                            } else {
+                                // ${arr[@]} -> @arr (for array iteration)
+                                let array_name = &pe.variable;
+                                combined_string.push_str(&format!("@{}", array_name));
+                            }
+                        } else {
+                            // Regular array slice
+                            if let Some(length_str) = length {
+                                combined_string.push_str(&format!("@${{{}}}[{}..{}]", pe.variable, offset, length_str));
+                            } else {
+                                combined_string.push_str(&format!("@${{{}}}[{}..]", pe.variable, offset));
+                            }
+                        }
+                    }
+                    _ => {
+                        // Handle other cases
+                        if pe.variable.contains('[') && pe.variable.contains(']') {
+                            if let Some(bracket_start) = pe.variable.find('[') {
+                                if let Some(bracket_end) = pe.variable.rfind(']') {
+                                    let var_name = &pe.variable[..bracket_start];
+                                    let key = &pe.variable[bracket_start + 1..bracket_end];
+                                    
+                                    // Check if the key is numeric (indexed array) or string (associative array)
+                                    if key.parse::<usize>().is_ok() {
+                                        // Indexed array access: arr[1] -> $arr[1]
+                                        combined_string.push_str(&format!("${}[{}]", var_name, key));
+                                    } else {
+                                        // Associative array access: map[foo] -> $map{foo}
+                                        combined_string.push_str(&format!("${}{{{}}}", var_name, key));
+                                    }
+                                } else {
+                                    combined_string.push_str(&format!("${{{}}}", pe.variable));
+                                }
+                            } else {
+                                combined_string.push_str(&format!("${{{}}}", pe.variable));
+                            }
+                        } else {
+                            // Simple variable reference
+                            combined_string.push_str(&format!("${{{}}}", pe.variable));
+                        }
+                    }
                 }
             }
             _ => {

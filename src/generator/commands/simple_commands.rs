@@ -60,8 +60,38 @@ fn generate_command_specific(generator: &mut Generator, cmd: &SimpleCommand, inp
 
 pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleCommand) -> String {
     let mut output = String::new();
-    let has_env = !cmd.env_vars.is_empty() && cmd.name != "true";
-    if has_env {
+    // Handle array assignments first (these need to be in the main scope)
+    for (var, value) in &cmd.env_vars {
+        if let Word::Array(_, elements) = value {
+            // Handle array assignment like arr=(one two three)
+            let elements_perl: Vec<String> = elements.iter()
+                .map(|s| format!("\"{}\"", generator.escape_perl_string(s)))
+                .collect();
+            output.push_str(&generator.indent());
+            output.push_str(&format!("my @{} = ({});\n", var, elements_perl.join(", ")));
+            // Mark array as declared
+            if !generator.declared_locals.contains(var) {
+                generator.declared_locals.insert(var.clone());
+            }
+        } else if let Word::Literal(s) = value {
+            if let Some(elements) = generator.extract_array_elements(s) {
+                // Check if this is an indexed array assignment like arr=(one two three)
+                let elements_perl: Vec<String> = elements.iter()
+                    .map(|s| format!("\"{}\"", generator.escape_perl_string(s)))
+                    .collect();
+                output.push_str(&generator.indent());
+                output.push_str(&format!("my @{} = ({});\n", var, elements_perl.join(", ")));
+            }
+        }
+    }
+    
+    // Check if there are any non-array environment variables to process
+    let has_non_array_env = cmd.env_vars.iter().any(|(var, value)| {
+        !matches!(value, Word::Array(_, _)) && 
+        !matches!(value, Word::Literal(s) if generator.extract_array_elements(s).is_some())
+    });
+    
+    if has_non_array_env && cmd.name != "true" {
         output.push_str(&generator.indent());
         output.push_str("{\n");
         generator.indent_level += 1;
@@ -74,14 +104,13 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                 let quoted_key = format!("\"{}\"", generator.escape_perl_string(&key));
                 output.push_str(&generator.indent());
                 output.push_str(&format!("${}{{{}}} = {};\n", array_name, quoted_key, val));
+            } else if let Word::Array(_, _) = value {
+                // Skip array assignments here - they're handled above
+                continue;
             } else if let Word::Literal(s) = value {
-                if let Some(elements) = generator.extract_array_elements(s) {
-                    // Check if this is an indexed array assignment like arr=(one two three)
-                    let elements_perl: Vec<String> = elements.iter()
-                        .map(|s| format!("\"{}\"", generator.escape_perl_string(s)))
-                        .collect();
-                    output.push_str(&generator.indent());
-                    output.push_str(&format!("@{} = ({});\n", var, elements_perl.join(", ")));
+                if let Some(_) = generator.extract_array_elements(s) {
+                    // Skip array assignments here - they're handled above
+                    continue;
                 } else {
                     // Regular string assignment
                     let val = generator.perl_string_literal(value);
@@ -229,7 +258,8 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                         processed_args.push(format!("${}", var));
                     },
                     Word::ParameterExpansion(pe) => {
-                        // Handle parameter expansions
+                        // Handle parameter expansions as expressions, not strings
+                        // This should generate code like $arr[1] or $map{foo}
                         processed_args.push(generator.generate_parameter_expansion(pe));
                     },
                     Word::StringInterpolation(interp) => {
@@ -277,6 +307,24 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                                         }
                                     }
                                 },
+                                StringPart::ParameterExpansion(pe) => {
+                                    // Handle ParameterExpansion within StringInterpolation
+                                    // If this is the only part, we should treat it as a direct expression
+                                    if interp.parts.len() == 1 {
+                                        // Single ParameterExpansion - treat as expression, not string
+                                        can_handle_interp = false;
+                                        break;
+                                    } else {
+                                        // Multiple parts - handle as interpolation
+                                        let pe_result = generator.generate_parameter_expansion(pe);
+                                        // Remove the ${...} wrapper for interpolation
+                                        if pe_result.starts_with("${") && pe_result.ends_with("}") {
+                                            interp_result.push_str(&pe_result[2..pe_result.len()-1]);
+                                        } else {
+                                            interp_result.push_str(&pe_result);
+                                        }
+                                    }
+                                },
                                 _ => {
                                     // For other StringPart variants, fall back to concatenation
                                     can_handle_interp = false;
@@ -289,8 +337,24 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                             processed_args.push(format!("\"{}\"", interp_result));
                         } else {
                             // Can't handle this interpolation, fall back to concatenation
-                            // For special variables, we need to add them as unquoted expressions
-                            if needs_comma_separated_print {
+                            // Check if this is a single ParameterExpansion that should be treated as expression
+                            if interp.parts.len() == 1 {
+                                if let StringPart::ParameterExpansion(pe) = &interp.parts[0] {
+                                    // Single ParameterExpansion - treat as expression, not string
+                                    processed_args.push(generator.generate_parameter_expansion(pe));
+                                } else if let StringPart::Variable(var) = &interp.parts[0] {
+                                    // Single variable - handle special cases
+                                    match var.as_str() {
+                                        "#" => processed_args.push("scalar(@ARGV)".to_string()),
+                                        "@" => processed_args.push("@ARGV".to_string()),
+                                        "*" => processed_args.push("@ARGV".to_string()),
+                                        _ => processed_args.push(format!("${}", var)),
+                                    }
+                                } else {
+                                    // Fall back to general conversion
+                                    processed_args.push(generator.word_to_perl(arg));
+                                }
+                            } else if needs_comma_separated_print {
                                 // Add the special variable as an unquoted expression
                                 for part in &interp.parts {
                                     if let StringPart::Variable(var) = part {
@@ -329,8 +393,22 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                 output.push_str(&format!("print {}, \"\\n\";\n", args_str));
             } else if args.len() == 1 {
                 output.push_str(&generator.indent());
-                // Check if this is a simple string literal that we can optimize
-                if let Some(optimized_arg) = generator.optimize_string_with_newline(&args[0]) {
+                // Check if this is a ParameterExpansion that should be treated as an expression
+                let is_parameter_expansion = cmd.args.iter().any(|arg| {
+                    matches!(arg, Word::ParameterExpansion(_))
+                });
+                
+                // Check if this is a StringInterpolation with only a single ParameterExpansion
+                let is_single_param_expansion = cmd.args.len() == 1 && 
+                    matches!(&cmd.args[0], Word::StringInterpolation(interp) if 
+                        interp.parts.len() == 1 && 
+                        matches!(&interp.parts[0], StringPart::ParameterExpansion(_)));
+                
+                if is_parameter_expansion || is_single_param_expansion {
+                    // For ParameterExpansion or single ParameterExpansion in StringInterpolation, treat as expression, not string
+                    output.push_str(&format!("print {}, \"\\n\";\n", args[0]));
+                } else if let Some(optimized_arg) = generator.optimize_string_with_newline(&args[0]) {
+                    // Check if this is a simple string literal that we can optimize
                     output.push_str(&format!("print {};\n", optimized_arg));
                 } else {
                     // Check if this argument contains command substitution

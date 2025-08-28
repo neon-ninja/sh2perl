@@ -49,6 +49,10 @@ pub fn perl_string_literal_impl(generator: &mut Generator, word: &Word) -> Strin
             // Handle parameter expansion
             generator.generate_parameter_expansion(pe)
         }
+        Word::StringInterpolation(interp) => {
+            // Handle string interpolation
+            generator.convert_string_interpolation_to_perl(interp)
+        }
         _ => format!("{:?}", word)
     }
 }
