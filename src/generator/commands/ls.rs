@@ -71,7 +71,7 @@ fn generate_ls_helper(generator: &mut Generator, dir: &str, array_name: &str, so
     output
 }
 
-pub fn generate_ls_command(generator: &mut Generator, cmd: &SimpleCommand, pipeline_context: bool) -> String {
+pub fn generate_ls_command(generator: &mut Generator, cmd: &SimpleCommand, pipeline_context: bool, output_var: Option<&str>) -> String {
     let mut output = String::new();
     
     // Parse ls arguments to determine directory and flags
@@ -95,8 +95,19 @@ pub fn generate_ls_command(generator: &mut Generator, cmd: &SimpleCommand, pipel
         }
     }
     
-    // Only print files if not in pipeline context
-    if !pipeline_context {
+    // Handle context-based logic
+    if pipeline_context {
+        // Pipeline context: always use newline-separated output for proper pipeline behavior
+        output.push_str(&generate_ls_helper(generator, dir, "ls_files", single_column));
+        if let Some(var) = output_var {
+            output.push_str(&generator.indent());
+            output.push_str(&format!("{} = join(\"\\n\", @ls_files);\n", var));
+        } else {
+            output.push_str(&generator.indent());
+            output.push_str("print join(\"\\n\", @ls_files) . \"\\n\";\n");
+        }
+    } else {
+        // Only print files if not in pipeline context
         if single_column {
             // -1 flag: one file per line, preserve directory order (no sorting)
             output.push_str(&generate_ls_helper(generator, dir, "ls_files", false));
@@ -108,11 +119,6 @@ pub fn generate_ls_command(generator: &mut Generator, cmd: &SimpleCommand, pipel
             output.push_str(&generator.indent());
             output.push_str("print join(\"\\n\", @ls_files) . \"\\n\";\n");
         }
-    } else {
-        // In pipeline context, always collect to array for output
-        // For -1 flag, we want newline-separated output, so use single_column=true
-        // For other flags, we want space-separated output, so use single_column=false
-        output.push_str(&generate_ls_helper(generator, dir, "ls_files", single_column));
     }
     
     output

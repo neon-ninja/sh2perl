@@ -142,7 +142,7 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                 
                 if cmd_name == "ls" {
                     output.push_str(&generator.indent());
-                    output.push_str(&generate_ls_command(generator, cmd, true));
+                    output.push_str(&generate_ls_command(generator, cmd, true, Some("$output")));
                     output.push_str(&generator.indent());
                     output.push_str("$output = join(\"\\n\", @ls_files);\n");
                 } else if cmd_name == "cat" {
@@ -242,15 +242,21 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                 if cmd_name == "grep" {
                     output.push_str(&generator.indent());
                     output.push_str(&generate_grep_command(generator, cmd, "$output", 1, false));
+                    // Update the output variable with grep result
+                    output.push_str(&generator.indent());
+                    output.push_str("$output = $grep_result_1;\n");
                 } else if cmd_name == "wc" {
                     output.push_str(&generator.indent());
                     output.push_str(&generate_wc_command(generator, cmd, "$output", 1));
+                    // wc already updates the input variable
                 } else if cmd_name == "sort" {
                     output.push_str(&generator.indent());
                     output.push_str(&generate_sort_command(generator, cmd, "$output", 1));
+                    // sort already updates the input variable
                 } else if cmd_name == "uniq" {
                     output.push_str(&generator.indent());
                     output.push_str(&generate_uniq_command(generator, cmd, "$output", 1));
+                    // uniq already updates the input variable
                 } else {
                     // Generic command
                     output.push_str(&generator.indent());
@@ -575,7 +581,7 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                             
                             if cmd_name == "ls" {
                                 output.push_str(&generator.indent());
-                                output.push_str(&generate_ls_command(generator, cmd, true));
+                                output.push_str(&generate_ls_command(generator, cmd, true, Some(&format!("$output_{}", unique_id))));
                                 output.push_str(&generator.indent());
                                 output.push_str(&format!("$output_{} = join(\"\\n\", @ls_files);\n", unique_id));
                             } else if cmd_name == "cat" {
@@ -647,21 +653,29 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
                             if cmd_name == "grep" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_grep_command(generator, cmd, &format!("$output_{}", unique_id), i, is_final_command));
+                                // Update the main output variable with grep result
+                                output.push_str(&generator.indent());
+                                output.push_str(&format!("$output_{} = $grep_result_{};\n", unique_id, i));
                             } else if cmd_name == "wc" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_wc_command(generator, cmd, &format!("$output_{}", unique_id), i));
+                                // wc already updates the input variable
                             } else if cmd_name == "sort" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_sort_command(generator, cmd, &format!("$output_{}", unique_id), i));
+                                // sort already updates the input variable
                             } else if cmd_name == "uniq" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_uniq_command(generator, cmd, &format!("$output_{}", unique_id), i));
+                                // uniq already updates the input variable
                             } else if cmd_name == "xargs" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_xargs_command(generator, cmd, &format!("$output_{}", unique_id), i));
+                                // xargs already updates the input variable
                             } else if cmd_name == "tr" {
                                 output.push_str(&generator.indent());
                                 output.push_str(&generate_tr_command(generator, cmd, &format!("$output_{}", unique_id), i));
+                                // tr already updates the input variable
                             } else {
                                 // Generic command
                                 output.push_str(&generator.indent());

@@ -44,10 +44,13 @@ fn generate_command_specific(generator: &mut Generator, cmd: &SimpleCommand, inp
     let default_input = if input_var.is_empty() { "input_data" } else { input_var };
     
     match cmd_name.as_str() {
-        "grep" => Some(super::grep::generate_grep_command(generator, cmd, default_input, 0, true)),
+        "grep" => {
+            let unique_id = generator.get_unique_id().parse().unwrap_or(0);
+            Some(super::grep::generate_grep_command(generator, cmd, default_input, unique_id, true))
+        },
         "cat" => Some(super::cat::generate_cat_command(generator, cmd, &cmd.redirects, "$output")),
         "find" => Some(super::find::generate_find_command(generator, cmd, true, "$output")),
-        "ls" => Some(super::ls::generate_ls_command(generator, cmd, false)),
+                        "ls" => Some(super::ls::generate_ls_command(generator, cmd, false, None)),
         "wc" => Some(super::wc::generate_wc_command(generator, cmd, default_input, 0)),
         "sort" => Some(super::sort::generate_sort_command(generator, cmd, default_input, 0)),
         "uniq" => Some(super::uniq::generate_uniq_command(generator, cmd, default_input, 0)),

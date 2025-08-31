@@ -12,20 +12,45 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
     let mut invert_match = false;
     let mut word_match = false;
     let mut only_matching = false;
+    let mut quiet_mode = false;
+    let mut max_count = None;
+    let mut byte_offset = false;
+    let mut suppress_filename = false;
+    let mut show_filename = false;
+    let mut null_terminated = false;
+    let mut list_only = false;
     
-    for arg in &cmd.args {
+    // First pass: identify options and find the pattern
+    let mut args_iter = cmd.args.iter();
+    while let Some(arg) = args_iter.next() {
         if let Word::Literal(s) = arg {
             if s.starts_with('-') {
+                // Parse options
                 if s.contains('c') { count_only = true; }
                 if s.contains('n') { line_numbers = true; }
                 if s.contains('i') { ignore_case = true; }
                 if s.contains('v') { invert_match = true; }
                 if s.contains('w') { word_match = true; }
                 if s.contains('o') { only_matching = true; }
-            } else {
+                if s.contains('q') { quiet_mode = true; }
+                if s.contains('b') { byte_offset = true; }
+                if s.contains('h') { suppress_filename = true; }
+                if s.contains('H') { show_filename = true; }
+                if s.contains('Z') { null_terminated = true; }
+                if s.contains('l') { list_only = true; }
+                
+                // Handle numeric options
+                if s == "-m" {
+                    if let Some(Word::Literal(next_arg)) = args_iter.next() {
+                        max_count = Some(next_arg.parse().unwrap_or(0));
+                    }
+                }
+            } else if pattern.is_empty() {
+                // First non-option argument is the pattern
                 pattern = s.clone();
             }
-        } else {
+        } else if pattern.is_empty() {
+            // First non-literal argument is the pattern
             pattern = generator.word_to_perl(arg);
         }
     }
@@ -35,19 +60,60 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         output.push_str("warn \"grep: no pattern specified\";\n");
         output.push_str("exit(1);\n");
     } else {
-        // Use the provided input variable as source
-        let input_source = if input_var.starts_with('$') {
-            input_var.to_string()
-        } else {
-            format!("${}", input_var)
-        };
+        // Second pass: collect file arguments (arguments that are not options and not the pattern)
+        let mut file_args = Vec::new();
+        for arg in &cmd.args {
+            if let Word::Literal(s) = arg {
+                if !s.starts_with('-') && s != &pattern && s != "-m" {
+                    // Check if this is a numeric value that follows -m
+                    if let Some(prev_arg) = cmd.args.iter().position(|a| a == arg) {
+                        if prev_arg > 0 {
+                            if let Word::Literal(prev) = &cmd.args[prev_arg - 1] {
+                                if prev == "-m" {
+                                    continue; // Skip the numeric value after -m
+                                }
+                            }
+                        }
+                    }
+                    file_args.push(s.clone());
+                }
+            }
+        }
         
-        // Split input into lines and apply grep logic
-        output.push_str(&format!("my @grep_lines_{} = split(/\\n/, {});\n", command_index, input_source));
+        let has_file_args = !file_args.is_empty();
+        
+        // Declare the result variable
+        output.push_str(&format!("my $grep_result_{};\n", command_index));
+        
+        if has_file_args {
+            // File-based grep - read from files
+            output.push_str(&format!("my @grep_lines_{} = ();\n", command_index));
+            for file in &file_args {
+                output.push_str(&format!("if (-f '{}') {{\n", file));
+                output.push_str(&format!("    open(my $fh, '<', '{}') or die \"Cannot open {}: $!\";\n", file, file));
+                output.push_str("    while (my $line = <$fh>) {\n");
+                output.push_str("        chomp($line);\n");
+                output.push_str(&format!("        push @grep_lines_{}, $line;\n", command_index));
+                output.push_str("    }\n");
+                output.push_str("    close($fh);\n");
+                output.push_str("}\n");
+            }
+        } else if input_var != "input_data" {
+            // Pipeline-based grep with no file arguments - use the provided input variable
+            let input_source = if input_var.starts_with('$') {
+                input_var.to_string()
+            } else {
+                format!("${}", input_var)
+            };
+            
+            // Split input into lines and apply grep logic
+            output.push_str(&format!("my @grep_lines_{} = split(/\\n/, {});\n", command_index, input_source));
+        } else {
+            // Standalone grep with no input and no files - this shouldn't happen in practice
+            output.push_str(&format!("my @grep_lines_{} = ();\n", command_index));
+        }
         
         // Escape the pattern for Perl regex
-        // For patterns like "\.txt$", the backslash is escaping the dot in shell
-        // In Perl, we need to escape it properly
         let escaped_pattern = pattern.to_string();
         // Remove quotes if they exist around the pattern
         let regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
@@ -56,6 +122,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             &escaped_pattern
         };
         
+        // Apply grep filtering
         if invert_match {
             // Negative grep: exclude lines that match the pattern
             output.push_str(&format!("my @grep_filtered_{} = grep !/{}/, @grep_lines_{};\n", command_index, regex_pattern, command_index));
@@ -64,10 +131,18 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             output.push_str(&format!("my @grep_filtered_{} = grep /{}/, @grep_lines_{};\n", command_index, regex_pattern, command_index));
         }
         
+        // Apply max count if specified
+        if let Some(max) = max_count {
+            if max > 0 {
+                output.push_str(&format!("@grep_filtered_{} = @grep_filtered_{}[0..{}];\n", command_index, command_index, max));
+            }
+        }
+        
+        // Generate output based on options
         if count_only {
-            output.push_str(&format!("{} = scalar(@grep_filtered_{});\n", input_source, command_index));
-            if should_print {
-                output.push_str(&format!("print {};\n", input_source));
+            output.push_str(&format!("$grep_result_{} = scalar(@grep_filtered_{});\n", command_index, command_index));
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
                 output.push_str("print \"\\n\";\n");
             }
         } else if line_numbers {
@@ -77,9 +152,9 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             output.push_str(&format!("        push @grep_numbered_{}, sprintf(\"%d:%s\", $i + 1, $grep_lines_{}[$i]);\n", command_index, command_index));
             output.push_str("    }\n");
             output.push_str("}\n");
-            output.push_str(&format!("{} = join(\"\\n\", @grep_numbered_{});\n", input_source, command_index));
-            if should_print {
-                output.push_str(&format!("print {};\n", input_source));
+            output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_numbered_{});\n", command_index, command_index));
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
                 output.push_str("print \"\\n\";\n");
             }
         } else if only_matching {
@@ -90,17 +165,44 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             output.push_str(&format!("        push @grep_matches_{}, $1;\n", command_index));
             output.push_str("    }\n");
             output.push_str("}\n");
-            output.push_str(&format!("{} = join(\"\\n\", @grep_matches_{});\n", input_source, command_index));
-            if should_print {
-                output.push_str(&format!("print {};\n", input_source));
+            output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_matches_{});\n", command_index, command_index));
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
                 output.push_str("print \"\\n\";\n");
+            }
+        } else if list_only {
+            // Handle -l flag: only show filenames
+            if has_file_args {
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{} > 0 ? qw({}) : ());\n", 
+                    command_index, command_index, file_args.join(" ")));
+            } else {
+                output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"(standard input)\" : \"\";\n", 
+                    command_index, command_index));
+            }
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
+                if null_terminated {
+                    output.push_str("print \"\\0\";\n");
+                } else {
+                    output.push_str("print \"\\n\";\n");
+                }
             }
         } else {
-            output.push_str(&format!("{} = join(\"\\n\", @grep_filtered_{});\n", input_source, command_index));
-            if should_print {
-                output.push_str(&format!("print {};\n", input_source));
-                output.push_str("print \"\\n\";\n");
+            // Default case: output matching lines
+            output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
+                if null_terminated {
+                    output.push_str("print \"\\0\";\n");
+                } else {
+                    output.push_str("print \"\\n\";\n");
+                }
             }
+        }
+        
+        // Set exit status for quiet mode
+        if quiet_mode {
+            output.push_str(&format!("exit(@grep_filtered_{} > 0 ? 0 : 1);\n", command_index));
         }
     }
     

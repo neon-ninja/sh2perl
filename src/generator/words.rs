@@ -58,9 +58,35 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
                     // and wrap it in a way that ensures proper variable scoping
                     let command_code = match &**cmd {
                         Command::Pipeline(pipeline) => {
-                            // For pipelines in command substitution, don't print, just return the value
-                            use crate::generator::commands::pipeline_commands::generate_pipeline_with_print_option;
-                            generate_pipeline_with_print_option(generator, pipeline, false)
+                            // For command substitution pipelines, use our custom Perl implementations
+                            // instead of shell backticks to ensure consistency and proper filtering
+                            // This avoids issues with shell command interpretation differences
+                            let mut modified_pipeline = pipeline.clone();
+                            for command in &mut modified_pipeline.commands {
+                                if let Command::Simple(simple_cmd) = command {
+                                    if simple_cmd.name.as_str() == "ls" {
+                                        // Check if ls already has the -1 flag
+                                        let has_minus_one = simple_cmd.args.iter().any(|arg| {
+                                            if let Word::Literal(s) = arg {
+                                                s == "-1"
+                                            } else {
+                                                false
+                                            }
+                                        });
+                                        
+                                        // If no -1 flag, add it to ensure consistent output
+                                        if !has_minus_one {
+                                            simple_cmd.args.insert(0, Word::Literal("-1".to_string()));
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Use our custom pipeline implementation but capture output instead of printing
+                            let pipeline_code = generator.generate_command(&Command::Pipeline(modified_pipeline));
+                            // Remove the print statements and capture output, then convert newlines to spaces
+                            let captured_pipeline = pipeline_code.replace("print $output;", "").replace("print \"\\n\";", "");
+                            format!("my $cmd_output = do {{ {} }}; $cmd_output =~ s/\\n/ /g; $cmd_output", captured_pipeline)
                         },
                         _ => generator.generate_command(cmd)
                     };

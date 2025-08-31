@@ -369,10 +369,10 @@ pub fn generate_command_impl(generator: &mut Generator, command: &Command, in_st
                         result.push_str(&generator.indent());
                         result.push_str(&format!("my ${} = {};\n", temp_var, here_string_content));
                         
-                        // Call the grep generator with the here-string content
-                        let specific_output = generate_grep_command(generator, &grep_cmd, &temp_var, 0, true);
-                        // Replace input_data with the here-string variable (add $ prefix)
-                        let modified_output = specific_output.replace("input_data", &format!("${}", temp_var));
+                        // Call the grep generator with the here-string content (pass with $ prefix)
+                        let specific_output = generate_grep_command(generator, &grep_cmd, &format!("${}", temp_var), 0, true);
+                        // No need to replace input_data since we're passing the full variable name
+                        let modified_output = specific_output;
                         result.push_str(&modified_output);
                         
                         eprintln!("DEBUG: Final grep result: {}", result);
