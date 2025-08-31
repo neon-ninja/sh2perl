@@ -101,7 +101,7 @@ pub fn generate_ls_command(generator: &mut Generator, cmd: &SimpleCommand, pipel
         output.push_str(&generate_ls_helper(generator, dir, "ls_files", single_column));
         if let Some(var) = output_var {
             output.push_str(&generator.indent());
-            output.push_str(&format!("{} = join(\"\\n\", @ls_files);\n", var));
+            output.push_str(&format!("${} = join(\"\\n\", @ls_files);\n", var));
         }
         // No print statement in pipeline context
     } else {

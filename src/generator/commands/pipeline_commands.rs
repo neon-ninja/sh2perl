@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::generator::Generator;
-use crate::generator::commands::builtins::{is_builtin, generate_generic_builtin, get_specialized_module};
+use crate::generator::commands::builtins::{is_builtin, generate_generic_builtin};
 
 /// Helper function to generate Perl code for a command using the builtins registry
 fn generate_command_using_builtins(
@@ -16,185 +16,45 @@ fn generate_command_using_builtins(
         };
         
         if is_builtin(cmd_name) {
-            if let Some(module) = get_specialized_module(cmd_name) {
-                match module {
-                    "pipeline_commands" => {
-                        // Handle commands that have specialized logic in this module
-                        generate_specialized_pipeline_command(generator, cmd, cmd_name, input_var, output_var)
-                    },
-                    _ => {
-                        // Route to other specialized modules (this would need to be implemented)
-                        // For now, fall back to generic handling
-                        let args: Vec<String> = cmd.args.iter()
-                            .map(|arg| generator.word_to_perl(arg))
-                            .collect();
-                        generate_generic_builtin(cmd_name, &args, input_var, output_var)
-                    }
-                }
+            // Route to specialized modules via generate_generic_builtin
+            if input_var.is_empty() {
+                // First command in pipeline - generate without input
+                generate_generic_builtin(generator, cmd, "", output_var)
             } else {
-                // Use generic builtin handling
-                let args: Vec<String> = cmd.args.iter()
-                    .map(|arg| generator.word_to_perl(arg))
-                    .collect();
-                generate_generic_builtin(cmd_name, &args, input_var, output_var)
+                // Subsequent command - use previous output as input
+                generate_generic_builtin(generator, cmd, input_var, output_var)
             }
         } else {
             // Non-builtin command - use system call
-            format!("{} = `echo \"${}\" | {}`;\n", 
-                output_var, input_var, 
-                generator.generate_command_string_for_system(command))
+            if input_var.is_empty() {
+                // First command in pipeline
+                format!("${} = `{}`;\n", 
+                    output_var, 
+                    generator.generate_command_string_for_system(command))
+            } else {
+                // Subsequent command
+                format!("${} = `echo \"${}\" | {}`;\n", 
+                    output_var, input_var, 
+                    generator.generate_command_string_for_system(command))
+            }
         }
     } else {
         // Non-simple command - use system call
-        format!("{} = `echo \"${}\" | {}`;\n", 
-            output_var, input_var, 
-            generator.generate_command_string_for_system(command))
+        if input_var.is_empty() {
+            // First command in pipeline
+            format!("${} = `{}`;\n", 
+                output_var, 
+                generator.generate_command_string_for_system(command))
+        } else {
+            // Subsequent command
+            format!("${} = `echo \"${}\" | {}`;\n", 
+                output_var, input_var, 
+                generator.generate_command_string_for_system(command))
+        }
     }
 }
 
-/// Generate specialized pipeline command logic (moved from the main function)
-fn generate_specialized_pipeline_command(
-    generator: &mut Generator,
-    cmd: &SimpleCommand,
-    cmd_name: &str,
-    input_var: &str,
-    output_var: &str
-) -> String {
-    let mut output = String::new();
-    
-    match cmd_name {
-        "grep" => {
-            let pattern = cmd.args.iter()
-                .filter(|arg| !matches!(arg, Word::Literal(s) if s.starts_with('-')))
-                .next()
-                .map(|arg| generator.word_to_perl(arg))
-                .unwrap_or_else(|| ".*".to_string());
-            
-            // Remove quotes if they exist around the pattern
-            let regex_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
-                &pattern[1..pattern.len()-1]
-            } else {
-                &pattern
-            };
-            
-            let grep_unique_id = generator.get_unique_id();
-            output.push_str(&format!("my @lines_{} = split(/\\n/, ${});\n", grep_unique_id, input_var));
-            output.push_str(&format!("my @filtered_{} = grep {{ $_ =~ /{}/ }} @lines_{};\n", grep_unique_id, regex_pattern, grep_unique_id));
-            output.push_str(&format!("{} = join(\"\\n\", @filtered_{});\n", output_var, grep_unique_id));
-        },
-        "wc" => {
-            let is_line_count = cmd.args.iter().any(|arg| matches!(arg, Word::Literal(s) if s == "-l"));
-            let wc_unique_id = generator.get_unique_id();
-            if is_line_count {
-                output.push_str(&format!("my @lines_{} = split(/\\n/, ${});\n", wc_unique_id, input_var));
-                output.push_str(&format!("{} = scalar(@lines_{});\n", output_var, wc_unique_id));
-            } else {
-                // Default to character count
-                output.push_str(&format!("{} = length(${});\n", output_var, input_var));
-            }
-        },
-        "sort" => {
-            let is_numeric = cmd.args.iter().any(|arg| matches!(arg, Word::Literal(s) if s == "-n"));
-            let is_reverse = cmd.args.iter().any(|arg| matches!(arg, Word::Literal(s) if s == "-r"));
-            
-            let sort_unique_id = generator.get_unique_id();
-            output.push_str(&format!("my @lines_{} = split(/\\n/, ${});\n", sort_unique_id, input_var));
-            if is_numeric {
-                if is_reverse {
-                    output.push_str(&format!("@lines_{} = sort {{ (split(/\\s+/, $a))[0] <=> (split(/\\s+/, $b))[0] }} @lines_{};\n", sort_unique_id, sort_unique_id));
-                } else {
-                    output.push_str(&format!("@lines_{} = sort {{ (split(/\\s+/, $a))[0] <=> (split(/\\s+/, $b))[0] }} @lines_{};\n", sort_unique_id, sort_unique_id));
-                }
-            } else {
-                if is_reverse {
-                    output.push_str(&format!("@lines_{} = sort {{ $b cmp $a }} @lines_{};\n", sort_unique_id, sort_unique_id));
-                } else {
-                    output.push_str(&format!("@lines_{} = sort @lines_{};\n", sort_unique_id, sort_unique_id));
-                }
-            }
-            output.push_str(&format!("{} = join(\"\\n\", @lines_{});\n", output_var, sort_unique_id));
-        },
-        "uniq" => {
-            let is_count = cmd.args.iter().any(|arg| matches!(arg, Word::Literal(s) if s == "-c"));
-            
-            let uniq_unique_id = generator.get_unique_id();
-            output.push_str(&format!("my @lines_{} = split(/\\n/, ${});\n", uniq_unique_id, input_var));
-            if is_count {
-                output.push_str(&format!("my %count_{};\n", uniq_unique_id));
-                output.push_str(&format!("$count_{}{{$_}}++ for @lines_{};\n", uniq_unique_id, uniq_unique_id));
-                output.push_str(&format!("{} = join(\"\\n\", map {{ \"$count_{}{{$_}} $_\" }} keys %count_{});\n", output_var, uniq_unique_id, uniq_unique_id));
-            } else {
-                output.push_str(&format!("my %seen_{};\n", uniq_unique_id));
-                output.push_str(&format!("my @unique_{} = grep {{ !$seen_{}{{$_}}++ }} @lines_{};\n", uniq_unique_id, uniq_unique_id, uniq_unique_id));
-                output.push_str(&format!("{} = join(\"\\n\", @unique_{});\n", output_var, uniq_unique_id));
-            }
-        },
-        "tr" => {
-            // Handle tr command for character translation
-            let mut delete_chars = String::new();
-            let mut is_delete = false;
-            for arg in &cmd.args {
-                if let Word::Literal(s) = arg {
-                    if s == "-d" {
-                        is_delete = true;
-                    } else if !s.starts_with('-') {
-                        delete_chars = s.clone();
-                    }
-                }
-            }
-            
-            if is_delete && !delete_chars.is_empty() {
-                // Remove quotes if they exist around the pattern
-                let chars_to_delete = if delete_chars.starts_with('"') && delete_chars.ends_with('"') {
-                    &delete_chars[1..delete_chars.len()-1]
-                } else {
-                    &delete_chars
-                };
-                
-                output.push_str(&format!("{} = ${};\n", output_var, input_var));
-                output.push_str(&format!("{} =~ tr/{}/ /d;\n", output_var, chars_to_delete));
-            } else {
-                output.push_str(&format!("{} = ${};\n", output_var, input_var));
-            }
-        },
-        "xargs" => {
-            // Handle xargs command
-            let mut xargs_cmd = String::new();
-            let mut xargs_args = Vec::new();
-            
-            for arg in &cmd.args {
-                if let Word::Literal(s) = arg {
-                    if s == "grep" {
-                        xargs_cmd = s.clone();
-                    } else if s.starts_with('-') {
-                        xargs_args.push(s.clone());
-                    } else {
-                        xargs_args.push(s.clone());
-                    }
-                } else {
-                    // Handle non-literal arguments (like StringInterpolation)
-                    xargs_args.push(generator.word_to_perl(arg));
-                }
-            }
-            
-            if !xargs_cmd.is_empty() {
-                let args_str = xargs_args.join(" ");
-                output.push_str(&format!("{} = `echo \"${}\" | xargs {} {}`;\n", output_var, input_var, xargs_cmd, args_str));
-            } else {
-                output.push_str(&format!("{} = ${};\n", output_var, input_var));
-            }
-        },
-        _ => {
-            // Fallback for other specialized commands
-            let args: Vec<String> = cmd.args.iter()
-                .map(|arg| generator.word_to_perl(arg))
-                .collect();
-            output.push_str(&generate_generic_builtin(cmd_name, &args, input_var, output_var));
-        }
-    }
-    
-    output
-}
+
 
 /// Generate a simple pipe pipeline (no logical operators)
 pub fn generate_pipeline_impl(generator: &mut Generator, pipeline: &Pipeline) -> String {
@@ -244,9 +104,19 @@ fn generate_simple_pipe_pipeline(generator: &mut Generator, pipeline: &Pipeline,
                     output.push_str(&generator.indent());
                     output.push_str(&format!("$output_{} = $output;\n", unique_id));
                 } else {
-                    output.push_str(&format!("$output_{} = `", unique_id));
-                    output.push_str(&generator.generate_command_string_for_system(command));
-                    output.push_str("`;\n");
+                    // Use the builtins registry for the first command too
+                    let command_output = generate_command_using_builtins(generator, command, "", &format!("output_{}", unique_id));
+                    
+                    // Split the output into lines and apply indentation
+                    for line in command_output.lines() {
+                        if !line.trim().is_empty() {
+                            output.push_str(&generator.indent());
+                            output.push_str(line);
+                            if !line.ends_with('\n') {
+                                output.push_str("\n");
+                            }
+                        }
+                    }
                 }
             } else {
                 // Handle subsequent commands - they should use the previous command's output

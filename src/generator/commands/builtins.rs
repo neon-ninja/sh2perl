@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use crate::ast::*;
+use crate::generator::Generator;
 
 #[derive(Debug, Clone)]
 pub struct BuiltinCommand {
@@ -86,23 +88,192 @@ pub fn is_builtin(command_name: &str) -> bool {
     get_builtin_commands().contains_key(command_name)
 }
 
-/// Get the module name that handles this builtin command's Perl generation
-/// Returns None if the command should use generic handling
-pub fn get_specialized_module(command_name: &str) -> Option<&'static str> {
-    match command_name {
-        "grep" | "wc" | "sort" | "uniq" | "tr" | "xargs" => Some("pipeline_commands"),
-        "ls" => Some("ls_commands"),
-        "echo" => Some("echo_commands"),
-        "printf" => Some("printf_commands"),
-        _ => None
-    }
-}
-
 /// Generate generic Perl code for a builtin command that doesn't need special handling
 /// This is a fallback for commands that don't have specialized modules
-pub fn generate_generic_builtin(command_name: &str, args: &[String], input_var: &str, output_var: &str) -> String {
-    let args_str = args.join(" ");
-    format!("{} = `echo \"${}\" | {} {}`;\n", output_var, input_var, command_name, args_str)
+pub fn generate_generic_builtin(generator: &mut Generator, cmd: &SimpleCommand, input_var: &str, output_var: &str) -> String {
+    let command_name = match &cmd.name {
+        Word::Literal(s) => s,
+        _ => "unknown_command"
+    };
+    
+    match command_name {
+        "grep" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::grep::generate_grep_command(generator, cmd, input_var, "pipeline", false)
+        },
+        "wc" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::wc::generate_wc_command(generator, cmd, input_var, "pipeline")
+        },
+        "sort" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::sort::generate_sort_command(generator, cmd, input_var, "pipeline")
+        },
+        "uniq" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::uniq::generate_uniq_command(generator, cmd, input_var, "pipeline")
+        },
+        "tr" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::tr::generate_tr_command(generator, cmd, input_var, 0)
+        },
+        "xargs" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::xargs::generate_xargs_command(generator, cmd, input_var, 0)
+        },
+        "ls" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::ls::generate_ls_command(generator, cmd, true, Some(output_var))
+        },
+        // Echo is handled in simple_commands.rs, so use generic fallback
+        // "echo" => { ... },
+        "printf" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::printf::generate_printf_command(generator, cmd, input_var, 0)
+        },
+        "cat" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::cat::generate_cat_command(generator, cmd, &[], input_var)
+        },
+        "find" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::find::generate_find_command(generator, cmd, true, input_var)
+        },
+        "sed" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::sed::generate_sed_command(generator, cmd, input_var, 0)
+        },
+        "awk" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::awk::generate_awk_command(generator, cmd, input_var, 0)
+        },
+        "head" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::head::generate_head_command(generator, cmd, input_var, 0)
+        },
+        "tail" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::tail::generate_tail_command(generator, cmd, input_var, 0)
+        },
+        "cut" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::cut::generate_cut_command(generator, cmd, input_var, 0)
+        },
+        "paste" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::paste::generate_paste_command(generator, cmd, &[])
+        },
+        "comm" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::comm::generate_comm_command(generator, cmd, input_var, 0)
+        },
+        "diff" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::diff::generate_diff_command(generator, cmd, input_var, 0, false)
+        },
+        "cp" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::cp::generate_cp_command(generator, cmd)
+        },
+        "mv" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::mv::generate_mv_command(generator, cmd)
+        },
+        "rm" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::rm::generate_rm_command(generator, cmd)
+        },
+        "mkdir" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::mkdir::generate_mkdir_command(generator, cmd)
+        },
+        "touch" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::touch::generate_touch_command(generator, cmd)
+        },
+        "basename" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::basename::generate_basename_command(generator, cmd, input_var)
+        },
+        "dirname" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::dirname::generate_dirname_command(generator, cmd, input_var)
+        },
+        "date" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::date::generate_date_command(generator, cmd)
+        },
+        "time" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::time::generate_time_command(generator, cmd)
+        },
+        "sleep" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::sleep::generate_sleep_command(generator, cmd)
+        },
+        "which" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::which::generate_which_command(generator, cmd)
+        },
+        "yes" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::yes::generate_yes_command(generator, cmd)
+        },
+        "gzip" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::gzip::generate_gzip_command(generator, cmd, input_var)
+        },
+        "zcat" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::zcat::generate_zcat_command(generator, cmd)
+        },
+        "wget" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::wget::generate_wget_command(generator, cmd)
+        },
+        "curl" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::curl::generate_curl_command(generator, cmd)
+        },
+        "kill" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::kill::generate_kill_command(generator, cmd)
+        },
+        "nohup" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::nohup::generate_nohup_command(generator, cmd)
+        },
+        "nice" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::nice::generate_nice_command(generator, cmd)
+        },
+        "sha256sum" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::sha256sum::generate_sha256sum_command(generator, cmd, input_var)
+        },
+        "sha512sum" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::sha512sum::generate_sha512sum_command(generator, cmd, input_var)
+        },
+        "strings" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::strings::generate_strings_command(generator, cmd, input_var)
+        },
+        "tee" => {
+            // For now, use the existing signature but we should standardize this
+            crate::generator::commands::tee::generate_tee_command(generator, cmd, input_var)
+        },
+        _ => {
+            let args: Vec<String> = cmd.args.iter()
+                .filter_map(|arg| match arg {
+                    Word::Literal(s) => Some(s.clone()),
+                    _ => None
+                })
+                .collect();
+            let args_str = args.join(" ");
+            format!("${} = `echo \"${}\" | {} {}`;\n", output_var, input_var, command_name, args_str)
+        }
+    }
 }
 
 

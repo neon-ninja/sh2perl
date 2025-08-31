@@ -99,7 +99,7 @@ pub fn generate_find_command(generator: &mut Generator, cmd: &SimpleCommand, gen
     output.push_str(&format!("find_files('{}', '{}');\n", path, escape_glob_pattern(&pattern)));
     if generate_output {
         output.push_str(&generator.indent());
-        output.push_str(&format!("{} = join(\"\\n\", @find_files);\n", input_var));
+        output.push_str(&format!("${} = join(\"\\n\", @find_files);\n", input_var));
     }
     output.push_str("\n");
     
