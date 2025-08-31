@@ -25,15 +25,15 @@ pub fn get_builtin_commands() -> HashMap<&'static str, BuiltinCommand> {
     // File and directory operations
     commands.insert("ls", BuiltinCommand::new("ls", "List directory contents", false));
     commands.insert("cat", BuiltinCommand::new("cat", "Concatenate and display files", true));
-    commands.insert("find", BuiltinCommand::new("find", "Find files", false));
+    commands.insert("find", BuiltinCommand::new("find", "Find files", true));
     commands.insert("grep", BuiltinCommand::new("grep", "Search for patterns in text", true));
     commands.insert("sed", BuiltinCommand::new("sed", "Stream editor", true));
     commands.insert("awk", BuiltinCommand::new("awk", "Pattern scanning and processing", true));
     commands.insert("sort", BuiltinCommand::new("sort", "Sort lines", false));
-    commands.insert("uniq", BuiltinCommand::new("uniq", "Remove duplicate lines", false));
+    commands.insert("uniq", BuiltinCommand::new("uniq", "Remove duplicate lines", true));
     commands.insert("wc", BuiltinCommand::new("wc", "Word, line, and byte count", true));
-    commands.insert("head", BuiltinCommand::new("head", "Display first lines", false));
-    commands.insert("tail", BuiltinCommand::new("tail", "Display last lines", false));
+    commands.insert("head", BuiltinCommand::new("head", "Display first lines", true));
+    commands.insert("tail", BuiltinCommand::new("tail", "Display last lines", true));
     commands.insert("cut", BuiltinCommand::new("cut", "Cut sections from lines", true));
     commands.insert("paste", BuiltinCommand::new("paste", "Merge lines from files", false));
     commands.insert("comm", BuiltinCommand::new("comm", "Compare sorted files", false));
@@ -62,22 +62,22 @@ pub fn get_builtin_commands() -> HashMap<&'static str, BuiltinCommand> {
     commands.insert("yes", BuiltinCommand::new("yes", "Output string repeatedly", true));
     
     // Compression and archiving
-    commands.insert("gzip", BuiltinCommand::new("gzip", "Compress files", false));
+    commands.insert("gzip", BuiltinCommand::new("gzip", "Compress files", true));
     commands.insert("zcat", BuiltinCommand::new("zcat", "Decompress and display", true));
     
     // Network and downloads
-    commands.insert("wget", BuiltinCommand::new("wget", "Download files", false));
-    commands.insert("curl", BuiltinCommand::new("curl", "Transfer data", false));
+    commands.insert("wget", BuiltinCommand::new("wget", "Download files", true));
+    commands.insert("curl", BuiltinCommand::new("curl", "Transfer data", true));
     
     // Process management
     commands.insert("kill", BuiltinCommand::new("kill", "Terminate processes", false));
-    commands.insert("nohup", BuiltinCommand::new("nohup", "Run command immune to hangups", false));
-    commands.insert("nice", BuiltinCommand::new("nice", "Run command with modified priority", false));
+    commands.insert("nohup", BuiltinCommand::new("nohup", "Run command immune to hangups", true));
+    commands.insert("nice", BuiltinCommand::new("nice", "Run command with modified priority", true));
     
     // Checksums and verification
-    commands.insert("sha256sum", BuiltinCommand::new("sha256sum", "Compute SHA256 checksums", false));
-    commands.insert("sha512sum", BuiltinCommand::new("sha512sum", "Compute SHA512 checksums", false));
-    commands.insert("strings", BuiltinCommand::new("strings", "Extract printable strings", false));
+    commands.insert("sha256sum", BuiltinCommand::new("sha256sum", "Compute SHA256 checksums", true));
+    commands.insert("sha512sum", BuiltinCommand::new("sha512sum", "Compute SHA512 checksums", true));
+    commands.insert("strings", BuiltinCommand::new("strings", "Extract printable strings", true));
     
     // I/O redirection
     commands.insert("tee", BuiltinCommand::new("tee", "Read from stdin, write to stdout and files", true));
