@@ -188,6 +188,10 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
     let mut output = String::new();
     
     if should_print {
+        // Wrap the entire pipeline in a block scope to prevent variable contamination
+        output.push_str("{\n");
+        generator.indent_level += 1;
+        
         // For printing pipelines, use proper command chaining
         let unique_id = generator.get_unique_id();
         output.push_str(&generator.indent());
@@ -295,11 +299,19 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
         if should_print {
             output.push_str(&generator.indent());
             output.push_str(&format!("print $output_{};\n", unique_id));
+            // Ensure output ends with newline to match shell behavior
             output.push_str(&generator.indent());
-            output.push_str("print \"\\n\";\n");
+            output.push_str(&format!("print \"\\n\" unless $output_{} =~ /\\n$/;\n", unique_id));
         }
+        
+        generator.indent_level -= 1;
+        output.push_str("}\n");
     } else {
         // For command substitution, use streaming approach
+        // Wrap in block scope to prevent variable contamination
+        output.push_str("{\n");
+        generator.indent_level += 1;
+        
         if let (Command::Simple(cmd1), Command::Simple(cmd2)) = (&pipeline.commands[0], &pipeline.commands[1]) {
             let cmd1_name = match &cmd1.name {
                 Word::Literal(s) => s,
@@ -388,6 +400,8 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                 output.push_str(&format!("$output_{};\n", unique_id));
             }
         }
+        generator.indent_level -= 1;
+        output.push_str("}\n");
     }
     
     output

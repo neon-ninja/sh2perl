@@ -39,6 +39,8 @@ pub fn generate_cat_command(generator: &mut Generator, cmd: &SimpleCommand, redi
         output.push_str(&format!("${} .= $line;\n", input_var));
         output.push_str("}\n");
         output.push_str("close($fh);\n");
+        output.push_str(&format!("# Ensure content ends with newline to prevent line concatenation\n"));
+        output.push_str(&format!("${} .= \"\\n\" unless ${} =~ /\\n$/;\n", input_var, input_var));
         output.push_str("} else {\n");
         output.push_str(&format!("warn \"cat: {}: No such file or directory\";\n", filename));
         output.push_str("exit(1);\n");

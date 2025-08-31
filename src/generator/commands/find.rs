@@ -53,10 +53,15 @@ pub fn generate_find_command(generator: &mut Generator, cmd: &SimpleCommand, gen
         i += 1;
     }
     
+    // Use unique variable names to prevent cross-contamination between pipelines
+    let unique_id = generator.get_unique_id();
+    let find_var = format!("find_files_{}", unique_id);
+    let find_func = format!("find_files_{}", unique_id);
+    
     output.push_str(&generator.indent());
-    output.push_str(&format!("my @find_files;\n"));
+    output.push_str(&format!("my @{};\n", find_var));
     output.push_str(&generator.indent());
-    output.push_str(&format!("sub find_files {{\n"));
+    output.push_str(&format!("sub {} {{\n", find_func));
     generator.indent_level += 1;
     output.push_str(&generator.indent());
     output.push_str("my ($dir, $pattern) = @_;\n");
@@ -81,7 +86,7 @@ pub fn generate_find_command(generator: &mut Generator, cmd: &SimpleCommand, gen
     output.push_str("} elsif ($file =~ /^$pattern$/) {\n");
     generator.indent_level += 1;
     output.push_str(&generator.indent());
-    output.push_str("push @find_files, $full_path;\n");
+    output.push_str(&format!("push @{}, $full_path;\n", find_var));
     generator.indent_level -= 1;
     output.push_str(&generator.indent());
     output.push_str("}\n");
@@ -97,10 +102,14 @@ pub fn generate_find_command(generator: &mut Generator, cmd: &SimpleCommand, gen
     output.push_str(&generator.indent());
     output.push_str("}\n");
     output.push_str(&generator.indent());
-    output.push_str(&format!("find_files('{}', '{}');\n", path, escape_glob_pattern(&pattern)));
+    output.push_str(&format!("{}('{}', '{}');\n", find_func, path, escape_glob_pattern(&pattern)));
+    
     if generate_output {
         output.push_str(&generator.indent());
-        output.push_str(&format!("${} = join(\"\\n\", @find_files);\n", input_var));
+        output.push_str(&format!("${} = join(\"\\n\", @{});\n", input_var, find_var));
+        // Ensure output ends with newline to match shell behavior
+        output.push_str(&generator.indent());
+        output.push_str(&format!("${} .= \"\\n\" unless ${} =~ /\\n$/;\n", input_var, input_var));
     }
     output.push_str("\n");
     

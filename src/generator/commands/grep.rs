@@ -118,6 +118,8 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         // Remove quotes if they exist around the pattern
         let regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
             &escaped_pattern[1..escaped_pattern.len()-1]
+        } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+            &escaped_pattern[1..escaped_pattern.len()-1]
         } else {
             &escaped_pattern
         };
@@ -190,6 +192,8 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         } else {
             // Default case: output matching lines
             output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
+            // Ensure output ends with newline to match shell behavior
+            output.push_str(&format!("$grep_result_{} .= \"\\n\" unless $grep_result_{} =~ /\\n$/;\n", command_index, command_index));
             if should_print && !quiet_mode {
                 output.push_str(&format!("print $grep_result_{};\n", command_index));
                 if null_terminated {

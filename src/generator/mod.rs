@@ -1,5 +1,9 @@
 use crate::ast::*;
 use std::collections::{HashSet, HashMap};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+// Static counter for generating truly unique IDs across all generator instances
+static GLOBAL_UNIQUE_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 pub mod commands;
 pub mod control_flow;
@@ -170,8 +174,8 @@ impl Generator {
     }
 
     pub fn get_unique_id(&mut self) -> String {
-        self.file_handle_counter += 1;
-        format!("{}", self.file_handle_counter)
+        let id = GLOBAL_UNIQUE_COUNTER.fetch_add(1, Ordering::SeqCst);
+        format!("{}", id)
     }
 
     // Additional helper methods that are needed

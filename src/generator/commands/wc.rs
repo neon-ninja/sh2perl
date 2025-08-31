@@ -67,7 +67,7 @@ pub fn generate_wc_command(_generator: &mut Generator, cmd: &SimpleCommand, inpu
         output.push_str(&format!("$wc_result_{} .= \"$wc_byte_count_{} \";\n", command_index, command_index));
     }
     output.push_str(&format!("$wc_result_{} =~ s/\\s+$//;\n", command_index)); // Remove trailing space
-    output.push_str(&format!("${} = $wc_result_{};\n", input_var, command_index));
+    // Don't add newline for pipeline commands - shell wc doesn't add trailing newline in pipelines
     
     output
 }
