@@ -1,4 +1,5 @@
 // Command generation modules
+pub mod builtins;
 pub mod command_dispatcher;
 pub mod simple_commands;
 pub mod pipeline_commands;
