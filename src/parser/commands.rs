@@ -337,7 +337,8 @@ impl Parser {
 
     pub fn parse_pipeline_from_command(&mut self, first_command: Command) -> Result<Command, ParserError> {
         let mut commands = Vec::new();
-        let mut operators = Vec::new();
+        let mut pipe_operators = Vec::new();
+        let mut logical_operators = Vec::new();
         
         commands.push(first_command);
         
@@ -348,7 +349,7 @@ impl Parser {
             match token {
                 Token::Pipe => {
                     self.lexer.next();
-                    operators.push(PipeOperator::Pipe);
+                    pipe_operators.push(PipeOperator::Pipe);
                     self.lexer.skip_whitespace_and_comments();
                     let command = self.parse_simple_command()?;
                     // Parse redirects for this command
@@ -357,7 +358,7 @@ impl Parser {
                 }
                 Token::And => {
                     self.lexer.next();
-                    operators.push(PipeOperator::And);
+                    logical_operators.push(CommandLogic::And);
                     self.lexer.skip_whitespace_and_comments();
                     let command = self.parse_simple_command()?;
                     // Parse redirects for this command
@@ -366,7 +367,7 @@ impl Parser {
                 }
                 Token::Or => {
                     self.lexer.next();
-                    operators.push(PipeOperator::Or);
+                    logical_operators.push(CommandLogic::Or);
                     self.lexer.skip_whitespace_and_comments();
                     let command = self.parse_simple_command()?;
                     // Parse redirects for this command
@@ -388,7 +389,11 @@ impl Parser {
             eprintln!("DEBUG: parse_pipeline_from_command returning single command: {:?}", result);
             Ok(result)
         } else {
-            let result = Command::Pipeline(Pipeline { commands, operators });
+            let result = Command::Pipeline(Pipeline { 
+                commands, 
+                operators: pipe_operators,
+                logical_operators 
+            });
             eprintln!("DEBUG: parse_pipeline_from_command returning pipeline: {:?}", result);
             Ok(result)
         }

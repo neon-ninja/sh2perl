@@ -5,6 +5,7 @@ pub mod pipeline_commands;
 pub mod subshell_commands;
 pub mod system_commands;
 pub mod utilities;
+pub mod logic_commands;
 
 // Individual command modules
 pub mod grep;

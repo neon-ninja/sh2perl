@@ -29,10 +29,10 @@ pub fn generate_tr_command(generator: &mut Generator, cmd: &SimpleCommand, input
         output.push_str(&format!("my $input = {};\n", input_var));
         
         // Delete characters in SET1 from input
-        output.push_str(&format!("{} = '';\n", input_var));
+        output.push_str(&format!("my $tr_result_{} = '';\n", command_index));
         output.push_str("for my $char (split //, $input) {\n");
         output.push_str("    if (index($set1, $char) == -1) {\n");
-        output.push_str(&format!("        {} .= $char;\n", input_var));
+        output.push_str(&format!("        $tr_result_{} .= $char;\n", command_index));
         output.push_str("    }\n");
         output.push_str("}\n");
     } else if args.len() >= 2 {
@@ -45,13 +45,13 @@ pub fn generate_tr_command(generator: &mut Generator, cmd: &SimpleCommand, input
         output.push_str(&format!("my $input = {};\n", input_var));
         
         // Character-by-character translation
-        output.push_str(&format!("{} = '';\n", input_var));
+        output.push_str(&format!("my $tr_result_{} = '';\n", command_index));
         output.push_str("for my $char (split //, $input) {\n");
         output.push_str("    my $pos = index($set1, $char);\n");
         output.push_str("    if ($pos >= 0 && $pos < length($set2)) {\n");
-        output.push_str(&format!("        {} .= substr($set2, $pos, 1);\n", input_var));
+        output.push_str(&format!("        $tr_result_{} .= substr($set2, $pos, 1);\n", command_index));
         output.push_str("    } else {\n");
-        output.push_str(&format!("        {} .= $char;\n", input_var));
+        output.push_str(&format!("        $tr_result_{} .= $char;\n", command_index));
         output.push_str("    }\n");
         output.push_str("}\n");
     } else {

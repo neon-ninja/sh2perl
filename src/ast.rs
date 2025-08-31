@@ -7,6 +7,8 @@ pub enum Command {
     ShoptCommand(ShoptCommand),
     TestExpression(TestExpression),
     Pipeline(Pipeline),
+    And(Box<Command>, Box<Command>),      // left && right
+    Or(Box<Command>, Box<Command>),       // left || right
     If(IfStatement),
     Case(CaseStatement),
     While(WhileLoop),
@@ -47,15 +49,9 @@ pub struct ShoptCommand {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pipeline {
     pub commands: Vec<Command>,
-    pub operators: Vec<PipeOperator>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum PipeOperator {
-    Pipe,      // |
-    And,       // &&
-    Or,        // ||
-}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IfStatement {

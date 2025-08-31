@@ -47,7 +47,7 @@ pub fn generate_xargs_command(_generator: &mut Generator, cmd: &SimpleCommand, i
         output.push_str(&format!("push @xargs_matching_files_{}, $file if $xargs_found_{};\n", command_index, command_index));
         output.push_str("}\n");
         output.push_str("}\n");
-        output.push_str(&format!("{} = join(\"\\n\", @xargs_matching_files_{});\n", input_var, command_index));
+        output.push_str(&format!("my $xargs_result_{} = join(\"\\n\", @xargs_matching_files_{});\n", command_index, command_index));
     } else {
         // Fallback to system command for other cases
         output.push_str(&format!("{} = `echo \"${}\" | {}`;\n", input_var, input_var, command));
