@@ -338,7 +338,6 @@ impl Parser {
     pub fn parse_pipeline_from_command(&mut self, first_command: Command) -> Result<Command, ParserError> {
         let mut commands = Vec::new();
         let mut pipe_operators = Vec::new();
-        let mut logical_operators = Vec::new();
         
         commands.push(first_command);
         
@@ -349,7 +348,7 @@ impl Parser {
             match token {
                 Token::Pipe => {
                     self.lexer.next();
-                    pipe_operators.push(PipeOperator::Pipe);
+                    pipe_operators.push(());
                     self.lexer.skip_whitespace_and_comments();
                     let command = self.parse_simple_command()?;
                     // Parse redirects for this command
@@ -358,21 +357,25 @@ impl Parser {
                 }
                 Token::And => {
                     self.lexer.next();
-                    logical_operators.push(CommandLogic::And);
                     self.lexer.skip_whitespace_and_comments();
-                    let command = self.parse_simple_command()?;
-                    // Parse redirects for this command
-                    let command_with_redirects = self.parse_command_redirects(command)?;
-                    commands.push(command_with_redirects);
+                    let right_command = self.parse_simple_command()?;
+                    let right_command_with_redirects = self.parse_command_redirects(right_command)?;
+                    
+                    // Create Command::And(left, right)
+                    let left_command = commands.pop().unwrap();
+                    let and_command = Command::And(Box::new(left_command), Box::new(right_command_with_redirects));
+                    commands.push(and_command);
                 }
                 Token::Or => {
                     self.lexer.next();
-                    logical_operators.push(CommandLogic::Or);
                     self.lexer.skip_whitespace_and_comments();
-                    let command = self.parse_simple_command()?;
-                    // Parse redirects for this command
-                    let command_with_redirects = self.parse_command_redirects(command)?;
-                    commands.push(command_with_redirects);
+                    let right_command = self.parse_simple_command()?;
+                    let right_command_with_redirects = self.parse_command_redirects(right_command)?;
+                    
+                    // Create Command::Or(left, right)
+                    let left_command = commands.pop().unwrap();
+                    let or_command = Command::Or(Box::new(left_command), Box::new(right_command_with_redirects));
+                    commands.push(or_command);
                 }
                 Token::Semicolon | Token::Newline => {
                     // Stop parsing pipeline when we hit a command separator
@@ -389,11 +392,7 @@ impl Parser {
             eprintln!("DEBUG: parse_pipeline_from_command returning single command: {:?}", result);
             Ok(result)
         } else {
-            let result = Command::Pipeline(Pipeline { 
-                commands, 
-                operators: pipe_operators,
-                logical_operators 
-            });
+            let result = Command::Pipeline(Pipeline { commands });
             eprintln!("DEBUG: parse_pipeline_from_command returning pipeline: {:?}", result);
             Ok(result)
         }
@@ -633,6 +632,8 @@ impl Parser {
                 }
             }
         }
+        
+
         
 
         

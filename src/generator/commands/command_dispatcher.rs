@@ -33,7 +33,25 @@ pub fn generate_command_impl(generator: &mut Generator, command: &Command, in_st
         Command::TestExpression(test_expr) => {
             generator.generate_test_expression(test_expr)
         },
-        Command::Pipeline(pipeline) => generator.generate_pipeline(pipeline),
+        Command::Pipeline(pipeline) => {
+            eprintln!("DEBUG: Found Pipeline, commands: {:?}", pipeline.commands);
+            // This is now a pure pipe pipeline since logical operators are handled separately
+            if pipeline.commands.len() == 1 {
+                // Single command in pipeline, just generate it
+                generator.generate_command(&pipeline.commands[0])
+            } else {
+                // Multiple commands, implement proper Perl pipeline
+                super::pipeline_commands::generate_pipeline_impl(generator, pipeline)
+            }
+        },
+        Command::And(left, right) => {
+            // Handle logical AND operation
+            super::logic_commands::generate_logical_and(generator, left, right)
+        },
+        Command::Or(left, right) => {
+            // Handle logical OR operation
+            super::logic_commands::generate_logical_or(generator, left, right)
+        },
         Command::If(if_stmt) => generator.generate_if_statement(if_stmt),
         Command::Case(case_stmt) => generator.generate_case_statement(case_stmt),
         Command::While(while_loop) => generator.generate_while_loop(while_loop),
@@ -57,8 +75,9 @@ pub fn generate_command_impl(generator: &mut Generator, command: &Command, in_st
         // If the base command is a Pipeline with logical operators, handle it specially
         eprintln!("DEBUG: Base command type: {:?}", std::mem::discriminant(&base_command));
         if let Command::Pipeline(pipeline) = &base_command {
-            eprintln!("DEBUG: Found Pipeline, operators: {:?}", pipeline.operators);
-            if pipeline.operators.iter().any(|op| matches!(op, PipeOperator::And | PipeOperator::Or)) {
+            eprintln!("DEBUG: Found Pipeline, commands: {:?}", pipeline.commands);
+            // This is now a pure pipe pipeline since logical operators are handled separately
+            if pipeline.commands.len() == 1 {
                 eprintln!("DEBUG: Found Pipeline with logical operators inside Redirect, delegating to pipeline generator");
                 return generator.generate_pipeline(pipeline);
             }
@@ -69,8 +88,9 @@ pub fn generate_command_impl(generator: &mut Generator, command: &Command, in_st
         if let Command::Redirect(redirect_cmd) = command {
             eprintln!("DEBUG: Checking RedirectCommand for nested Pipeline with logical operators");
             if let Command::Pipeline(pipeline) = &*redirect_cmd.command {
-                eprintln!("DEBUG: Found Pipeline with logical operators in nested Redirect, operators: {:?}", pipeline.operators);
-                if pipeline.operators.iter().any(|op| matches!(op, PipeOperator::And | PipeOperator::Or)) {
+                eprintln!("DEBUG: Found Pipeline in nested Redirect, commands: {:?}", pipeline.commands);
+                // This is now a pure pipe pipeline since logical operators are handled separately
+                if pipeline.commands.len() > 1 {
                     eprintln!("DEBUG: Delegating to pipeline generator for logical operators");
                     return generator.generate_pipeline(pipeline);
                 }

@@ -101,13 +101,10 @@ fn generate_bash_command_string(cmd: &Command) -> String {
                 .collect();
             
             let mut result = String::new();
-            for (i, (command, operator)) in commands.iter().zip(pipeline.operators.iter()).enumerate() {
+            // Handle pipeline operators
+            for (i, (command, _)) in commands.iter().zip(pipeline.commands.iter()).enumerate() {
                 if i > 0 {
-                    match operator {
-                        PipeOperator::And => result.push_str(" && "),
-                        PipeOperator::Or => result.push_str(" || "),
-                        PipeOperator::Pipe => result.push_str(" | "),
-                    }
+                    result.push_str(" | "); // Default to pipe for now
                 }
                 result.push_str(command);
             }

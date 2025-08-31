@@ -1459,36 +1459,15 @@ fn parse_backtick_command_substitution(lexer: &mut Lexer) -> Result<Word, Parser
         // Parse as a pipeline
         let pipeline_parts: Vec<&str> = command_text.split('|').collect();
         let mut commands = Vec::new();
-        let mut operators = Vec::new();
-        
-        for (i, part) in pipeline_parts.iter().enumerate() {
-            if i > 0 {
-                operators.push(PipeOperator::Pipe);
-            }
-            
-            // Parse each part as a simple command
-            let trimmed_part = part.trim();
-            if !trimmed_part.is_empty() {
-                let cmd_parts: Vec<&str> = trimmed_part.split_whitespace().collect();
-                if !cmd_parts.is_empty() {
-                    let name = Word::Literal(cmd_parts[0].to_string());
-                    let args: Vec<Word> = cmd_parts[1..].iter().map(|&s| Word::Literal(s.to_string())).collect();
-                    
-                    let cmd = Command::Simple(SimpleCommand {
-                        name,
-                        args,
-                        redirects: vec![],
-                        env_vars: HashMap::new(),
-                    });
-                    commands.push(cmd);
-                }
-            }
+        for part in pipeline_parts {
+            let command = parse_simple_command_from_text(part.trim())?;
+            commands.push(command);
         }
         
         if commands.len() == 1 {
             Ok(Word::CommandSubstitution(Box::new(commands.remove(0))))
         } else {
-            let pipeline = Command::Pipeline(Pipeline { commands, operators });
+            let pipeline = Command::Pipeline(Pipeline { commands });
             Ok(Word::CommandSubstitution(Box::new(pipeline)))
         }
     } else {
@@ -1510,4 +1489,24 @@ fn parse_backtick_command_substitution(lexer: &mut Lexer) -> Result<Word, Parser
         
         Ok(Word::CommandSubstitution(Box::new(cmd)))
     }
+}
+
+// Helper function to parse a simple command from text
+fn parse_simple_command_from_text(text: &str) -> Result<Command, ParserError> {
+    let cmd_parts: Vec<&str> = text.split_whitespace().collect();
+    if cmd_parts.is_empty() {
+        return Err(ParserError::InvalidSyntax("Empty command in process substitution".to_string()));
+    }
+    
+    let name = Word::Literal(cmd_parts[0].to_string());
+    let args: Vec<Word> = cmd_parts[1..].iter().map(|&s| Word::Literal(s.to_string())).collect();
+    
+    let cmd = Command::Simple(SimpleCommand {
+        name,
+        args,
+        redirects: vec![],
+        env_vars: HashMap::new(),
+    });
+    
+    Ok(cmd)
 }

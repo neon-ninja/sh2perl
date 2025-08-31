@@ -2,10 +2,10 @@
 pub mod command_dispatcher;
 pub mod simple_commands;
 pub mod pipeline_commands;
+pub mod logic_commands;
 pub mod subshell_commands;
 pub mod system_commands;
 pub mod utilities;
-pub mod logic_commands;
 
 // Individual command modules
 pub mod grep;
