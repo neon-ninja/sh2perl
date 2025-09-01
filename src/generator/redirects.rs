@@ -43,16 +43,22 @@ pub fn generate_redirect_impl(generator: &mut Generator, redirect: &Redirect) ->
             
             output.push_str(&format!("my ${} = '{}';\n", temp_var, temp_file));
             
-            if let Command::Pipeline(_) = &**cmd {
+            if let Command::Pipeline(_) = cmd.as_ref() {
                 output.push_str(&format!("my ${};\n", output_var));
                 output.push_str(&format!("{{\n"));
-                output.push_str(&format!("    local $/;  # Read entire input at once\n"));
-                // For pipelines, we need to generate a proper bash command string
-                let bash_cmd = generate_bash_command_string(cmd);
-                output.push_str(&format!("    open(my $pipe, '-|', 'bash', '-c', '{}') or die \"Cannot execute command: $!\\n\";\n", 
-                    bash_cmd));
-                output.push_str(&format!("    ${} = <$pipe>;\n", output_var));
-                output.push_str(&format!("    close($pipe);\n"));
+                output.push_str(&format!("    local *STDOUT;\n"));
+                output.push_str(&format!("    open(STDOUT, '>', \\${}) or die \"Cannot redirect STDOUT\";\n", output_var));
+                output.push_str(&format!("    {{\n"));
+                
+                // Use the Perl generator instead of bash execution
+                let perl_code = generator.generate_command(cmd);
+                for line in perl_code.lines() {
+                    if !line.trim().is_empty() {
+                        output.push_str(&format!("    {}\n", line));
+                    }
+                }
+                
+                output.push_str(&format!("    }}\n"));
                 output.push_str(&format!("}}\n"));
             } else {
                 let cmd_str = generate_bash_command_string(cmd);

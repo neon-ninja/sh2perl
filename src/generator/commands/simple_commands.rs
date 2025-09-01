@@ -378,8 +378,26 @@ pub fn generate_echo_command(generator: &mut Generator, cmd: &SimpleCommand, _in
     if cmd.args.is_empty() {
         output.push_str(&format!("${} = \"\\n\";\n", output_var));
     } else {
+        // Check for -e flag
+        let has_e_flag = cmd.args.iter().any(|arg| {
+            if let Word::Literal(s) = arg {
+                s == "-e"
+            } else {
+                false
+            }
+        });
+        
+        // Filter out the -e flag from arguments
+        let filtered_args: Vec<&Word> = cmd.args.iter().filter(|&arg| {
+            if let Word::Literal(s) = arg {
+                s != "-e"
+            } else {
+                true
+            }
+        }).collect();
+        
         // Convert arguments to Perl format
-        let args: Vec<String> = cmd.args.iter()
+        let args: Vec<String> = filtered_args.iter()
             .map(|arg| {
                 // For echo commands, handle special variables differently
                 match arg {
@@ -413,12 +431,37 @@ pub fn generate_echo_command(generator: &mut Generator, cmd: &SimpleCommand, _in
                         // Handle brace expansion like {1..5} -> "1 2 3 4 5"
                         handle_brace_expansion_for_echo(generator, expansion)
                     }
+                    Word::Literal(literal) => {
+                        if has_e_flag {
+                            // If -e flag is present, interpret backslash escapes
+                            let mut interpreted = literal.clone();
+                            // Remove outer quotes if present
+                            if (interpreted.starts_with('"') && interpreted.ends_with('"')) ||
+                               (interpreted.starts_with('\'') && interpreted.ends_with('\'')) {
+                                interpreted = interpreted[1..interpreted.len()-1].to_string();
+                            }
+                            
+                            // Interpret backslash escapes
+                            interpreted = interpreted
+                                .replace("\\n", "\n")
+                                .replace("\\t", "\t")
+                                .replace("\\r", "\r")
+                                .replace("\\\\", "\\");
+                            
+                            // Return as a quoted string literal with proper escaping for Perl
+                            format!("\"{}\"", interpreted.replace("\"", "\\\"").replace("\n", "\\n").replace("\t", "\\t").replace("\r", "\\r"))
+                        } else {
+                            generator.perl_string_literal(arg)
+                        }
+                    }
                     _ => generator.perl_string_literal(arg)
                 }
             })
             .collect();
         
-        if args.len() == 1 {
+        if args.is_empty() {
+            output.push_str(&format!("${} = \"\\n\";\n", output_var));
+        } else if args.len() == 1 {
             output.push_str(&format!("${} = {};\n", output_var, args[0]));
         } else {
             // For multiple arguments, join them with spaces
