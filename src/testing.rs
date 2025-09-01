@@ -617,6 +617,18 @@ pub fn test_all_examples() {
     // Sort examples for consistent output
     examples.sort();
     
+    // Create results directory if it doesn't exist
+    if let Err(_) = fs::create_dir_all("results") {
+        println!("Warning: Could not create results directory");
+    }
+    
+    // Initialize output files
+    let mut equivalent = Vec::new();
+    let mut cangenerate = Vec::new();
+    let mut canparse = Vec::new();
+    let mut canlex = Vec::new();
+    let mut failed = Vec::new();
+    
     // Test each combination
     let mut results = Vec::new();
     let total_tests = examples.len() * generators.len();
@@ -645,14 +657,23 @@ pub fn test_all_examples() {
             let mut error_msg = String::new();
             
             // Run the actual test
+            let example_name = example.replace("examples/", "").replace("examples\\", "");
             match test_file_equivalence(generator, example) {
                 Ok(_) => {
                     passed_tests += 1;
                     print!("✓");
+                    equivalent.push(example_name);
                 }
                 Err(e) => {
                     success = false;
                     error_msg = format!("Test failed for {} with {}: {}", example, generator, e);
+                    let failure_type = determine_failure_type(&e);
+                    match failure_type {
+                        "cangenerate" => cangenerate.push(example_name.clone()),
+                        "canparse" => canparse.push(example_name.clone()),
+                        "canlex" => canlex.push(example_name.clone()),
+                        _ => failed.push(example_name.clone()),
+                    }
                     print!("✗");
                 }
             }
@@ -661,6 +682,9 @@ pub fn test_all_examples() {
             io::stdout().flush().unwrap();
         }
     }
+    
+    // Write results to files
+    write_results_to_files(&equivalent, &cangenerate, &canparse, &canlex, &failed);
     
     // Clear screen and show prominent summary
     println!("\n\n");
@@ -1020,5 +1044,70 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
         } else {
             println!("Successfully wrote total test count {} and matching stdout lines -2 to first_n_tests_passed.txt", passed_tests);
         }
+    }
+}
+
+/// Determine the type of failure for a test
+fn determine_failure_type(error_msg: &str) -> &'static str {
+    if error_msg.contains("Failed to read") {
+        "failed"
+    } else if error_msg.contains("Failed to parse") {
+        "canparse"
+    } else if error_msg.contains("Failed to run translated program") || error_msg.contains("Failed to run compiled") {
+        "cangenerate"
+    } else if error_msg.contains("STDOUT mismatch") || error_msg.contains("STDERR mismatch") || error_msg.contains("Exit status mismatch") {
+        "cangenerate"
+    } else {
+        "failed"
+    }
+}
+
+/// Write test results to appropriate files in the results directory
+fn write_results_to_files(
+    equivalent: &[String],
+    cangenerate: &[String],
+    canparse: &[String],
+    canlex: &[String],
+    failed: &[String],
+) {
+    // Create results directory if it doesn't exist
+    if let Err(_) = fs::create_dir_all("results") {
+        println!("Warning: Could not create results directory");
+        return;
+    }
+    
+    // Write equivalent tests
+    if let Err(e) = fs::write("results/equivalent.txt", equivalent.join("\n")) {
+        println!("Warning: Failed to write equivalent.txt: {}", e);
+    } else {
+        println!("Wrote {} equivalent tests to results/equivalent.txt", equivalent.len());
+    }
+    
+    // Write tests that can generate but fail at runtime
+    if let Err(e) = fs::write("results/cangenerate.txt", cangenerate.join("\n")) {
+        println!("Warning: Failed to write cangenerate.txt: {}", e);
+    } else {
+        println!("Wrote {} generation-failed tests to results/cangenerate.txt", cangenerate.len());
+    }
+    
+    // Write tests that can parse but fail to generate
+    if let Err(e) = fs::write("results/canparse.txt", canparse.join("\n")) {
+        println!("Warning: Failed to write canparse.txt: {}", e);
+    } else {
+        println!("Wrote {} parse-failed tests to results/canparse.txt", canparse.len());
+    }
+    
+    // Write tests that can lex but fail to parse
+    if let Err(e) = fs::write("results/canlex.txt", canlex.join("\n")) {
+        println!("Warning: Failed to write canlex.txt: {}", e);
+    } else {
+        println!("Wrote {} lex-failed tests to results/canlex.txt", canlex.len());
+    }
+    
+    // Write tests that fail to lex
+    if let Err(e) = fs::write("results/failed.txt", failed.join("\n")) {
+        println!("Warning: Failed to write failed.txt: {}", e);
+    } else {
+        println!("Wrote {} lex-failed tests to results/failed.txt", failed.len());
     }
 }
