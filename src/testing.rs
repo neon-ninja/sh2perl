@@ -266,16 +266,17 @@ pub fn test_file_equivalence(lang: &str, filename: &str) -> Result<(), String> {
         return Err(format!("STDOUT mismatch (lang: {}, file: {}): stdout differs even with matching exit codes", lang, filename));
     }
     
+    // Always check stderr regardless of exit status
+    if shell_stderr != trans_stderr {
+        return Err(format!("STDERR mismatch (lang: {}, file: {}): stderr differs", lang, filename));
+    }
+    
     if !shell_success {
-        // Both programs failed - only check stdout (which we already did above)
-        println!("Both programs failed with same exit status and matching stdout - behavior matches (lang: {}, file: {})", lang, filename);
+        // Both programs failed - check that both stdout and stderr match
+        println!("Both programs failed with matching stdout and stderr - behavior matches (lang: {}, file: {})", lang, filename);
     } else {
-        // Both programs succeeded - also check stderr
-        if shell_stderr != trans_stderr {
-            return Err(format!("STDERR mismatch (lang: {}, file: {}): stderr differs", lang, filename));
-        } else {
-            println!("Both programs succeeded with matching outputs (lang: {}, file: {})", lang, filename);
-        }
+        // Both programs succeeded - check that both stdout and stderr match
+        println!("Both programs succeeded with matching outputs (lang: {}, file: {})", lang, filename);
     }
     
     Ok(())
@@ -843,22 +844,6 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
                         println!("Shell script exit code: {}", result.shell_exit);
                         println!("Translated code exit code: {}", result.translated_exit);
                         
-                        // Show unified diff for stdout
-                        if result.shell_stdout != result.translated_stdout {
-                            println!("\n{}", "=".repeat(80));
-                            println!("STDOUT COMPARISON:");
-                            println!("{}", "=".repeat(80));
-                            println!("{}", generate_unified_diff(&result.shell_stdout, &result.translated_stdout, "shell_stdout", &format!("{}_stdout", generator)));
-                        }
-                        
-                        // Show unified diff for stderr
-                        if result.shell_stderr != result.translated_stderr {
-                            println!("\n{}", "=".repeat(80));
-                            println!("STDERR COMPARISON:");
-                            println!("{}", "=".repeat(80));
-                            println!("{}", generate_unified_diff(&result.shell_stderr, &result.translated_stderr, "shell_stderr", &format!("{}_stderr", generator)));
-                        }
-                        
                         // Show original code
                         println!("\n{}", "=".repeat(80));
                         println!("ORIGINAL SHELL SCRIPT:");
@@ -876,6 +861,29 @@ pub fn test_all_examples_next_fail(generators: &[String], test_number: Option<us
                         println!("ABSTRACT SYNTAX TREE:");
                         println!("{}", "=".repeat(80));
                         println!("{}", result.ast);
+                        
+                        // Always show unified diff for stdout
+                        println!("\n{}", "=".repeat(80));
+                        if result.shell_stdout != result.translated_stdout {
+                            println!("STDOUT COMPARISON (DIFF):");
+                        } else {
+                            println!("STDOUT COMPARISON (IDENTICAL):");
+                        }
+                        println!("{}", "=".repeat(80));
+                        println!("{}", generate_unified_diff(&result.shell_stdout, &result.translated_stdout, "shell_stdout", &format!("{}_stdout", generator)));
+                        
+                        // Show unified diff for stderr (always show for debugging)
+                        println!("\n{}", "=".repeat(80));
+                        println!("STDERR COMPARISON:");
+                        println!("{}", "=".repeat(80));
+                        if result.shell_stderr != result.translated_stderr {
+                            println!("STDERR DIFFERENCES FOUND:");
+                            println!("{}", generate_unified_diff(&result.shell_stderr, &result.translated_stderr, "shell_stderr", &format!("{}_stderr", generator)));
+                        } else {
+                            println!("STDERR values are identical:");
+                            println!("Shell stderr: '{}'", result.shell_stderr);
+                            println!("Perl stderr: '{}'", result.translated_stderr);
+                        }
                         
                         // Show summary
                         println!("\n{}", "=".repeat(80));

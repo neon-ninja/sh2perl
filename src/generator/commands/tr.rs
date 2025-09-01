@@ -47,6 +47,7 @@ fn generate_tr_linebyline_impl(generator: &mut Generator, cmd: &SimpleCommand, i
     
     output
 }
+
 fn generate_tr_buffered_impl(generator: &mut Generator, cmd: &SimpleCommand, input_var: &str, command_index: &str) -> String {
     let mut output = String::new();
     
@@ -110,4 +111,3 @@ fn generate_tr_buffered_impl(generator: &mut Generator, cmd: &SimpleCommand, inp
     
     output
 }
-

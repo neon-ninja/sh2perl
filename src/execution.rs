@@ -32,51 +32,20 @@ pub fn create_exit_status(exit_code: i32) -> std::process::ExitStatus {
 }
 
 /// Cross-platform function to run shell scripts
-/// Uses bash on Unix systems and tries to find an appropriate shell on Windows
+/// Always uses bash -c for consistency across platforms
 pub fn run_shell_script(filename: &str) -> Result<std::process::Output, String> {
-    // Try to find an appropriate shell
-    let shell_cmd = if cfg!(unix) {
-        "bash"
-    } else if cfg!(windows) {
-        // On Windows, try to find bash in common locations
-        if Command::new("bash").arg("--version").output().is_ok() {
-            "bash"
-        } else if Command::new("wsl").arg("bash").arg("--version").output().is_ok() {
-            "wsl"
-        } else if Command::new("git").arg("--version").output().is_ok() {
-            // Git Bash is commonly available on Windows
-            "git"
-        } else {
-            return Err("No suitable shell found on Windows. Please install Git Bash, WSL, or another Unix-like shell.".to_string());
-        }
-    } else {
-        "bash" // Default fallback
-    };
+    // Extract just the filename part from the full path
+    let script_name = filename.split(['\\', '/']).last().unwrap_or(filename);
     
-    // Create the command based on the shell type
-    let mut child_cmd = if shell_cmd == "wsl" {
-        let mut cmd = Command::new("wsl");
-        // For WSL, use the same approach as integration tests - convert Windows path to WSL path
-        let current_dir = std::env::current_dir().unwrap().to_string_lossy().to_string();
-        let wsl_working_dir = format!("/mnt/{}/examples", 
-            current_dir.replace(":", "").replace("\\", "/"));
-        // Change to the examples directory first, then run the original script
-        cmd.args(&["bash", "-c", &format!("export LC_ALL=C && cd {} && bash {}", wsl_working_dir, filename)]);
-        cmd
-    } else if shell_cmd == "git" {
-        let mut cmd = Command::new("git");
-        cmd.args(&["bash", "-c", &format!("export LC_ALL=C && cd examples && bash {}", filename)]);
-        cmd
-    } else {
-        let mut cmd = Command::new(shell_cmd);
-        cmd.args(&["-c", &format!("cd examples && bash {}", filename)]);
-        cmd
-    };
+    // Always use bash -c with cd examples for consistency
+    let mut cmd = Command::new("bash");
+    cmd.current_dir("examples");
+    cmd.args(&["-c", &format!("bash {}", script_name)]);
     
-    let mut child = match child_cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
+    let mut child = match cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn() {
         Ok(c) => c,
         Err(e) => { 
-            return Err(format!("Failed to spawn shell: {}", e)); 
+            return Err(format!("Failed to spawn bash: {}", e)); 
         }
     };
     
@@ -85,11 +54,11 @@ pub fn run_shell_script(filename: &str) -> Result<std::process::Output, String> 
         match child.try_wait() {
             Ok(Some(_)) => break child.wait_with_output().unwrap(),
             Ok(None) => {
-                if start.elapsed() > Duration::from_millis(1000) { 
+                if start.elapsed() > Duration::from_millis(10000) { // Increased timeout to 10 seconds
                     let _ = child.kill(); 
                     break child.wait_with_output().unwrap(); 
                 }
-                thread::sleep(Duration::from_millis(10));
+                thread::sleep(Duration::from_millis(100)); // Increased sleep interval
             }
             Err(_) => break child.wait_with_output().unwrap(),
         }
