@@ -304,7 +304,9 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                     }
                     _ => {
                         // Route other builtins to the builtins system
-                        output.push_str(&crate::generator::commands::builtins::generate_generic_builtin(generator, cmd, "", "", "0", false));
+                        // Use unique index for standalone commands to prevent variable masking
+                        let unique_index = generator.get_unique_id();
+                        output.push_str(&crate::generator::commands::builtins::generate_generic_builtin(generator, cmd, "", "", &unique_index, false));
                     }
                 }
             } else if generator.declared_functions.contains(name) || *name == "greet" {

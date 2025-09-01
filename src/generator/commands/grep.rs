@@ -45,6 +45,12 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                         max_count = Some(next_arg.parse().unwrap_or(0));
                     }
                 }
+                
+                // Handle --color=always (for now, we'll ignore color since it's complex)
+                if s.starts_with("--color") {
+                    // For now, just ignore the color flag since color output is complex
+                    // The grep will work normally but without color
+                }
             } else if pattern.is_empty() {
                 // First non-option argument is the pattern
                 pattern = s.clone();
@@ -82,11 +88,9 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         
         let has_file_args = !file_args.is_empty();
         
-        // Declare the result variable only if not in a pipeline context
-        // Pipeline contexts pre-declare these variables
-        if command_index == "0" {
-            output.push_str(&format!("my $grep_result_{};\n", command_index));
-        }
+        // Always declare the result variable when called from generate_generic_builtin
+        // The function is responsible for declaring the variables it uses
+        output.push_str(&format!("my $grep_result_{};\n", command_index));
         
         if has_file_args {
             // File-based grep - read from files
@@ -139,7 +143,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         // Apply max count if specified
         if let Some(max) = max_count {
             if max > 0 {
-                output.push_str(&format!("@grep_filtered_{} = @grep_filtered_{}[0..{}];\n", command_index, command_index, max));
+                output.push_str(&format!("@grep_filtered_{} = @grep_filtered_{}[0..{}];\n", command_index, command_index, max - 1));
             }
         }
         
@@ -178,8 +182,8 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         } else if list_only {
             // Handle -l flag: only show filenames
             if has_file_args {
-                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{} > 0 ? qw({}) : ());\n", 
-                    command_index, command_index, file_args.join(" ")));
+                output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"{}\" : \"\";\n", 
+                    command_index, command_index, file_args[0]));
             } else {
                 output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"(standard input)\" : \"\";\n", 
                     command_index, command_index));
@@ -193,10 +197,38 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 }
             }
         } else {
-            // Default case: output matching lines
-            output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
-            // Ensure output ends with newline to match shell behavior
-            output.push_str(&format!("$grep_result_{} .= \"\\n\" unless $grep_result_{} =~ /\\n$/;\n", command_index, command_index));
+            // Default case: output matching lines with various formatting options
+            if byte_offset {
+                // Handle -b flag: show byte offset with output lines
+                output.push_str(&format!("my @grep_with_offset_{};\n", command_index));
+                output.push_str(&format!("my $offset_{} = 0;\n", command_index));
+                output.push_str(&format!("for my $line (@grep_lines_{}) {{\n", command_index));
+                output.push_str(&format!("    if (grep {{ $_ eq $line }} @grep_filtered_{}) {{\n", command_index));
+                output.push_str(&format!("        push @grep_with_offset_{}, sprintf(\"%d:%s\", $offset_{}, $line);\n", command_index, command_index));
+                output.push_str("    }\n");
+                output.push_str(&format!("    $offset_{} += length($line) + 1; # +1 for newline\n", command_index));
+                output.push_str("}\n");
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_with_offset_{});\n", command_index, command_index));
+            } else if show_filename && has_file_args {
+                // Handle -H flag: always show filename even with single file
+                output.push_str(&format!("my @grep_with_filename_{};\n", command_index));
+                output.push_str(&format!("for my $line (@grep_filtered_{}) {{\n", command_index));
+                output.push_str(&format!("    push @grep_with_filename_{}, \"{}:$line\";\n", command_index, file_args[0]));
+                output.push_str("}\n");
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_with_filename_{});\n", command_index, command_index));
+            } else {
+                // Default: just output matching lines (handles -h flag implicitly by not adding filename)
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
+            }
+            
+            // Handle null-terminated output (-Z flag)
+            if null_terminated {
+                output.push_str(&format!("$grep_result_{} =~ s/\\n/\\0/g;\n", command_index));
+            } else {
+                // Ensure output ends with newline to match shell behavior
+                output.push_str(&format!("$grep_result_{} .= \"\\n\" unless $grep_result_{} =~ /\\n$/;\n", command_index, command_index));
+            }
+            
             if should_print && !quiet_mode {
                 output.push_str(&format!("print $grep_result_{};\n", command_index));
             }

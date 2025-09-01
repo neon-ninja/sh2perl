@@ -19,6 +19,50 @@ pub fn generate_logical_and(generator: &mut Generator, left: &Command, right: &C
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("} == 0");
+    } else if let Command::Simple(simple_cmd) = left {
+        if let Word::Literal(name) = &simple_cmd.name {
+            if name == "grep" {
+                // For grep commands in logical AND, generate the command in a block
+                // and check if it found any matches
+                output.push_str("do {\n");
+                generator.indent_level += 1;
+                output.push_str(&generator.indent());
+                let grep_result = generator.generate_command(left);
+                
+                // Extract the grep_result variable name from the generated code
+                let mut grep_result_var = String::new();
+                for line in grep_result.lines() {
+                    if line.trim_start().starts_with("my $grep_result_") {
+                        if let Some(end) = line.find(';') {
+                            let var_decl = &line[3..end]; // Remove "my " prefix
+                            grep_result_var = var_decl.to_string();
+                        }
+                    }
+                    if !line.trim().is_empty() {
+                        output.push_str(&generator.indent());
+                        output.push_str(line);
+                        output.push_str("\n");
+                    }
+                }
+                
+                output.push_str(&generator.indent());
+                // Check if grep found matches by checking if the result is non-empty
+                if !grep_result_var.is_empty() {
+                    output.push_str(&format!("{} ne ''\n", grep_result_var));
+                } else {
+                    output.push_str("1\n"); // Default to true if we can't find the variable
+                }
+                generator.indent_level -= 1;
+                output.push_str(&generator.indent());
+                output.push_str("}");
+            } else {
+                // For other simple commands, use the default approach
+                output.push_str(&generator.generate_command(left));
+            }
+        } else {
+            // For non-literal command names, use the default approach
+            output.push_str(&generator.generate_command(left));
+        }
     } else {
         output.push_str(&generator.generate_command(left));
     }
@@ -55,6 +99,73 @@ pub fn generate_logical_or(generator: &mut Generator, left: &Command, right: &Co
         output.push_str(&generator.indent());
         output.push_str("}\n");
     } else {
+        // For commands that generate Perl code (like grep), we need to handle them specially
+        // to avoid embedding Perl code inside shell backticks
+        if let Command::Simple(simple_cmd) = left {
+            if let Word::Literal(name) = &simple_cmd.name {
+                if name == "grep" {
+                    // For grep commands in logical OR, we need to generate the complete conditional structure
+                    // including proper variable declarations and exit code checking
+                    let unique_id = generator.get_unique_id();
+                    output.push_str(&format!("my $grep_exit_code_{};\n", unique_id));
+                    output.push_str(&generator.indent());
+                    output.push_str(&format!("{{\n"));
+                    generator.indent_level += 1;
+                    
+                    // Pre-declare all the variables that the grep command might use
+                    // The grep command will use variables like $grep_result_X, where X is some identifier
+                    // We need to analyze the grep output to see what variables it's trying to use
+                    let grep_result = generator.generate_command(left);
+                    
+                    // Extract variable names from the grep result and declare them
+                    let mut declared_vars = std::collections::HashSet::new();
+                    for line in grep_result.lines() {
+                        // Look for patterns like $grep_result_... that are not declared
+                        if line.contains("$grep_result_") && !line.trim_start().starts_with("my ") {
+                            // Extract the variable name
+                            if let Some(start) = line.find("$grep_result_") {
+                                let var_part = &line[start..];
+                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
+                                    let var_name = &var_part[1..end]; // Remove the $
+                                    if !declared_vars.contains(var_name) {
+                                        output.push_str(&generator.indent());
+                                        output.push_str(&format!("my ${};\n", var_name));
+                                        declared_vars.insert(var_name.to_string());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Now output the grep command
+                    for line in grep_result.lines() {
+                        if !line.trim().is_empty() {
+                            output.push_str(&generator.indent());
+                            output.push_str(line);
+                            output.push_str("\n");
+                        }
+                    }
+                    
+                    // Set the exit code based on grep result
+                    output.push_str(&generator.indent());
+                    output.push_str(&format!("$grep_exit_code_{} = $?;\n", unique_id));
+                    
+                    generator.indent_level -= 1;
+                    output.push_str(&generator.indent());
+                    output.push_str(&format!("}}\n"));
+                    output.push_str(&generator.indent());
+                    output.push_str(&format!("if ($grep_exit_code_{} != 0) {{\n", unique_id));
+                    generator.indent_level += 1;
+                    output.push_str(&generator.indent());
+                    output.push_str(&generator.generate_command(right));
+                    generator.indent_level -= 1;
+                    output.push_str(&generator.indent());
+                    output.push_str("}\n");
+                    return output;
+                }
+            }
+        }
+        
         // Execute left command and check exit code
         output.push_str(&generator.generate_command(left));
         

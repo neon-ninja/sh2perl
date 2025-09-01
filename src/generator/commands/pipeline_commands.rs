@@ -119,6 +119,126 @@ fn generate_command_using_builtins(
                 format!("# For loop as subsequent command in pipeline not supported\n")
             }
         },
+        Command::Or(left, right) => {
+            // Handle logical OR in pipeline context
+            let mut output = String::new();
+            
+            // For logical OR in pipeline context, we need to handle it specially
+            // to avoid embedding Perl code in shell backticks
+            if let Command::Simple(simple_cmd) = &**left {
+                if let Word::Literal(name) = &simple_cmd.name {
+                    if name == "grep" {
+                        // For grep commands in logical OR, generate proper conditional structure
+                        let unique_id = generator.get_unique_id();
+                        output.push_str(&format!("my $grep_exit_code_{};\n", unique_id));
+                        output.push_str(&format!("{{\n"));
+                        generator.indent_level += 1;
+                        output.push_str(&generator.indent());
+                        
+                        // Generate the grep command with input and capture the result
+                        let grep_output = if input_var.is_empty() {
+                            generate_generic_builtin(generator, simple_cmd, "", output_var, command_index, linebyline)
+                        } else {
+                            generate_generic_builtin(generator, simple_cmd, input_var, output_var, command_index, linebyline)
+                        };
+                        
+                        // Split the output into lines and apply indentation
+                        for line in grep_output.lines() {
+                            if !line.trim().is_empty() {
+                                output.push_str(&generator.indent());
+                                output.push_str(line);
+                                if !line.ends_with('\n') {
+                                    output.push_str("\n");
+                                }
+                            }
+                        }
+                        
+                        output.push_str(&generator.indent());
+                        output.push_str(&format!("$grep_exit_code_{} = $?;\n", unique_id));
+                        generator.indent_level -= 1;
+                        output.push_str(&generator.indent());
+                        output.push_str(&format!("}}\n"));
+                        output.push_str(&generator.indent());
+                        output.push_str(&format!("if ($grep_exit_code_{} != 0) {{\n", unique_id));
+                        generator.indent_level += 1;
+                        output.push_str(&generator.indent());
+                        output.push_str(&generator.generate_command(right));
+                        generator.indent_level -= 1;
+                        output.push_str(&generator.indent());
+                        output.push_str("}\n");
+                        return output;
+                    }
+                }
+            }
+            
+            // For other logical OR cases, generate a proper conditional structure
+            let unique_id = generator.get_unique_id();
+            output.push_str(&format!("my $exit_code_{};\n", unique_id));
+            output.push_str(&format!("{{\n"));
+            generator.indent_level += 1;
+            output.push_str(&generator.indent());
+            
+            // Generate the left command
+            if input_var.is_empty() {
+                output.push_str(&generator.generate_command(left));
+            } else {
+                // For pipeline context, we need to handle input properly
+                output.push_str(&format!("my $temp_input_{} = ${};\n", unique_id, input_var));
+                output.push_str(&generator.indent());
+                output.push_str(&generator.generate_command(left));
+            }
+            
+            output.push_str(&generator.indent());
+            output.push_str(&format!("$exit_code_{} = $?;\n", unique_id));
+            generator.indent_level -= 1;
+            output.push_str(&generator.indent());
+            output.push_str(&format!("}}\n"));
+            output.push_str(&generator.indent());
+            output.push_str(&format!("if ($exit_code_{} != 0) {{\n", unique_id));
+            generator.indent_level += 1;
+            output.push_str(&generator.indent());
+            output.push_str(&generator.generate_command(right));
+            generator.indent_level -= 1;
+            output.push_str(&generator.indent());
+            output.push_str("}\n");
+            output
+        },
+        Command::And(left, right) => {
+            // Handle logical AND in pipeline context
+            let mut output = String::new();
+            
+            // For logical AND in pipeline context, we need to handle it specially
+            let unique_id = generator.get_unique_id();
+            output.push_str(&format!("my $exit_code_{};\n", unique_id));
+            output.push_str(&format!("{{\n"));
+            generator.indent_level += 1;
+            output.push_str(&generator.indent());
+            
+            // Generate the left command
+            if input_var.is_empty() {
+                output.push_str(&generator.generate_command(left));
+            } else {
+                // For pipeline context, we need to handle input properly
+                output.push_str(&format!("my $temp_input_{} = ${};\n", unique_id, input_var));
+                output.push_str(&generator.indent());
+                output.push_str(&generator.generate_command(left));
+            }
+            
+            output.push_str(&generator.indent());
+            output.push_str(&format!("$exit_code_{} = $?;\n", unique_id));
+            generator.indent_level -= 1;
+            output.push_str(&generator.indent());
+            output.push_str(&format!("}}\n"));
+            output.push_str(&generator.indent());
+            output.push_str(&format!("if ($exit_code_{} == 0) {{\n", unique_id));
+            generator.indent_level += 1;
+            output.push_str(&generator.indent());
+            output.push_str(&generator.generate_command(right));
+            generator.indent_level -= 1;
+            output.push_str(&generator.indent());
+            output.push_str("}\n");
+            output
+        },
         _ => {
             // Other non-simple commands - use system call fallback
             if input_var.is_empty() {
@@ -367,17 +487,8 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
         output.push_str(&generator.indent());
         output.push_str(&format!("my $output_{};\n", unique_id));
         
-        // Declare result variables only for commands that emit separate result vars
-        for (i, command) in pipeline.commands.iter().enumerate() {
-            if let Command::Simple(cmd) = command {
-                if let Word::Literal(cmd_name) = &cmd.name {
-                    if matches!(cmd_name.as_str(), "grep" | "wc" | "xargs" | "tr") {
-                        output.push_str(&generator.indent());
-                        output.push_str(&format!("my ${}_result_{}_{};\n", cmd_name, unique_id, i));
-                    }
-                }
-            }
-        }
+        // Individual commands will declare their own result variables as needed
+        // No need to pre-declare them here to avoid variable masking
         
         // Track pipeline success for proper exit code handling
         output.push_str(&generator.indent());
@@ -406,6 +517,25 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                             output.push_str(line);
                             if !line.ends_with('\n') {
                                 output.push_str("\n");
+                            }
+                        }
+                    }
+                    
+                    // For builtin commands, ensure output assignment for those with separate result vars
+                    if let Command::Simple(cmd) = command {
+                        if let Word::Literal(cmd_name) = &cmd.name {
+                            if matches!(cmd_name.as_str(), "grep" | "wc" | "xargs" | "tr") {
+                                let result_var = format!("{}_result_{}_{}", cmd_name, unique_id, i);
+                                output.push_str(&generator.indent());
+                                output.push_str(&format!("$output_{} = ${};\n", unique_id, result_var));
+                                if cmd_name == "grep" {
+                                    output.push_str(&generator.indent());
+                                    output.push_str(&format!("if (scalar(@grep_filtered_{}_{}) == 0) {{\n", unique_id, i));
+                                    output.push_str(&generator.indent());
+                                    output.push_str(&format!("    $pipeline_success_{} = 0;\n", unique_id));
+                                    output.push_str(&generator.indent());
+                                    output.push_str("}\n");
+                                }
                             }
                         }
                     }
@@ -441,69 +571,57 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                     output.push_str(&generator.indent());
                     output.push_str("}\n");
                 } else {
-                    // Use proper command chaining without echo
-                    if let Command::Simple(cmd) = command {
-                        let cmd_name = match &cmd.name {
-                            Word::Literal(s) => s,
-                            _ => "unknown_command"
-                        };
-                        
-                        // Use the builtins registry to handle command generation
-                        // Pass the previous command's output as input to this command
-                        let command_output = generate_command_using_builtins(generator, command, &format!("output_{}", unique_id), &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
-                        
-                        // Split the output into lines and apply indentation
-                        for line in command_output.lines() {
-                            if !line.trim().is_empty() {
-                                output.push_str(&generator.indent());
-                                output.push_str(line);
-                                if !line.ends_with('\n') {
-                                    output.push_str("\n");
+                    // Check if this is a logical operator command
+                    match command {
+                        Command::Or(_, _) | Command::And(_, _) => {
+                            // For logical operators, generate the conditional structure directly
+                            let command_output = generate_command_using_builtins(generator, command, &format!("output_{}", unique_id), &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
+                            
+                            // Split the output into lines and apply indentation
+                            for line in command_output.lines() {
+                                if !line.trim().is_empty() {
+                                    output.push_str(&generator.indent());
+                                    output.push_str(line);
+                                    if !line.ends_with('\n') {
+                                        output.push_str("\n");
+                                    }
                                 }
                             }
-                        }
-                        
-                        // For builtin commands, ensure output assignment for those with separate result vars
-                        if is_builtin(cmd_name) {
-                            if matches!(cmd_name, "grep" | "wc" | "xargs" | "tr") {
-                                let result_var = format!("{}_result_{}_{}", cmd_name, unique_id, i);
-                                output.push_str(&generator.indent());
-                                output.push_str(&format!("$output_{} = ${};\n", unique_id, result_var));
-                                if cmd_name == "grep" {
+                        },
+                        _ => {
+                            // Use generate_command_using_builtins for regular commands
+                            let command_output = generate_command_using_builtins(generator, command, &format!("output_{}", unique_id), &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
+                            
+                            // Split the output into lines and apply indentation
+                            for line in command_output.lines() {
+                                if !line.trim().is_empty() {
                                     output.push_str(&generator.indent());
-                                    output.push_str(&format!("if (scalar(@grep_filtered_{}_{}) == 0) {{\n", unique_id, i));
-                                    output.push_str(&generator.indent());
-                                    output.push_str(&format!("    $pipeline_success_{} = 0;\n", unique_id));
-                                    output.push_str(&generator.indent());
-                                    output.push_str("}\n");
+                                    output.push_str(line);
+                                    if !line.ends_with('\n') {
+                                        output.push_str("\n");
+                                    }
                                 }
                             }
-                        } else {
-                            // For non-builtin commands, use centralized fallback logic
+                            
+                            // For builtin commands, ensure output assignment for those with separate result vars
                             if let Command::Simple(cmd) = command {
-                                let fallback_output = generate_generic_builtin(generator, cmd, &format!("output_{}", unique_id), &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
-                                for line in fallback_output.lines() {
-                                    if !line.trim().is_empty() {
+                                if let Word::Literal(cmd_name) = &cmd.name {
+                                    if matches!(cmd_name.as_str(), "grep" | "wc" | "xargs" | "tr") {
+                                        let result_var = format!("{}_result_{}_{}", cmd_name, unique_id, i);
                                         output.push_str(&generator.indent());
-                                        output.push_str(line);
-                                        if !line.ends_with('\n') {
-                                            output.push_str("\n");
+                                        output.push_str(&format!("$output_{} = ${};\n", unique_id, result_var));
+                                        if cmd_name == "grep" {
+                                            output.push_str(&generator.indent());
+                                            output.push_str(&format!("if (scalar(@grep_filtered_{}_{}) == 0) {{\n", unique_id, i));
+                                            output.push_str(&generator.indent());
+                                            output.push_str(&format!("    $pipeline_success_{} = 0;\n", unique_id));
+                                            output.push_str(&generator.indent());
+                                            output.push_str("}\n");
                                         }
                                     }
                                 }
-                            } else {
-                                // Non-simple command - use system call fallback
-                                output.push_str(&generator.indent());
-                                output.push_str(&format!("$output_{} = `echo \"$output_{}\" | {}`;\n", 
-                                    unique_id, unique_id, generator.generate_command_string_for_system(command)));
                             }
                         }
-                    } else {
-                        // Non-simple command - use system call fallback
-                        output.push_str(&generator.indent());
-                        output.push_str(&format!("$output_{} = `echo \"$output_{}\" | ", unique_id, unique_id));
-                        output.push_str(&generator.generate_command_string_for_system(command));
-                        output.push_str("`;\n");
                     }
                 }
             }

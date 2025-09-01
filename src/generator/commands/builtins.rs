@@ -92,7 +92,8 @@ pub fn is_builtin(command_name: &str) -> bool {
 
 /// Check if all commands in a pipeline support line-by-line processing
 pub fn pipeline_supports_linebyline(pipeline: &Pipeline) -> bool {
-    pipeline.commands.iter().all(|cmd| {
+    // First check if all commands support line-by-line processing
+    let all_support_linebyline = pipeline.commands.iter().all(|cmd| {
         if let Command::Simple(simple_cmd) = cmd {
             if let Word::Literal(name) = &simple_cmd.name {
                 if let Some(builtin) = get_builtin_commands().get(name.as_str()) {
@@ -106,7 +107,54 @@ pub fn pipeline_supports_linebyline(pipeline: &Pipeline) -> bool {
         } else {
             false // Only simple commands can do line-by-line
         }
-    })
+    });
+    
+    if !all_support_linebyline {
+        return false;
+    }
+    
+    // Additional checks for specific cases where streaming doesn't make sense
+    
+    // Check if the first command reads from a file (not STDIN)
+    if let Some(Command::Simple(first_cmd)) = pipeline.commands.first() {
+        if let Word::Literal(name) = &first_cmd.name {
+            match name.as_str() {
+                "grep" => {
+                    // Check for grep options that make streaming inappropriate
+                    for arg in &first_cmd.args {
+                        if let Word::Literal(arg_str) = arg {
+                            if arg_str == "-l" || arg_str == "-L" || arg_str == "-Z" {
+                                // These options don't make sense in streaming context
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Check if grep has a filename argument (not reading from STDIN)
+                    if first_cmd.args.len() > 1 {
+                        // Look for the last argument that might be a filename
+                        if let Some(last_arg) = first_cmd.args.last() {
+                            if let Word::Literal(filename) = last_arg {
+                                // If it's not an option (doesn't start with -), it's likely a filename
+                                if !filename.starts_with('-') {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                },
+                "cat" => {
+                    // If cat has arguments, it's reading from files, not STDIN
+                    if !first_cmd.args.is_empty() {
+                        return false;
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+    
+    true
 }
 
 /// Generate generic Perl code for a builtin command that doesn't need special handling

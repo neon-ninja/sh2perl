@@ -27,6 +27,7 @@ fn main() {
     
     // Example 1: All commands support line-by-line
     let pipeline1 = Pipeline {
+        source_text: Some("cat | grep 'test' | wc -l".to_string()),
         commands: vec![
             Command::Simple(SimpleCommand {
                 name: Word::Literal("cat".to_string()),
@@ -60,6 +61,7 @@ fn main() {
     
     // Example 2: Some commands don't support line-by-line
     let pipeline2 = Pipeline {
+        source_text: Some("ls | tr 'a-z' 'A-Z' | sort".to_string()),
         commands: vec![
             Command::Simple(SimpleCommand {
                 name: Word::Literal("cat".to_string()),
@@ -94,6 +96,7 @@ fn main() {
     
     // Example 3: Non-builtin command
     let pipeline3 = Pipeline {
+        source_text: Some("head -n 10 | tail -n 5 | cut -d' ' -f1".to_string()),
         commands: vec![
             Command::Simple(SimpleCommand {
                 name: Word::Literal("cat".to_string()),
