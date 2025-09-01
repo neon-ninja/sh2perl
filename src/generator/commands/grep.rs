@@ -94,6 +94,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         
         // Always declare the result variable when called from generate_generic_builtin
         // The function is responsible for declaring the variables it uses
+        // But don't declare if it's already declared (to avoid duplicate declarations in logical OR)
         output.push_str(&format!("my $grep_result_{};\n", command_index));
         
         if has_file_args {
@@ -127,21 +128,36 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         // Escape the pattern for Perl regex
         let escaped_pattern = pattern.to_string();
         // Remove quotes if they exist around the pattern
-        let regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
-            &escaped_pattern[1..escaped_pattern.len()-1]
+        let mut regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+            escaped_pattern[1..escaped_pattern.len()-1].to_string()
         } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
-            &escaped_pattern[1..escaped_pattern.len()-1]
+            escaped_pattern[1..escaped_pattern.len()-1].to_string()
         } else {
-            &escaped_pattern
+            escaped_pattern
         };
         
+        // Convert shell regex patterns to Perl regex patterns
+        // Convert \+ to + (shell extended regex to Perl)
+        regex_pattern = regex_pattern.replace("\\+", "+");
+        // Convert \? to ? (shell extended regex to Perl)
+        regex_pattern = regex_pattern.replace("\\?", "?");
+        // Convert \( and \) to ( and ) (shell extended regex to Perl)
+        regex_pattern = regex_pattern.replace("\\(", "(");
+        regex_pattern = regex_pattern.replace("\\)", ")");
+        // Convert \{ and \} to { and } (shell extended regex to Perl)
+        regex_pattern = regex_pattern.replace("\\{", "{");
+        regex_pattern = regex_pattern.replace("\\}", "}");
+        // Convert \| to | (shell extended regex to Perl)
+        regex_pattern = regex_pattern.replace("\\|", "|");
+        
         // Apply grep filtering
+        let regex_flags = if ignore_case { "i" } else { "" };
         if invert_match {
             // Negative grep: exclude lines that match the pattern
-            output.push_str(&format!("my @grep_filtered_{} = grep !/{}/, @grep_lines_{};\n", command_index, regex_pattern, command_index));
+            output.push_str(&format!("my @grep_filtered_{} = grep !/{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
         } else {
             // Positive grep: include lines that match the pattern
-            output.push_str(&format!("my @grep_filtered_{} = grep /{}/, @grep_lines_{};\n", command_index, regex_pattern, command_index));
+            output.push_str(&format!("my @grep_filtered_{} = grep /{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
         }
         
         // Apply max count if specified

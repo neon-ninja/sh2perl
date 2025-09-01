@@ -140,9 +140,9 @@ pub fn generate_logical_or(generator: &mut Generator, left: &Command, right: &Co
                         }
                     }
                     
-                    // Now output the grep command
+                    // Now output the grep command, but skip variable declarations that are already handled
                     for line in grep_result.lines() {
-                        if !line.trim().is_empty() {
+                        if !line.trim().is_empty() && !line.trim().starts_with("my $grep_result_") {
                             output.push_str(&generator.indent());
                             output.push_str(line);
                             output.push_str("\n");
