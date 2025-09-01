@@ -19,7 +19,13 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
     let mut show_filename = false;
     let mut null_terminated = false;
     let mut list_only = false;
+    let mut files_without_match = false;
+    let mut after_context = 0;
+    let mut before_context = 0;
+    let mut context_lines = 0;
     let mut color_always = false;
+    let mut recursive = false;
+    let mut include_pattern = None;
     
     // First pass: identify options and find the pattern
     let mut args_iter = cmd.args.iter();
@@ -32,6 +38,23 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                         color_always = true;
                     }
                     // Don't treat this as a pattern
+                    continue;
+                }
+                
+                // Handle --include flag
+                if s.starts_with("--include=") {
+                    let pattern = s[10..].to_string(); // Remove "--include=" prefix
+                    // Remove quotes if present
+                    let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+                        pattern[1..pattern.len()-1].to_string()
+                    } else if pattern.starts_with("'") && pattern.ends_with("'") {
+                        pattern[1..pattern.len()-1].to_string()
+                    } else {
+                        pattern
+                    };
+                    include_pattern = Some(clean_pattern);
+                    // Don't treat this as a pattern
+
                     continue;
                 }
                 
@@ -48,11 +71,25 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 if s.contains('H') { show_filename = true; }
                 if s.contains('Z') { null_terminated = true; }
                 if s.contains('l') { list_only = true; }
+                if s.contains('L') { files_without_match = true; }
+                if s.contains('r') { recursive = true; }
                 
                 // Handle numeric options
                 if s == "-m" {
                     if let Some(Word::Literal(next_arg)) = args_iter.next() {
                         max_count = Some(next_arg.parse().unwrap_or(0));
+                    }
+                } else if s == "-A" {
+                    if let Some(Word::Literal(next_arg)) = args_iter.next() {
+                        after_context = next_arg.parse().unwrap_or(0);
+                    }
+                } else if s == "-B" {
+                    if let Some(Word::Literal(next_arg)) = args_iter.next() {
+                        before_context = next_arg.parse().unwrap_or(0);
+                    }
+                } else if s == "-C" {
+                    if let Some(Word::Literal(next_arg)) = args_iter.next() {
+                        context_lines = next_arg.parse().unwrap_or(0);
                     }
                 }
             } else if pattern.is_empty() {
@@ -72,22 +109,39 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
     } else {
         // Second pass: collect file arguments (arguments that are not options and not the pattern)
         let mut file_args = Vec::new();
-        for arg in &cmd.args {
-            if let Word::Literal(s) = arg {
-                if !s.starts_with('-') && s != &pattern && s != "-m" {
-                    // Check if this is a numeric value that follows -m
-                    if let Some(prev_arg) = cmd.args.iter().position(|a| a == arg) {
-                        if prev_arg > 0 {
-                            if let Word::Literal(prev) = &cmd.args[prev_arg - 1] {
-                                if prev == "-m" {
-                                    continue; // Skip the numeric value after -m
-                                }
+        let mut i = 0;
+        while i < cmd.args.len() {
+            if let Word::Literal(s) = &cmd.args[i] {
+                if !s.starts_with('-') && s != &pattern {
+                    // Check if this is a numeric value that follows a context flag
+                    if i > 0 {
+                        if let Word::Literal(prev) = &cmd.args[i - 1] {
+                            if prev == "-m" || prev == "-A" || prev == "-B" || prev == "-C" {
+                                i += 1; // Skip the numeric value after context flags
+                                continue;
                             }
                         }
                     }
-                    file_args.push(s.clone());
+                    
+                    // Check if this is part of a glob pattern (like *.txt)
+                    if s == "*" && i + 1 < cmd.args.len() {
+                        if let Word::Literal(next) = &cmd.args[i + 1] {
+                            if next.starts_with('.') {
+                                // Combine * and .txt into *.txt
+                                file_args.push(format!("{}{}", s, next));
+                                i += 1; // Skip the next argument
+                            } else {
+                                file_args.push(s.clone());
+                            }
+                        } else {
+                            file_args.push(s.clone());
+                        }
+                    } else {
+                        file_args.push(s.clone());
+                    }
                 }
             }
+            i += 1;
         }
         
         let has_file_args = !file_args.is_empty();
@@ -100,15 +154,93 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         if has_file_args {
             // File-based grep - read from files
             output.push_str(&format!("my @grep_lines_{} = ();\n", command_index));
-            for file in &file_args {
-                output.push_str(&format!("if (-f '{}') {{\n", file));
-                output.push_str(&format!("    open(my $fh, '<', '{}') or die \"Cannot open {}: $!\";\n", file, file));
-                output.push_str("    while (my $line = <$fh>) {\n");
-                output.push_str("        chomp($line);\n");
-                output.push_str(&format!("        push @grep_lines_{}, $line;\n", command_index));
-                output.push_str("    }\n");
-                output.push_str("    close($fh);\n");
-                output.push_str("}\n");
+            output.push_str(&format!("my @grep_filenames_{} = ();\n", command_index));
+            
+            if recursive {
+                // Recursive search
+                output.push_str(&format!("sub find_files_recursive_{} {{\n", command_index));
+                output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+                output.push_str(&format!("    my @files;\n"));
+                output.push_str(&format!("    if (opendir(my $dh, $dir)) {{\n"));
+                output.push_str(&format!("        while (my $file = readdir($dh)) {{\n"));
+                output.push_str(&format!("            next if $file eq '.' || $file eq '..';\n"));
+                output.push_str(&format!("            my $path = \"$dir/$file\";\n"));
+                output.push_str(&format!("            if (-d $path) {{\n"));
+                output.push_str(&format!("                push @files, find_files_recursive_{}($path, $pattern);\n", command_index));
+                output.push_str(&format!("            }} elsif (-f $path) {{\n"));
+                if let Some(ref include_pat) = include_pattern {
+                    // Convert shell glob pattern to Perl regex
+                    // *.txt -> .*\.txt$
+                    let mut regex_pattern = include_pat.clone();
+                    // Replace * with .* first
+                    regex_pattern = regex_pattern.replace("*", ".*");
+                    // Escape literal dots (but not the ones from .*)
+                    regex_pattern = regex_pattern.replace(".", "\\.");
+                    // Fix the .* that got escaped to \.*
+                    regex_pattern = regex_pattern.replace("\\.*", ".*");
+                    // Add end anchor for proper matching
+                    if !regex_pattern.ends_with("$") {
+                        regex_pattern.push_str("$");
+                    }
+                    output.push_str(&format!("                if ($file =~ /{}/) {{\n", regex_pattern));
+                    output.push_str(&format!("                    push @files, $path;\n"));
+                    output.push_str(&format!("                }}\n"));
+                } else {
+                    // Only include .txt files by default for recursive search
+                    output.push_str(&format!("                if ($file =~ /\\.txt$/) {{\n"));
+                    output.push_str(&format!("                    push @files, $path;\n"));
+                    output.push_str(&format!("                }}\n"));
+                }
+                output.push_str(&format!("            }}\n"));
+                output.push_str(&format!("        }}\n"));
+                output.push_str(&format!("        closedir($dh);\n"));
+                output.push_str(&format!("    }}\n"));
+                output.push_str(&format!("    return @files;\n"));
+                output.push_str(&format!("}}\n"));
+                
+                for file in &file_args {
+                    output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+                    output.push_str(&format!("for my $file (@files_{}) {{\n", command_index));
+                    output.push_str(&format!("    if (-f $file) {{\n"));
+                    output.push_str(&format!("        open(my $fh, '<', $file) or die \"Cannot open $file: $!\";\n"));
+                    output.push_str(&format!("        while (my $line = <$fh>) {{\n"));
+                    output.push_str(&format!("            chomp($line);\n"));
+                    output.push_str(&format!("            push @grep_lines_{}, $line;\n", command_index));
+                    output.push_str(&format!("            push @grep_filenames_{}, $file;\n", command_index));
+                    output.push_str(&format!("        }}\n"));
+                    output.push_str(&format!("        close($fh);\n"));
+                    output.push_str(&format!("    }}\n"));
+                    output.push_str(&format!("}}\n"));
+                }
+            } else {
+                // Non-recursive search
+                for file in &file_args {
+                    if file.contains('*') {
+                        // Handle glob patterns
+                        output.push_str(&format!("my @glob_files_{} = glob('{}');\n", command_index, file));
+                        output.push_str(&format!("for my $glob_file (@glob_files_{}) {{\n", command_index));
+                        output.push_str(&format!("    if (-f $glob_file) {{\n"));
+                        output.push_str(&format!("        open(my $fh, '<', $glob_file) or die \"Cannot open $glob_file: $!\";\n"));
+                        output.push_str("        while (my $line = <$fh>) {\n");
+                        output.push_str("            chomp($line);\n");
+                        output.push_str(&format!("            push @grep_lines_{}, $line;\n", command_index));
+                        output.push_str(&format!("            push @grep_filenames_{}, $glob_file;\n", command_index));
+                        output.push_str("        }\n");
+                        output.push_str("        close($fh);\n");
+                        output.push_str("    }\n");
+                        output.push_str("}\n");
+                    } else {
+                        output.push_str(&format!("if (-f '{}') {{\n", file));
+                        output.push_str(&format!("    open(my $fh, '<', '{}') or die \"Cannot open {}: $!\";\n", file, file));
+                        output.push_str("    while (my $line = <$fh>) {\n");
+                        output.push_str("        chomp($line);\n");
+                        output.push_str(&format!("        push @grep_lines_{}, $line;\n", command_index));
+                        output.push_str(&format!("        push @grep_filenames_{}, '{}';\n", command_index, file));
+                        output.push_str("    }\n");
+                        output.push_str("    close($fh);\n");
+                        output.push_str("}\n");
+                    }
+                }
             }
         } else if input_var != "input_data" {
             // Pipeline-based grep with no file arguments - use the provided input variable
@@ -174,6 +306,37 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 output.push_str(&format!("print $grep_result_{};\n", command_index));
                 output.push_str("print \"\\n\";\n");
             }
+        } else if after_context > 0 || before_context > 0 || context_lines > 0 {
+            // Handle context flags: -A, -B, -C
+            let after = if context_lines > 0 { context_lines } else { after_context };
+            let before = if context_lines > 0 { context_lines } else { before_context };
+            
+            output.push_str(&format!("my @grep_with_context_{};\n", command_index));
+            output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+            output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+            // Add before context
+            if before > 0 {
+                output.push_str(&format!("        for (my $j = $i - {}; $j < $i; $j++) {{\n", before));
+                output.push_str(&format!("            if ($j >= 0) {{\n"));
+                output.push_str(&format!("                push @grep_with_context_{}, $grep_lines_{}[$j];\n", command_index, command_index));
+                output.push_str("            }\n");
+                output.push_str("        }\n");
+            }
+            // Add matching line
+            output.push_str(&format!("        push @grep_with_context_{}, $grep_lines_{}[$i];\n", command_index, command_index));
+            // Add after context
+            if after > 0 {
+                output.push_str(&format!("        for (my $j = $i + 1; $j <= $i + {} && $j < @grep_lines_{}; $j++) {{\n", after, command_index));
+                output.push_str(&format!("            push @grep_with_context_{}, $grep_lines_{}[$j];\n", command_index, command_index));
+                output.push_str("        }\n");
+            }
+            output.push_str("    }\n");
+            output.push_str("}\n");
+            output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_with_context_{});\n", command_index, command_index));
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
+                output.push_str("print \"\\n\";\n");
+            }
         } else if line_numbers {
             output.push_str(&format!("my @grep_numbered_{};\n", command_index));
             output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
@@ -200,12 +363,67 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 output.push_str("print \"\\n\";\n");
             }
         } else if list_only {
-            // Handle -l flag: only show filenames
+            // Handle -l flag: only show filenames that contain matches
             if has_file_args {
-                output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"{}\" : \"\";\n", 
-                    command_index, command_index, file_args[0]));
+                if file_args[0].contains('*') {
+                    // For glob patterns, output the actual filenames that contain matches
+                    output.push_str(&format!("my @matching_files_{};\n", command_index));
+                    output.push_str(&format!("my %file_has_match_{};\n", command_index));
+                    output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+                    output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+                    output.push_str(&format!("        $file_has_match_{}{{$grep_filenames_{}[$i]}} = 1;\n", command_index, command_index));
+                    output.push_str("    }\n");
+                    output.push_str("}\n");
+                    output.push_str(&format!("for my $file (keys %file_has_match_{}) {{\n", command_index));
+                    output.push_str(&format!("    push @matching_files_{}, $file;\n", command_index));
+                    output.push_str("}\n");
+                    output.push_str(&format!("$grep_result_{} = join(\"\\n\", @matching_files_{});\n", command_index, command_index));
+                } else {
+                    output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"{}\" : \"\";\n", 
+                        command_index, command_index, file_args[0]));
+                }
             } else {
                 output.push_str(&format!("$grep_result_{} = @grep_filtered_{} > 0 ? \"(standard input)\" : \"\";\n", 
+                    command_index, command_index));
+            }
+            if should_print && !quiet_mode {
+                output.push_str(&format!("print $grep_result_{};\n", command_index));
+                if null_terminated {
+                    output.push_str("print \"\\0\";\n");
+                } else {
+                    output.push_str("print \"\\n\";\n");
+                }
+            }
+        } else if files_without_match {
+            // Handle -L flag: only show filenames that do NOT contain matches
+            if has_file_args {
+                if file_args[0].contains('*') {
+                    // For glob patterns, output the actual filenames that do NOT contain matches
+                    output.push_str(&format!("my @non_matching_files_{};\n", command_index));
+                    output.push_str(&format!("my %file_has_match_{};\n", command_index));
+                    output.push_str(&format!("my %all_files_{};\n", command_index));
+                    
+                    // First, collect all files and mark which ones have matches
+                    output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+                    output.push_str(&format!("    $all_files_{}{{$grep_filenames_{}[$i]}} = 1;\n", command_index, command_index));
+                    output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+                    output.push_str(&format!("        $file_has_match_{}{{$grep_filenames_{}[$i]}} = 1;\n", command_index, command_index));
+                    output.push_str("    }\n");
+                    output.push_str("}\n");
+                    
+                    // Then find files that don't have matches
+                    output.push_str(&format!("for my $file (keys %all_files_{}) {{\n", command_index));
+                    output.push_str(&format!("    if (!exists $file_has_match_{}{{$file}}) {{\n", command_index));
+                    output.push_str(&format!("        push @non_matching_files_{}, $file;\n", command_index));
+                    output.push_str("    }\n");
+                    output.push_str("}\n");
+                    output.push_str(&format!("$grep_result_{} = join(\"\\n\", @non_matching_files_{});\n", command_index, command_index));
+                } else {
+                    output.push_str(&format!("$grep_result_{} = @grep_filtered_{} == 0 ? \"{}\" : \"\";\n", 
+                        command_index, command_index, file_args[0]));
+                }
+            } else {
+                output.push_str(&format!("$grep_result_{} = @grep_filtered_{} == 0 ? \"(standard input)\" : \"\";\n", 
                     command_index, command_index));
             }
             if should_print && !quiet_mode {
@@ -232,25 +450,42 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             } else if show_filename && has_file_args {
                 // Handle -H flag: always show filename even with single file
                 output.push_str(&format!("my @grep_with_filename_{};\n", command_index));
-                output.push_str(&format!("for my $line (@grep_filtered_{}) {{\n", command_index));
-                output.push_str(&format!("    push @grep_with_filename_{}, \"{}:$line\";\n", command_index, file_args[0]));
+                if recursive {
+                    output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+                    output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+                    output.push_str(&format!("        push @grep_with_filename_{}, \"$grep_filenames_{}[$i]:$grep_lines_{}[$i]\";\n", command_index, command_index, command_index));
+                    output.push_str("    }\n");
+                    output.push_str("}\n");
+                } else {
+                    output.push_str(&format!("for my $line (@grep_filtered_{}) {{\n", command_index));
+                    output.push_str(&format!("    push @grep_with_filename_{}, \"{}:$line\";\n", command_index, file_args[0]));
+                    output.push_str("}\n");
+                }
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_with_filename_{});\n", command_index, command_index));
+                    } else {
+            // Default: just output matching lines (handles -h flag implicitly by not adding filename)
+            if recursive && has_file_args {
+                // For recursive search, show filename:content format
+                output.push_str(&format!("my @grep_with_filename_{};\n", command_index));
+                output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+                output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+                output.push_str(&format!("        push @grep_with_filename_{}, \"$grep_filenames_{}[$i]:$grep_lines_{}[$i]\";\n", command_index, command_index, command_index));
+                output.push_str("    }\n");
                 output.push_str("}\n");
                 output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_with_filename_{});\n", command_index, command_index));
+            } else if color_always {
+                // Add color support for --color=always
+                output.push_str(&format!("my @grep_colored_{};\n", command_index));
+                output.push_str(&format!("for my $line (@grep_filtered_{}) {{\n", command_index));
+                output.push_str(&format!("    my $colored_line = $line;\n"));
+                output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+                output.push_str(&format!("    push @grep_colored_{}, $colored_line;\n", command_index));
+                output.push_str("}\n");
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_colored_{});\n", command_index, command_index));
             } else {
-                // Default: just output matching lines (handles -h flag implicitly by not adding filename)
-                if color_always {
-                    // Add color support for --color=always
-                    output.push_str(&format!("my @grep_colored_{};\n", command_index));
-                    output.push_str(&format!("for my $line (@grep_filtered_{}) {{\n", command_index));
-                    output.push_str(&format!("    my $colored_line = $line;\n"));
-                    output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
-                    output.push_str(&format!("    push @grep_colored_{}, $colored_line;\n", command_index));
-                    output.push_str("}\n");
-                    output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_colored_{});\n", command_index, command_index));
-                } else {
-                    output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
-                }
+                output.push_str(&format!("$grep_result_{} = join(\"\\n\", @grep_filtered_{});\n", command_index, command_index));
             }
+        }
             
             // Handle null-terminated output (-Z flag)
             if null_terminated {

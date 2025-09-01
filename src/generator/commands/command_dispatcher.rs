@@ -453,8 +453,21 @@ pub fn generate_command_impl(generator: &mut Generator, command: &Command, in_st
                 generator.indent_level += 1;
                 result.push_str(&generator.indent());
                 result.push_str("open(my $original_stdout, '>&', STDOUT) or die \"Cannot save STDOUT: $!\";\n");
-                result.push_str(&generator.indent());
-                result.push_str("open(STDOUT, '>', 'temp_file.txt') or die \"Cannot open file: $!\";\n");
+                
+                // Find the output redirect target
+                let output_redirect = all_redirects.iter().find(|r| {
+                    matches!(r.operator, RedirectOperator::Output | RedirectOperator::Append)
+                });
+                
+                if let Some(redirect) = output_redirect {
+                    let target = generator.word_to_perl(&redirect.target);
+                    let mode = if matches!(redirect.operator, RedirectOperator::Append) { ">>" } else { ">" };
+                    result.push_str(&generator.indent());
+                    result.push_str(&format!("open(STDOUT, '{}', '{}') or die \"Cannot open file: $!\";\n", mode, target));
+                } else {
+                    result.push_str(&generator.indent());
+                    result.push_str("open(STDOUT, '>', 'temp_file.txt') or die \"Cannot open file: $!\";\n");
+                }
             }
             
             match &base_command {

@@ -138,11 +138,40 @@ pub fn generate_logical_or(generator: &mut Generator, left: &Command, right: &Co
                                 }
                             }
                         }
+                        // Also look for @grep_lines_ and @grep_filenames_ variables
+                        if line.contains("@grep_lines_") && !line.trim_start().starts_with("my ") {
+                            // Extract the variable name
+                            if let Some(start) = line.find("@grep_lines_") {
+                                let var_part = &line[start..];
+                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
+                                    let var_name = &var_part[..end]; // Keep the @
+                                    if !declared_vars.contains(var_name) {
+                                        output.push_str(&generator.indent());
+                                        output.push_str(&format!("my {};\n", var_name));
+                                        declared_vars.insert(var_name.to_string());
+                                    }
+                                }
+                            }
+                        }
+                        if line.contains("@grep_filenames_") && !line.trim_start().starts_with("my ") {
+                            // Extract the variable name
+                            if let Some(start) = line.find("@grep_filenames_") {
+                                let var_part = &line[start..];
+                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
+                                    let var_name = &var_part[..end]; // Keep the @
+                                    if !declared_vars.contains(var_name) {
+                                        output.push_str(&generator.indent());
+                                        output.push_str(&format!("my {};\n", var_name));
+                                        declared_vars.insert(var_name.to_string());
+                                    }
+                                }
+                            }
+                        }
                     }
                     
                     // Now output the grep command, but skip variable declarations that are already handled
                     for line in grep_result.lines() {
-                        if !line.trim().is_empty() && !line.trim().starts_with("my $grep_result_") {
+                        if !line.trim().is_empty() && !line.trim().starts_with("my $grep_result_") && !line.trim().starts_with("my @grep_lines_") && !line.trim().starts_with("my @grep_filenames_") {
                             output.push_str(&generator.indent());
                             output.push_str(line);
                             output.push_str("\n");
