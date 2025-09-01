@@ -19,7 +19,7 @@ grep -r "pattern" . --include="*.txt"
 
 echo Result 2...
 # Print file names with matches
-grep -l "pattern" *.txt
+grep -l "pattern" *.txt | sort
 
 echo Result 3...
 # Print file names without matches
