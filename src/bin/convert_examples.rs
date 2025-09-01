@@ -18,10 +18,41 @@ fn escape_js(content: &str) -> String {
     result
 }
 
-fn categorize_file(filename: &str) -> String {
+fn load_test_results() -> std::collections::HashMap<String, String> {
+    let mut results = std::collections::HashMap::new();
+    
+    // Try to read the results files
+    let result_files = [
+        ("results/equivalent.txt", "✅ Equivalent"),
+        ("results/cangenerate.txt", "⚠️ Can Generate"),
+        ("results/canparse.txt", "🔍 Can Parse"),
+        ("results/canlex.txt", "📝 Can Lex"),
+        ("results/failed.txt", "❌ Failed"),
+    ];
+    
+    for (file_path, category) in result_files {
+        if let Ok(content) = fs::read_to_string(file_path) {
+            for line in content.lines() {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    results.insert(trimmed.to_string(), category.to_string());
+                }
+            }
+        }
+    }
+    
+    results
+}
+
+fn categorize_file(filename: &str, test_results: &std::collections::HashMap<String, String>) -> String {
+    // First check if we have test results for this file
+    if let Some(category) = test_results.get(filename) {
+        return category.clone();
+    }
+    
+    // Fallback to filename-based categorization for files not in test results
     let lower_filename = filename.to_lowercase();
     
-    // Categorize based on filename patterns
     if lower_filename.contains("control_flow") || lower_filename.contains("if") || lower_filename.contains("loop") || lower_filename.contains("function") || lower_filename.contains("case") {
         "Control Flow".to_string()
     } else if lower_filename.contains("pipeline") {
@@ -63,11 +94,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!("Converting examples from {} to JavaScript...", examples_dir);
     
+    // Load test results for categorization
+    let test_results = load_test_results();
+    if test_results.is_empty() {
+        println!("⚠️  No test results found. Run 'cargo run -- --test-eq' first to generate results/* files.");
+        println!("   Using filename-based categorization as fallback.");
+    } else {
+        println!("📊 Loaded test results: {} categorized examples", test_results.len());
+    }
+    
     // Start the JavaScript file
     let mut js_content = String::new();
     js_content.push_str("// Shell script examples for the Debashc compiler\n");
     js_content.push_str("// This file contains all examples that were previously embedded in WASM\n");
-    js_content.push_str("// Generated automatically from examples/ directory\n\n");
+    js_content.push_str("// Generated automatically from examples/ directory\n");
+    js_content.push_str("// Categorized based on test results from results/* files\n\n");
     js_content.push_str("export const examples = {\n");
     
     // Find all shell script and text files
@@ -117,13 +158,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Close the examples object
     js_content.push_str("\n};\n\n");
     
-    // Generate categories automatically based on actual files
+    // Generate categories automatically based on test results and actual files
     let mut categories: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
     
     for file_path in &files {
         if let Some(filename) = file_path.file_name() {
             if let Some(filename_str) = filename.to_str() {
-                let category = categorize_file(filename_str);
+                let category = categorize_file(filename_str, &test_results);
                 categories.entry(category).or_insert_with(Vec::new).push(filename_str.to_string());
             }
         }
