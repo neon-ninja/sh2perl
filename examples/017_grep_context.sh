@@ -17,9 +17,11 @@ echo "pattern in file3" > temp_file3.txt
 echo "Recursive search results:"
 grep -r "pattern" . --include="*.txt"
 
+echo Result 2...
 # Print file names with matches
 grep -l "pattern" *.txt
 
+echo Result 3...
 # Print file names without matches
 grep -L "pattern" *.txt
 
