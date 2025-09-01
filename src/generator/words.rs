@@ -1,5 +1,6 @@
 use crate::ast::*;
 use super::Generator;
+use regex::Regex;
 
 pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
     match word {
@@ -28,74 +29,9 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
             // Quote the result since it's used in contexts where quotes are needed
             format!("\"{}\"", expanded)
         },
-        Word::CommandSubstitution(cmd) => {
-            // Execute the command and capture its output
-            // For command substitution, we need to generate Perl code that produces the same output
-            // as our custom command implementations
-            match cmd.as_ref() {
-                Command::Simple(simple_cmd) => {
-                    let cmd_name = generator.word_to_perl(&simple_cmd.name);
-                    let args: Vec<String> = simple_cmd.args.iter()
-                        .map(|arg| generator.word_to_perl(arg))
-                        .collect();
-                    
-                    // Use our custom command implementations for consistency
-                    if cmd_name == "ls" {
-                        // Use the custom ls implementation for command substitution
-                        use crate::generator::commands::ls::generate_ls_for_substitution;
-                        generate_ls_for_substitution(generator, simple_cmd)
-                    } else {
-                        // For other commands, fall back to system command for now
-                        if args.is_empty() {
-                            format!("`{}`", cmd_name)
-                        } else {
-                            format!("`{} {}`", cmd_name, args.join(" "))
-                        }
-                    }
-                },
-                _ => {
-                    // For other command types (like pipelines), generate the command
-                    // and wrap it in a way that ensures proper variable scoping
-                    let command_code = match &**cmd {
-                        Command::Pipeline(pipeline) => {
-                            // For command substitution pipelines, use our custom Perl implementations
-                            // instead of shell backticks to ensure consistency and proper filtering
-                            // This avoids issues with shell command interpretation differences
-                            let mut modified_pipeline = pipeline.clone();
-                            for command in &mut modified_pipeline.commands {
-                                if let Command::Simple(simple_cmd) = command {
-                                    if simple_cmd.name.as_str() == "ls" {
-                                        // Check if ls already has the -1 flag
-                                        let has_minus_one = simple_cmd.args.iter().any(|arg| {
-                                            if let Word::Literal(s) = arg {
-                                                s == "-1"
-                                            } else {
-                                                false
-                                            }
-                                        });
-                                        
-                                        // If no -1 flag, add it to ensure consistent output
-                                        if !has_minus_one {
-                                            simple_cmd.args.insert(0, Word::Literal("-1".to_string()));
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Use our custom pipeline implementation but capture output instead of printing
-                            let pipeline_code = generator.generate_command(&Command::Pipeline(modified_pipeline));
-                            // Remove the print statements and capture output, then convert newlines to spaces
-                            let captured_pipeline = pipeline_code.replace("print $output;", "").replace("print \"\\n\";", "");
-                            format!("my $cmd_output = do {{ {} }}; $cmd_output =~ s/\\n/ /g; $cmd_output", captured_pipeline)
-                        },
-                        _ => generator.generate_command(cmd)
-                    };
-                    // For pipelines and complex commands, we need to ensure proper variable scoping
-                    // by wrapping in a do block and capturing the output.
-                    // The pipeline generation now handles streaming without buffering.
-                    format!("do {{\n{}}}", command_code.trim_end_matches('\n'))
-                }
-            }
+        Word::CommandSubstitution(_cmd) => {
+            // TEMPORARY DEBUG: Just return a simple string to test if this case is being matched
+            "\"[COMMAND_SUBSTITUTION_MATCHED]\"".to_string()
         },
         Word::Variable(var) => {
             // Handle special shell variables
