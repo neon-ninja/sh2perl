@@ -49,7 +49,7 @@ pub fn get_builtin_commands() -> HashMap<&'static str, BuiltinCommand> {
     commands.insert("touch", BuiltinCommand::new("touch", "Create empty files", false));
     
     // Text processing
-    commands.insert("echo", BuiltinCommand::new("echo", "Display text", true));
+    commands.insert("echo", BuiltinCommand::new("echo", "Display text", false));
     commands.insert("printf", BuiltinCommand::new("printf", "Format and print data", true));
     commands.insert("basename", BuiltinCommand::new("basename", "Extract filename", true));
     commands.insert("dirname", BuiltinCommand::new("dirname", "Extract directory name", true));

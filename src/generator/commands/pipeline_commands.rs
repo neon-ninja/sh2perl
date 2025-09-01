@@ -91,7 +91,7 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
         output.push_str(&format!("# Original bash: {}\n", first_line));
     }
     
-    // Check if the first command is 'cat filename' and handle it specially
+    // Check if the first command is 'cat filename' or 'echo' and handle it specially
     let mut start_index = 0;
     if let Command::Simple(first_cmd) = &pipeline.commands[0] {
         if let Word::Literal(name) = &first_cmd.name {
@@ -150,9 +150,7 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("}\n");
-    }
-    
-    if start_index == 1 {
+    } else if start_index == 1 {
         // For cat commands, we need to add the command processing inside the while loop
         // No variable declarations needed for streaming pipeline - we process each line directly
         
@@ -176,12 +174,10 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
             output.push_str("print $line . \"\\n\";\n");
         }
         
-        // Close the while loop
+        // Close the while loop and file handle
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("}\n");
-        
-        // Close the file handle if we opened one
         output.push_str(&generator.indent());
         output.push_str("close($fh);\n");
         generator.indent_level -= 1;
@@ -310,16 +306,31 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                     output.push_str(&generator.indent());
                     output.push_str(&format!("$output_{} = $output;\n", unique_id));
                 } else {
-                                    // Use the builtins registry for the first command too
-                let command_output = generate_command_using_builtins(generator, command, "", &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
-                    
-                    // Split the output into lines and apply indentation
-                    for line in command_output.lines() {
-                        if !line.trim().is_empty() {
-                            output.push_str(&generator.indent());
-                            output.push_str(line);
-                            if !line.ends_with('\n') {
-                                output.push_str("\n");
+                    // Handle the first command
+                    if let Command::Simple(cmd) = command {
+                        if let Word::Literal(cmd_name) = &cmd.name {
+                            if cmd_name == "echo" {
+                                // For echo commands, just output the arguments directly
+                                let echo_args: Vec<String> = cmd.args.iter()
+                                    .map(|arg| generator.perl_string_literal(arg))
+                                    .collect();
+                                let echo_output = echo_args.join(" . ");
+                                output.push_str(&generator.indent());
+                                output.push_str(&format!("$output_{} = {};\n", unique_id, echo_output));
+                            } else {
+                                // Use the builtins registry for other commands
+                                let command_output = generate_command_using_builtins(generator, command, "", &format!("output_{}", unique_id), &format!("{}_{}", unique_id, i), false);
+                                
+                                // Split the output into lines and apply indentation
+                                for line in command_output.lines() {
+                                    if !line.trim().is_empty() {
+                                        output.push_str(&generator.indent());
+                                        output.push_str(line);
+                                        if !line.ends_with('\n') {
+                                            output.push_str("\n");
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
