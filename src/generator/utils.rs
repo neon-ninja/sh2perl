@@ -41,6 +41,14 @@ pub fn perl_string_literal_impl(generator: &mut Generator, word: &Word) -> Strin
                           .replace("\r", "\\r");
             format!("\"{}\"", escaped)
         }
+        Word::Variable(var) => {
+            // Handle special shell variables
+            match var.as_str() {
+                "#" => "scalar(@ARGV)".to_string(),  // $# -> scalar(@ARGV) for argument count
+                "@" => "@ARGV".to_string(),          // $@ -> @ARGV for arguments array
+                _ => format!("${}", var)             // Regular variables
+            }
+        }
         Word::Arithmetic(expr) => {
             // Handle arithmetic expressions by converting them to Perl
             generator.convert_arithmetic_to_perl(&expr.expression)

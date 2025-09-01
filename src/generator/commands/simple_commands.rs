@@ -201,7 +201,35 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
             } else {
                 // Convert arguments to Perl format
                 let args: Vec<String> = cmd.args.iter()
-                    .map(|arg| generator.word_to_perl(arg))
+                    .map(|arg| {
+                        // For echo commands, handle special variables differently
+                        match arg {
+                            Word::Variable(var) => {
+                                match var.as_str() {
+                                    "#" => "scalar(@ARGV)".to_string(),
+                                    "@" => "@ARGV".to_string(),
+                                    _ => format!("${}", var)
+                                }
+                            }
+                            Word::StringInterpolation(interp) => {
+                                // Handle quoted variables like "$#" -> scalar(@ARGV)
+                                if interp.parts.len() == 1 {
+                                    if let StringPart::Variable(var) = &interp.parts[0] {
+                                        match var.as_str() {
+                                            "#" => "scalar(@ARGV)".to_string(),
+                                            "@" => "@ARGV".to_string(),
+                                            _ => format!("${}", var)
+                                        }
+                                    } else {
+                                        generator.perl_string_literal(arg)
+                                    }
+                                } else {
+                                    generator.perl_string_literal(arg)
+                                }
+                            }
+                            _ => generator.perl_string_literal(arg)
+                        }
+                    })
                     .collect();
                 
                 if args.len() == 1 {

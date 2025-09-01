@@ -72,18 +72,7 @@ pub fn generate_pipeline_with_print_option(generator: &mut Generator, pipeline: 
 /// Generate a simple pipe pipeline (commands connected with |)
 fn generate_simple_pipe_pipeline(generator: &mut Generator, pipeline: &Pipeline, should_print: bool) -> String {
     // Check if we can use line-by-line processing
-    // Force pipelines that start with 'cat' to use buffered approach for proper exit code handling
-    let force_buffered = if let Command::Simple(first_cmd) = &pipeline.commands[0] {
-        if let Word::Literal(name) = &first_cmd.name {
-            name == "cat"
-        } else {
-            false
-        }
-    } else {
-        false
-    };
-    
-    if !force_buffered && pipeline_supports_linebyline(pipeline) {
+    if pipeline_supports_linebyline(pipeline) {
         generate_streaming_pipeline(generator, pipeline, should_print)
     } else {
         generate_buffered_pipeline(generator, pipeline, should_print)
