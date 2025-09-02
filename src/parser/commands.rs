@@ -595,7 +595,7 @@ impl Parser {
                     break;
                 }
                 Token::Character | Token::NonZero | Token::Exists | Token::File | Token::Size | Token::Readable | Token::Writable | Token::Executable | Token::NewerThan | Token::OlderThan |
-                Token::NameFlag | Token::MaxDepthFlag | Token::TypeFlag => {
+                Token::NameFlag | Token::MaxDepthFlag | Token::TypeFlag | Token::Plus | Token::Minus | Token::Escape => {
                     // These are valid argument tokens
                     args.push(parse_word_no_newline_skip(&mut self.lexer)?);
                     

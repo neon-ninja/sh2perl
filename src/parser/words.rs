@@ -5,13 +5,14 @@ use crate::parser::utilities::ParserUtilities;
 use std::collections::HashMap;
 
 pub fn parse_word(lexer: &mut Lexer) -> Result<Word, ParserError> {
-    // Combine contiguous bare-word tokens (identifiers, numbers, slashes, dots) into a single literal
+    // Combine contiguous bare-word tokens (identifiers, numbers, slashes, dots, plus, minus) into a single literal
     // This handles filenames like "file.txt" by combining Identifier + Dot + Identifier
-    if matches!(lexer.peek(), Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range)) {
+    // and also handles find arguments like "+1M" by combining Plus + Number + Identifier
+    if matches!(lexer.peek(), Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) | Some(Token::Plus) | Some(Token::Minus) | Some(Token::Escape)) {
         let mut combined = String::new();
         loop {
             match lexer.peek() {
-                Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) => {
+                Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) | Some(Token::Plus) | Some(Token::Minus) | Some(Token::Escape) => {
                     // Append raw token text and consume
                     if let Some(text) = lexer.get_current_text() {
                         combined.push_str(&text);
@@ -258,13 +259,14 @@ pub fn parse_word(lexer: &mut Lexer) -> Result<Word, ParserError> {
 /// Parse a word without skipping newlines at the end.
 /// This is used specifically for argument parsing where we want to preserve newlines.
 pub fn parse_word_no_newline_skip(lexer: &mut Lexer) -> Result<Word, ParserError> {
-    // Combine contiguous bare-word tokens (identifiers, numbers, slashes, dots) into a single literal
+    // Combine contiguous bare-word tokens (identifiers, numbers, slashes, dots, plus, minus) into a single literal
     // This handles filenames like "file.txt" by combining Identifier + Dot + Identifier
-    if matches!(lexer.peek(), Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range)) {
+    // and also handles find arguments like "+1M" by combining Plus + Number + Identifier
+    if matches!(lexer.peek(), Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) | Some(Token::Plus) | Some(Token::Minus) | Some(Token::Escape)) {
         let mut combined = String::new();
         loop {
             match lexer.peek() {
-                Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) => {
+                Some(Token::Identifier) | Some(Token::Number) | Some(Token::PaddedNumber) | Some(Token::Slash) | Some(Token::Dot) | Some(Token::Range) | Some(Token::Plus) | Some(Token::Minus) | Some(Token::Escape) => {
                     // Append raw token text and consume
                     if let Some(text) = lexer.get_current_text() {
                         combined.push_str(&text);
