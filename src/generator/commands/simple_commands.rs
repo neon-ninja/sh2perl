@@ -274,9 +274,30 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                         // Convert arithmetic expression to Perl
                         let perl_expr = generator.convert_arithmetic_to_perl(&expr.expression);
                         if !generator.declared_locals.contains(var) {
-                            output.push_str(&generator.indent());
-                            output.push_str(&format!("my ${} = {};\n", var, perl_expr));
-                            generator.declared_locals.insert(var.clone());
+                            // Check if this variable is used in the arithmetic expression
+                            // If so, we need to initialize it to 0 first
+                            if expr.expression.contains(var) {
+                                // For variables used in arithmetic expressions inside loops,
+                                // we need to declare them in the outer scope
+                                // Check if we're inside a loop by looking at the indent level
+                                if generator.indent_level > 0 {
+                                    // We're inside a loop, just assign to it
+                                    output.push_str(&generator.indent());
+                                    output.push_str(&format!("${} = {};\n", var, perl_expr));
+                                } else {
+                                    // We're in the outer scope, declare normally
+                                    output.push_str(&generator.indent());
+                                    output.push_str(&format!("my ${} = 0;\n", var));
+                                    output.push_str(&generator.indent());
+                                    output.push_str(&format!("${} = {};\n", var, perl_expr));
+                                }
+                                generator.declared_locals.insert(var.clone());
+                            } else {
+                                // Variable not used in expression, declare and assign
+                                output.push_str(&generator.indent());
+                                output.push_str(&format!("my ${} = {};\n", var, perl_expr));
+                                generator.declared_locals.insert(var.clone());
+                            }
                         } else {
                             output.push_str(&generator.indent());
                             output.push_str(&format!("${} = {};\n", var, perl_expr));

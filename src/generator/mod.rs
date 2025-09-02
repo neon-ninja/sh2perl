@@ -1,6 +1,7 @@
 use crate::ast::*;
 use std::collections::{HashSet, HashMap};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use regex::Regex;
 
 // Static counter for generating truly unique IDs across all generator instances
 static GLOBAL_UNIQUE_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -22,6 +23,8 @@ pub struct Generator {
     pub nocasematch_enabled: bool,
     pub process_sub_files: HashMap<String, String>,
     pub current_process_sub_file: Option<String>,
+    pub function_level_vars: HashSet<String>,
+    pub loop_variables: HashSet<String>,
 }
 
 impl Generator {
@@ -35,6 +38,8 @@ impl Generator {
             nocasematch_enabled: false,
             process_sub_files: HashMap::new(),
             current_process_sub_file: None,
+            function_level_vars: HashSet::new(),
+            loop_variables: HashSet::new(),
         }
     }
 
@@ -49,6 +54,19 @@ impl Generator {
         
         // Add main exit code variable for pipeline tracking
         output.push_str("my $main_exit_code = 0;\n\n");
+        
+        // First pass: collect variables that need function-level declaration
+        for command in ast {
+            self.collect_function_level_vars(command);
+        }
+        
+        // Declare function-level variables (only for variables that are not loop variables)
+        for var in &self.function_level_vars {
+            output.push_str(&format!("my ${} = 0;\n", var));
+        }
+        if !self.function_level_vars.is_empty() {
+            output.push('\n');
+        }
         
         for command in ast {
             // Reset indentation level for each top-level command to prevent staircase effect
@@ -66,6 +84,169 @@ impl Generator {
         output.push_str("\nexit($main_exit_code);\n");
         
         output
+    }
+
+    pub fn collect_function_level_vars(&mut self, command: &Command) {
+        match command {
+            Command::For(for_loop) => {
+                // Track the loop variable
+                let loop_var = &for_loop.variable;
+                self.loop_variables.insert(loop_var.clone());
+                // Check if the for loop contains arithmetic expressions
+                // But exclude the loop variable itself from function-level declaration
+                self.collect_function_level_vars_from_block_with_exclusion(&for_loop.body, loop_var);
+            },
+            Command::While(while_loop) => {
+                // Check if the while loop condition contains variables
+                self.collect_function_level_vars(&while_loop.condition);
+                // Check if the while loop contains arithmetic expressions
+                self.collect_function_level_vars_from_block(&while_loop.body);
+            },
+            Command::If(if_stmt) => {
+                // Check if the if statement contains arithmetic expressions
+                self.collect_function_level_vars(&if_stmt.then_branch);
+                if let Some(else_branch) = &if_stmt.else_branch {
+                    self.collect_function_level_vars(else_branch);
+                }
+            },
+            Command::Case(case_stmt) => {
+                // Check if the case statement contains arithmetic expressions
+                for case in &case_stmt.cases {
+                    for cmd in &case.body {
+                        self.collect_function_level_vars(cmd);
+                    }
+                }
+            },
+            Command::Function(func) => {
+                // Check if the function contains arithmetic expressions
+                self.collect_function_level_vars_from_block(&func.body);
+            },
+            Command::Block(block) => {
+                // Check if the block contains arithmetic expressions
+                self.collect_function_level_vars_from_block(block);
+            },
+            Command::TestExpression(test_expr) => {
+                // Check if the test expression contains variables that need function-level declaration
+                // For now, we'll extract variables from the expression string
+                // This is a simple approach - in a more sophisticated implementation,
+                // we'd parse the test expression properly
+                let expr_str = &test_expr.expression;
+                // Extract variable names from the expression (simple regex approach)
+                let var_regex = Regex::new(r"\$([a-zA-Z_][a-zA-Z0-9_]*)").unwrap();
+                for cap in var_regex.captures_iter(expr_str) {
+                    if let Some(var_match) = cap.get(1) {
+                        let var_name = var_match.as_str().to_string();
+                        // Collect variables used in test expressions
+                        // Even if they are loop variables, they might need function-level scope
+                        // if used after their loop context
+                        self.function_level_vars.insert(var_name);
+                    }
+                }
+            },
+            _ => {
+                // For other commands, check if they contain arithmetic expressions
+                if let Command::Simple(cmd) = command {
+                    if let Word::Literal(ref name) = cmd.name {
+                        if name == "true" && !cmd.env_vars.is_empty() && cmd.args.is_empty() {
+                            for (var, value) in &cmd.env_vars {
+                                if let Word::Arithmetic(expr) = value {
+                                    if expr.expression.contains(var) {
+                                        // Only collect variables that are not loop variables
+                                        if !self.loop_variables.contains(var) {
+                                            self.function_level_vars.insert(var.clone());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn collect_function_level_vars_from_block(&mut self, block: &Block) {
+        for command in &block.commands {
+            self.collect_function_level_vars(command);
+        }
+    }
+
+    fn collect_function_level_vars_from_block_with_exclusion(&mut self, block: &Block, exclude_var: &str) {
+        for command in &block.commands {
+            match command {
+                Command::Simple(cmd) => {
+                    if let Word::Literal(ref name) = cmd.name {
+                        if name == "true" && !cmd.env_vars.is_empty() && cmd.args.is_empty() {
+                            for (var, value) in &cmd.env_vars {
+                                if let Word::Arithmetic(expr) = value {
+                                    if expr.expression.contains(var) && var != exclude_var {
+                                        // Only collect variables that are not loop variables
+                                        if !self.loop_variables.contains(var) {
+                                            self.function_level_vars.insert(var.clone());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                _ => {
+                    // For other commands, recursively collect but exclude the specified variable
+                    self.collect_function_level_vars_with_exclusion(command, exclude_var);
+                }
+            }
+        }
+    }
+
+    fn collect_function_level_vars_with_exclusion(&mut self, command: &Command, exclude_var: &str) {
+        match command {
+            Command::For(for_loop) => {
+                // Recursively collect from for loop body, excluding the loop variable
+                let loop_var = &for_loop.variable;
+                self.collect_function_level_vars_from_block_with_exclusion(&for_loop.body, loop_var);
+            },
+            Command::While(while_loop) => {
+                self.collect_function_level_vars_from_block_with_exclusion(&while_loop.body, exclude_var);
+            },
+            Command::If(if_stmt) => {
+                self.collect_function_level_vars_with_exclusion(&if_stmt.then_branch, exclude_var);
+                if let Some(else_branch) = &if_stmt.else_branch {
+                    self.collect_function_level_vars_with_exclusion(else_branch, exclude_var);
+                }
+            },
+            Command::Case(case_stmt) => {
+                for case in &case_stmt.cases {
+                    for cmd in &case.body {
+                        self.collect_function_level_vars_with_exclusion(cmd, exclude_var);
+                    }
+                }
+            },
+            Command::Function(func) => {
+                self.collect_function_level_vars_from_block_with_exclusion(&func.body, exclude_var);
+            },
+            Command::Block(block) => {
+                self.collect_function_level_vars_from_block_with_exclusion(block, exclude_var);
+            },
+            _ => {
+                // For other commands, check if they contain arithmetic expressions
+                if let Command::Simple(cmd) = command {
+                    if let Word::Literal(ref name) = cmd.name {
+                        if name == "true" && !cmd.env_vars.is_empty() && cmd.args.is_empty() {
+                            for (var, value) in &cmd.env_vars {
+                                if let Word::Arithmetic(expr) = value {
+                                    if expr.expression.contains(var) && var != exclude_var {
+                                        // Only collect variables that are not loop variables
+                                        if !self.loop_variables.contains(var) {
+                                            self.function_level_vars.insert(var.clone());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn generate_command(&mut self, command: &Command) -> String {

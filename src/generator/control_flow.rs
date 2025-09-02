@@ -173,17 +173,9 @@ pub fn generate_while_loop_impl(generator: &mut Generator, while_loop: &WhileLoo
                 }
             }
         }
-    } else if let Command::TestExpression(test_expr) = &*while_loop.condition {
-        // For test expressions, parse to find variables that need initialization
-        let expr = &test_expr.expression;
-        
-        // Extract variables from the expression for initialization
-        if expr.contains("$i") && !generator.declared_locals.contains("i") {
-            // Check if this variable was used in a previous for loop
-            output.push_str(&generator.indent());
-            output.push_str("my $i = 5;\n");
-            generator.declared_locals.insert("i".to_string());
-        }
+    } else if let Command::TestExpression(_test_expr) = &*while_loop.condition {
+        // For test expressions, variables should already be declared at function level
+        // if they are used after their loop context
     }
     
     // Generate while loop
@@ -212,11 +204,19 @@ pub fn generate_while_loop_impl(generator: &mut Generator, while_loop: &WhileLoo
 pub fn generate_for_loop_impl(generator: &mut Generator, for_loop: &ForLoop) -> String {
     let mut output = String::new();
     
-    // Don't track for loop variables in declared_locals since they should be available globally
-    // generator.declared_locals.insert(for_loop.variable.clone());
+    // Declare the loop variable outside the loop so it persists after the loop ends
+    // But only if it hasn't already been declared at function level
+    let loop_var = &for_loop.variable;
+    if !generator.declared_locals.contains(loop_var) && !generator.function_level_vars.contains(loop_var) {
+        output.push_str(&generator.indent());
+        output.push_str(&format!("my ${};\n", loop_var));
+        generator.declared_locals.insert(loop_var.clone());
+    }
     
-    // Generate for loop using the actual variable name from the AST
-    output.push_str(&format!("for my ${} (", for_loop.variable));
+    // Generate for loop using the actual variable name from the AST (without 'my')
+    // We need to store the last value to mimic shell behavior
+    output.push_str(&generator.indent());
+    output.push_str(&format!("for ${} (", for_loop.variable));
     
     // Handle different types of for loop items
     let mut all_items = Vec::new();
@@ -352,8 +352,8 @@ pub fn generate_for_loop_impl(generator: &mut Generator, for_loop: &ForLoop) -> 
         }
     }
     
-    output.push_str(&all_items.join(", "));
-    
+    let items_str = all_items.join(", ");
+    output.push_str(&items_str);
     output.push_str(") {\n");
     
     // Generate body
@@ -363,6 +363,22 @@ pub fn generate_for_loop_impl(generator: &mut Generator, for_loop: &ForLoop) -> 
     
     output.push_str(&generator.indent());
     output.push_str("}\n");
+    
+    // After the loop, set the variable to the last value to mimic shell behavior
+    // But only if the variable is used later (to avoid unnecessary assignments)
+    if generator.function_level_vars.contains(&for_loop.variable) && !all_items.is_empty() {
+        // For simple ranges like 1..3, the last value is 3
+        // For now, we'll handle the common case of ranges
+        if all_items.len() == 1 && items_str.contains("..") {
+            // This is a range like "1..3"
+            let range_parts: Vec<&str> = items_str.split("..").collect();
+            if range_parts.len() == 2 {
+                let end_value = range_parts[1];
+                output.push_str(&generator.indent());
+                output.push_str(&format!("${} = {};\n", for_loop.variable, end_value));
+            }
+        }
+    }
     
     output
 }

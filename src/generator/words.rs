@@ -357,22 +357,16 @@ pub fn convert_arithmetic_to_perl_impl(_generator: &Generator, expr: &str) -> St
     let result = expr.to_string();
     
     // Convert shell variables to Perl variables (e.g., i -> $i)
-    // This is a simple regex-based approach - in practice, the parser should handle this better
+    // Use regex to find variable names and replace them with Perl variable syntax
     
-    // Split the expression into parts and convert each part
-    let parts: Vec<&str> = result.split_whitespace().collect();
-    let converted_parts: Vec<String> = parts.iter().map(|part| {
-        // Check if this part looks like a variable (starts with a letter and contains only alphanumeric chars)
-        if part.chars().next().map_or(false, |c| c.is_alphabetic()) && 
-           part.chars().all(|c| c.is_alphanumeric() || c == '_') {
-            // This looks like a variable, prefix with $
-            format!("${}", part)
-        } else {
-            // This is an operator, number, or already formatted variable
-            part.to_string()
-        }
-    }).collect();
+    // Create a regex to match variable names (letters followed by alphanumeric/underscore)
+    let var_regex = Regex::new(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b").unwrap();
     
-    // Rejoin the parts
-    converted_parts.join(" ")
+    // Replace variable names with Perl variable syntax
+    let converted = var_regex.replace_all(&result, |caps: &regex::Captures| {
+        let var_name = &caps[1];
+        format!("${}", var_name)
+    });
+    
+    converted.to_string()
 }
