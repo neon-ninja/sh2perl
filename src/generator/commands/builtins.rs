@@ -123,8 +123,9 @@ pub fn pipeline_supports_linebyline(pipeline: &Pipeline) -> bool {
                     // Check for grep options that make streaming inappropriate
                     for arg in &first_cmd.args {
                         if let Word::Literal(arg_str) = arg {
-                            if arg_str == "-l" || arg_str == "-L" || arg_str == "-Z" {
+                            if arg_str == "-l" || arg_str == "-L" || arg_str == "-Z" || arg_str == "-r" {
                                 // These options don't make sense in streaming context
+                                // -r (recursive) requires file system traversal
                                 return false;
                             }
                         }

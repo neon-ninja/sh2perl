@@ -110,6 +110,22 @@ pub fn perl_string_literal_impl(generator: &mut Generator, word: &Word) -> Strin
                         .replace(&format!("print \"\\n\" unless {} =~ /\\n$/;", output_var), "")
                         .replace(&format!("$main_exit_code = 1 unless {};", success_var), "");
                     
+                    // Remove conditional print blocks that are common in pipelines
+                    // Use a simpler approach with string replacement for the specific pattern
+                    let output_var_num = output_var.trim_start_matches("$output_");
+                    let print_block_to_remove = format!(
+                        "if ({} ne '' && !defined($output_printed_{})) {{\n\n        print {};\n        print \"\\n\" unless {} =~ /\\n$/;\n    }}", 
+                        output_var, output_var_num, output_var, output_var
+                    );
+                    captured_pipeline = captured_pipeline.replace(&print_block_to_remove, "");
+                    
+                    // Also try without the extra newlines in case formatting is different
+                    let print_block_compact = format!(
+                        "if ({} ne '' && !defined($output_printed_{})) {{ print {}; print \"\\n\" unless {} =~ /\\n$/; }}", 
+                        output_var, output_var_num, output_var, output_var
+                    );
+                    captured_pipeline = captured_pipeline.replace(&print_block_compact, "");
+                    
                     // Remove the outer braces if they exist, as we'll wrap in our own do block
                     captured_pipeline = captured_pipeline.trim().to_string();
                     if captured_pipeline.starts_with('{') && captured_pipeline.ends_with('}') {

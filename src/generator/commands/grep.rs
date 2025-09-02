@@ -26,6 +26,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
     let mut color_always = false;
     let mut recursive = false;
     let mut include_pattern = None;
+    let mut exclude_pattern = None;
     let mut pattern_file = None;
     
     // First pass: identify options and find the pattern
@@ -56,6 +57,22 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                     include_pattern = Some(clean_pattern);
                     // Don't treat this as a pattern
 
+                    continue;
+                }
+                
+                // Handle --exclude flag
+                if s.starts_with("--exclude=") {
+                    let pattern = s[10..].to_string(); // Remove "--exclude=" prefix
+                    // Remove quotes if present
+                    let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+                        pattern[1..pattern.len()-1].to_string()
+                    } else if pattern.starts_with("'") && pattern.ends_with("'") {
+                        pattern[1..pattern.len()-1].to_string()
+                    } else {
+                        pattern
+                    };
+                    exclude_pattern = Some(clean_pattern);
+                    // Don't treat this as a pattern
                     continue;
                 }
                 
@@ -176,6 +193,9 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 output.push_str(&format!("            if (-d $path) {{\n"));
                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
                 output.push_str(&format!("            }} elsif (-f $path) {{\n"));
+                // Handle file filtering with include/exclude patterns
+                let mut conditions = Vec::new();
+                
                 if let Some(ref include_pat) = include_pattern {
                     // Convert shell glob pattern to Perl regex
                     // *.txt -> .*\.txt$
@@ -190,15 +210,31 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                     if !regex_pattern.ends_with("$") {
                         regex_pattern.push_str("$");
                     }
-                    output.push_str(&format!("                if ($file =~ /{}/) {{\n", regex_pattern));
-                    output.push_str(&format!("                    push @files, $path;\n"));
-                    output.push_str(&format!("                }}\n"));
+                    conditions.push(format!("$file =~ /{}/", regex_pattern));
                 } else {
                     // Only include .txt files by default for recursive search
-                    output.push_str(&format!("                if ($file =~ /\\.txt$/) {{\n"));
-                    output.push_str(&format!("                    push @files, $path;\n"));
-                    output.push_str(&format!("                }}\n"));
+                    conditions.push("$file =~ /\\.txt$/".to_string());
                 }
+                
+                if let Some(ref exclude_pat) = exclude_pattern {
+                    // Convert shell glob pattern to Perl regex for exclusion
+                    let mut regex_pattern = exclude_pat.clone();
+                    regex_pattern = regex_pattern.replace("*", ".*");
+                    regex_pattern = regex_pattern.replace(".", "\\.");
+                    regex_pattern = regex_pattern.replace("\\.*", ".*");
+                    if !regex_pattern.ends_with("$") {
+                        regex_pattern.push_str("$");
+                    }
+                    conditions.push(format!("$file !~ /{}/", regex_pattern));
+                }
+                
+                if conditions.is_empty() {
+                    output.push_str(&format!("                if ($file =~ /\\.txt$/) {{\n"));
+                } else {
+                    output.push_str(&format!("                if ({}) {{\n", conditions.join(" && ")));
+                }
+                output.push_str(&format!("                    push @files, $path;\n"));
+                output.push_str(&format!("                }}\n"));
                 output.push_str(&format!("            }}\n"));
                 output.push_str(&format!("        }}\n"));
                 output.push_str(&format!("        closedir($dh);\n"));
@@ -355,7 +391,22 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         
         // Generate output based on options
         if count_only {
-            output.push_str(&format!("$grep_result_{} = scalar(@grep_filtered_{});\n", command_index, command_index));
+            if has_file_args && recursive {
+                // For recursive grep with -c, generate per-file counts
+                output.push_str(&format!("my %file_counts_{};\n", command_index));
+                output.push_str(&format!("for (my $i = 0; $i < @grep_lines_{}; $i++) {{\n", command_index));
+                output.push_str(&format!("    if (grep {{ $_ eq $grep_lines_{}[$i] }} @grep_filtered_{}) {{\n", command_index, command_index));
+                output.push_str(&format!("        $file_counts_{}{{$grep_filenames_{}[$i]}}++;\n", command_index, command_index));
+                output.push_str("    }\n");
+                output.push_str("}\n");
+                output.push_str(&format!("$grep_result_{} = '';\n", command_index));
+                output.push_str(&format!("for my $file (sort keys %file_counts_{}) {{\n", command_index));
+                output.push_str(&format!("    $grep_result_{} .= \"$file:$file_counts_{}{{$file}}\\n\";\n", command_index, command_index));
+                output.push_str("}\n");
+                output.push_str(&format!("$grep_result_{} =~ s/\\n$//; # Remove trailing newline\n", command_index));
+            } else {
+                output.push_str(&format!("$grep_result_{} = scalar(@grep_filtered_{});\n", command_index, command_index));
+            }
             if should_print && !quiet_mode {
                 output.push_str(&format!("print $grep_result_{};\n", command_index));
                 output.push_str("print \"\\n\";\n");

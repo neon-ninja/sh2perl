@@ -376,8 +376,31 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
                 output.push_str(&generator.indent());
                 output.push_str("while (my $line = <$fh>) {\n");
                 generator.indent_level += 1;
+                // Check if we need to declare variables for wc command
+                let has_wc = pipeline.commands.iter().any(|cmd| {
+                    if let Command::Simple(simple_cmd) = cmd {
+                        if let Word::Literal(name) = &simple_cmd.name {
+                            name == "wc"
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                });
+                
+                if has_wc {
+                    output.push_str(&generator.indent());
+                    output.push_str("my $char_count = 0;\n");
+                    output.push_str(&generator.indent());
+                    output.push_str("my $word_count = 0;\n");
+                    output.push_str(&generator.indent());
+                    output.push_str("my $line_count = 0;\n");
+                }
+                
                 output.push_str(&generator.indent());
                 output.push_str("chomp $line;\n");
+                
                 start_index = 1; // Skip the cat command since we're handling it
             }
         }
@@ -385,13 +408,34 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
     
     if start_index == 0 {
         // No special handling, read from STDIN
+        
+        // Check if we need to declare variables for wc command
+        let has_wc = pipeline.commands.iter().any(|cmd| {
+            if let Command::Simple(simple_cmd) = cmd {
+                if let Word::Literal(name) = &simple_cmd.name {
+                    name == "wc"
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        });
+        
+        if has_wc {
+            output.push_str(&generator.indent());
+            output.push_str("my $char_count = 0;\n");
+            output.push_str(&generator.indent());
+            output.push_str("my $word_count = 0;\n");
+            output.push_str(&generator.indent());
+            output.push_str("my $line_count = 0;\n");
+        }
+        
         output.push_str(&generator.indent());
         output.push_str("while (my $line = <STDIN>) {\n");
         generator.indent_level += 1;
         output.push_str(&generator.indent());
         output.push_str("chomp $line;\n");
-        
-        // No variable declarations needed for streaming pipeline - we process each line directly
         
         // Process each line through the remaining pipeline commands
         for (i, command) in pipeline.commands[start_index..].iter().enumerate() {
@@ -416,6 +460,24 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("}\n");
+        
+        // Output wc results if wc was used
+        let has_wc = pipeline.commands.iter().any(|cmd| {
+            if let Command::Simple(simple_cmd) = cmd {
+                if let Word::Literal(name) = &simple_cmd.name {
+                    name == "wc"
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        });
+        
+        if has_wc {
+            output.push_str(&generator.indent());
+            output.push_str("print \"$line_count\\n\";\n");
+        }
     } else if start_index == 1 {
         // For cat commands, we need to add the command processing inside the while loop
         // No variable declarations needed for streaming pipeline - we process each line directly
@@ -446,6 +508,25 @@ fn generate_streaming_pipeline(generator: &mut Generator, pipeline: &Pipeline, s
         output.push_str("}\n");
         output.push_str(&generator.indent());
         output.push_str("close($fh);\n");
+        
+        // Output wc results if wc was used
+        let has_wc = pipeline.commands.iter().any(|cmd| {
+            if let Command::Simple(simple_cmd) = cmd {
+                if let Word::Literal(name) = &simple_cmd.name {
+                    name == "wc"
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        });
+        
+        if has_wc {
+            output.push_str(&generator.indent());
+            output.push_str("print \"$line_count\\n\";\n");
+        }
+        
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("} else {\n");
@@ -512,6 +593,7 @@ fn generate_linebyline_command(generator: &mut Generator, cmd: &SimpleCommand, l
             output.push_str("$char_count += length($line);\n");
             output.push_str("$word_count += scalar(split(/\\s+/, $line));\n");
             output.push_str("$line_count++;\n");
+            output.push_str("next; # Skip normal line processing for wc\n");
             output
         },
         _ => {

@@ -34,6 +34,8 @@ echo "no pattern" > test_dir/file2.txt
 grep -r "pattern" test_dir
 grep -r "pattern" test_dir --include="*.txt"
 grep -r "pattern" test_dir --exclude="*.bak"
+grep -r -c "pattern" test_dir --include="*.txt"
+grep -r "pattern" test_dir --include="*.txt" | wc -l
 
 echo "== Advanced parameters =="
 echo -e "match1\nmatch2\nmatch3\nmatch4" | grep -m 2 "match"

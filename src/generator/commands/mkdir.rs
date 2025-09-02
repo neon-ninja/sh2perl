@@ -43,7 +43,7 @@ pub fn generate_mkdir_command(generator: &mut Generator, cmd: &SimpleCommand) ->
                 output.push_str(&format!("print \"mkdir: created directory {}\\n\";\n", dir));
                 output.push_str("}\n");
                 output.push_str("} else {\n");
-                output.push_str(&format!("print \"mkdir: directory {} already exists\\n\";\n", dir));
+                // mkdir -p is silent when directory already exists (matches shell behavior)
                 output.push_str("}\n");
             } else {
                 output.push_str(&format!("if (!-d {}) {{\n", dir));
