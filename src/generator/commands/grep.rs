@@ -166,7 +166,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                 output.push_str(&format!("            next if $file eq '.' || $file eq '..';\n"));
                 output.push_str(&format!("            my $path = \"$dir/$file\";\n"));
                 output.push_str(&format!("            if (-d $path) {{\n"));
-                output.push_str(&format!("                push @files, find_files_recursive_{}($path, $pattern);\n", command_index));
+                output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
                 output.push_str(&format!("            }} elsif (-f $path) {{\n"));
                 if let Some(ref include_pat) = include_pattern {
                     // Convert shell glob pattern to Perl regex
