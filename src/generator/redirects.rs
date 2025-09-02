@@ -70,6 +70,9 @@ pub fn generate_redirect_impl(generator: &mut Generator, redirect: &Redirect) ->
             output.push_str(&format!("close(${});\n", fh_var));
             
             generator.process_sub_files.insert(temp_file.clone(), temp_var.clone());
+            
+            // Store the temp_var for use by commands that need it (like grep -f)
+            generator.current_process_sub_file = Some(temp_var.clone());
         }
         RedirectOperator::ProcessSubstitutionOutput(_cmd) => {
             output.push_str("# Redirect ProcessSubstitutionOutput not yet implemented\n");

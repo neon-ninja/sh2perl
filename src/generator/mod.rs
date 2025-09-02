@@ -21,6 +21,7 @@ pub struct Generator {
     pub extglob_enabled: bool,
     pub nocasematch_enabled: bool,
     pub process_sub_files: HashMap<String, String>,
+    pub current_process_sub_file: Option<String>,
 }
 
 impl Generator {
@@ -33,6 +34,7 @@ impl Generator {
             extglob_enabled: false,
             nocasematch_enabled: false,
             process_sub_files: HashMap::new(),
+            current_process_sub_file: None,
         }
     }
 

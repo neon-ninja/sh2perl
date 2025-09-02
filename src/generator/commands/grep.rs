@@ -26,6 +26,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
     let mut color_always = false;
     let mut recursive = false;
     let mut include_pattern = None;
+    let mut pattern_file = None;
     
     // First pass: identify options and find the pattern
     let mut args_iter = cmd.args.iter();
@@ -79,6 +80,13 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
                     if let Some(Word::Literal(next_arg)) = args_iter.next() {
                         max_count = Some(next_arg.parse().unwrap_or(0));
                     }
+                } else if s == "-f" {
+                    if let Some(Word::Literal(next_arg)) = args_iter.next() {
+                        pattern_file = Some(next_arg.clone());
+                    } else if let Some(ref temp_file) = generator.current_process_sub_file {
+                        // Use the process substitution file if no explicit file is provided
+                        pattern_file = Some(format!("${}", temp_file));
+                    }
                 } else if s == "-A" {
                     if let Some(Word::Literal(next_arg)) = args_iter.next() {
                         after_context = next_arg.parse().unwrap_or(0);
@@ -102,7 +110,7 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
         }
     }
     
-    if pattern.is_empty() {
+    if pattern.is_empty() && pattern_file.is_none() {
         // No pattern provided, return error
         output.push_str("warn \"grep: no pattern specified\";\n");
         output.push_str("exit(1);\n");
@@ -257,39 +265,85 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             output.push_str(&format!("my @grep_lines_{} = ();\n", command_index));
         }
         
-        // Escape the pattern for Perl regex
-        let escaped_pattern = pattern.to_string();
-        // Remove quotes if they exist around the pattern
-        let mut regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
-            escaped_pattern[1..escaped_pattern.len()-1].to_string()
-        } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
-            escaped_pattern[1..escaped_pattern.len()-1].to_string()
-        } else {
-            escaped_pattern
-        };
-        
-        // Convert shell regex patterns to Perl regex patterns
-        // Convert \+ to + (shell extended regex to Perl)
-        regex_pattern = regex_pattern.replace("\\+", "+");
-        // Convert \? to ? (shell extended regex to Perl)
-        regex_pattern = regex_pattern.replace("\\?", "?");
-        // Convert \( and \) to ( and ) (shell extended regex to Perl)
-        regex_pattern = regex_pattern.replace("\\(", "(");
-        regex_pattern = regex_pattern.replace("\\)", ")");
-        // Convert \{ and \} to { and } (shell extended regex to Perl)
-        regex_pattern = regex_pattern.replace("\\{", "{");
-        regex_pattern = regex_pattern.replace("\\}", "}");
-        // Convert \| to | (shell extended regex to Perl)
-        regex_pattern = regex_pattern.replace("\\|", "|");
-        
-        // Apply grep filtering
+        // Handle pattern source - either from command line or from file
         let regex_flags = if ignore_case { "i" } else { "" };
-        if invert_match {
-            // Negative grep: exclude lines that match the pattern
-            output.push_str(&format!("my @grep_filtered_{} = grep !/{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+        let mut regex_pattern = String::new();
+        
+        if let Some(pattern_file_name) = &pattern_file {
+            // Read patterns from file (-f option)
+            output.push_str(&format!("my @patterns_{} = ();\n", command_index));
+            
+            // Check if this is a process substitution variable (starts with $)
+            if pattern_file_name.starts_with('$') {
+                output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+                output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+            } else {
+                output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+                output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+            }
+            
+            output.push_str(&format!("    while (my $line = <$fh_{}>) {{\n", command_index));
+            output.push_str(&format!("        chomp($line);\n"));
+            output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+            output.push_str(&format!("    }}\n"));
+            output.push_str(&format!("    close($fh_{});\n", command_index));
+            output.push_str(&format!("}}\n"));
+            
+            // Apply grep filtering with multiple patterns
+            output.push_str(&format!("my @grep_filtered_{} = ();\n", command_index));
+            output.push_str(&format!("for my $line (@grep_lines_{}) {{\n", command_index));
+            output.push_str(&format!("    my $match = 0;\n"));
+            output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+            if invert_match {
+                output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+                output.push_str(&format!("            $match = 1;\n"));
+                output.push_str(&format!("            last;\n"));
+                output.push_str(&format!("        }}\n"));
+                output.push_str(&format!("    }}\n"));
+                output.push_str(&format!("    push @grep_filtered_{}, $line unless $match;\n", command_index));
+            } else {
+                output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+                output.push_str(&format!("            $match = 1;\n"));
+                output.push_str(&format!("            last;\n"));
+                output.push_str(&format!("        }}\n"));
+                output.push_str(&format!("    }}\n"));
+                output.push_str(&format!("    push @grep_filtered_{}, $line if $match;\n", command_index));
+            }
+            output.push_str(&format!("}}\n"));
         } else {
-            // Positive grep: include lines that match the pattern
-            output.push_str(&format!("my @grep_filtered_{} = grep /{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+            // Use pattern from command line
+            let escaped_pattern = pattern.to_string();
+            // Remove quotes if they exist around the pattern
+            regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+                escaped_pattern[1..escaped_pattern.len()-1].to_string()
+            } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+                escaped_pattern[1..escaped_pattern.len()-1].to_string()
+            } else {
+                escaped_pattern
+            };
+            
+            // Convert shell regex patterns to Perl regex patterns
+            // Convert \+ to + (shell extended regex to Perl)
+            regex_pattern = regex_pattern.replace("\\+", "+");
+            // Convert \? to ? (shell extended regex to Perl)
+            regex_pattern = regex_pattern.replace("\\?", "?");
+            // Convert \( and \) to ( and ) (shell extended regex to Perl)
+            regex_pattern = regex_pattern.replace("\\(", "(");
+            regex_pattern = regex_pattern.replace("\\)", ")");
+            // Convert \{ and \} to { and } (shell extended regex to Perl)
+            regex_pattern = regex_pattern.replace("\\{", "{");
+            regex_pattern = regex_pattern.replace("\\}", "}");
+            // Convert \| to | (shell extended regex to Perl)
+            regex_pattern = regex_pattern.replace("\\|", "|");
+            
+            // Apply grep filtering
+            if invert_match {
+                // Negative grep: exclude lines that match the pattern
+                output.push_str(&format!("my @grep_filtered_{} = grep !/{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+            } else {
+                // Positive grep: include lines that match the pattern
+                output.push_str(&format!("my @grep_filtered_{} = grep /{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+            }
         }
         
         // Apply max count if specified

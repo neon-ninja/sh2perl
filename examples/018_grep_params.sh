@@ -7,8 +7,8 @@ set -euo pipefail
 
 echo "== Basic grep parameters =="
 echo "text with pattern" | grep -i "PATTERN"
-echo "line1\nline2\nline3" | grep -v "line2"
-echo "match\nno match\nmatch again" | grep -c "match"
+echo -e "line1\nline2\nline3" | grep -v "line2"
+echo -e "match\nno match\nmatch again" | grep -c "match"
 
 echo "== Context parameters =="
 echo -e "line1\nline2\nTARGET\nline4\nline5" | grep -A 2 "TARGET"
@@ -20,7 +20,7 @@ echo "content" > temp_file.txt
 grep -H "content" temp_file.txt
 grep -h "content" temp_file.txt
 grep -l "content" temp_file.txt
-grep -L "nonexistent" temp_file.txt
+grep -L "nonexistent" temp_file.txt || true
 
 echo "== Output formatting parameters =="
 echo "text with pattern in it" | grep -o "pattern"

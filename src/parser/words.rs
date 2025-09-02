@@ -232,6 +232,16 @@ pub fn parse_word(lexer: &mut Lexer) -> Result<Word, ParserError> {
         | Some(Token::DollarBraceHashStar) | Some(Token::DollarBraceHashAt) | Some(Token::DollarBraceBangStar) | Some(Token::DollarBraceBangAt)
             => Ok(parse_variable_expansion(lexer)?),
         Some(Token::Arithmetic) | Some(Token::ArithmeticEval) => Ok(parse_arithmetic_expression(lexer)?),
+        Some(Token::True) => {
+            // Treat standalone 'true' as a normal word (e.g., `true` or `command || true`)
+            lexer.next();
+            Ok(Word::Literal("true".to_string()))
+        }
+        Some(Token::False) => {
+            // Treat standalone 'false' as a normal word (e.g., `false` or `command && false`)
+            lexer.next();
+            Ok(Word::Literal("false".to_string()))
+        }
         _ => {
             let (line, col) = lexer.offset_to_line_col(0);
             let token = lexer.peek().unwrap_or(Token::Identifier).to_owned();
@@ -475,6 +485,16 @@ pub fn parse_word_no_newline_skip(lexer: &mut Lexer) -> Result<Word, ParserError
         | Some(Token::DollarBraceHashStar) | Some(Token::DollarBraceHashAt) | Some(Token::DollarBraceBangStar) | Some(Token::DollarBraceBangAt)
             => Ok(parse_variable_expansion(lexer)?),
         Some(Token::Arithmetic) | Some(Token::ArithmeticEval) => Ok(parse_arithmetic_expression(lexer)?),
+        Some(Token::True) => {
+            // Treat standalone 'true' as a normal word (e.g., `true` or `command || true`)
+            lexer.next();
+            Ok(Word::Literal("true".to_string()))
+        }
+        Some(Token::False) => {
+            // Treat standalone 'false' as a normal word (e.g., `false` or `command && false`)
+            lexer.next();
+            Ok(Word::Literal("false".to_string()))
+        }
         _ => {
             let (line, col) = lexer.offset_to_line_col(0);
             let token = lexer.peek().unwrap_or(Token::Identifier).to_owned();

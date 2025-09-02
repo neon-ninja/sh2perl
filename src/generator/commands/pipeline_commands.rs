@@ -125,9 +125,11 @@ fn generate_command_using_builtins(
             
             // For logical OR in pipeline context, we need to handle it specially
             // to avoid embedding Perl code in shell backticks
-            if let Command::Simple(simple_cmd) = &**left {
-                if let Word::Literal(name) = &simple_cmd.name {
-                    if name == "grep" {
+            if let Command::And(and_left, and_right) = &**left {
+                // Handle nested AND operations in OR context
+                if let Command::Simple(simple_cmd) = &**and_left {
+                    if let Word::Literal(name) = &simple_cmd.name {
+                        if name == "grep" {
                         // For grep commands in logical OR, generate proper conditional structure
                         let unique_id = generator.get_unique_id();
                         output.push_str(&format!("my $grep_exit_code_{};\n", unique_id));
@@ -169,47 +171,19 @@ fn generate_command_using_builtins(
                         output.push_str(&generator.indent());
                         output.push_str(&format!("$grep_exit_code_{} = scalar({}) > 0 ? 0 : 1;\n", unique_id, grep_filtered_var));
                         
-                        // Set the output based on grep result
+                        // Handle the nested AND operation: grep -q && echo "found"
                         output.push_str(&generator.indent());
                         output.push_str(&format!("if ($grep_exit_code_{} == 0) {{\n", unique_id));
                         generator.indent_level += 1;
                         output.push_str(&generator.indent());
-                        // Extract the actual grep result variable name from the generated grep code
-                        let mut grep_result_var = format!("$grep_result_{}", command_index);
-                        for line in grep_output.lines() {
-                            if line.contains("$grep_result_") && line.contains(" = ") {
-                                if let Some(start) = line.find("$grep_result_") {
-                                    let var_part = &line[start..];
-                                    if let Some(end) = var_part.find([' ', ';', '=']) {
-                                        grep_result_var = var_part[..end].to_string();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        output.push_str(&format!("${} = {};\n", output_var, grep_result_var));
-                        // Print the result immediately to avoid scoping issues
-                        output.push_str(&generator.indent());
-                        output.push_str(&format!("my $temp_result = {};\n", grep_result_var));
-                        output.push_str(&generator.indent());
-                        output.push_str("chomp($temp_result);\n");
-                        output.push_str(&generator.indent());
-                        output.push_str("print $temp_result;\n");
-                        output.push_str(&generator.indent());
-                        output.push_str("print \"\\n\";\n");
-                        // Don't add extra newline since grep result already has one
-                        // The grep result already contains a newline, so we don't need to add another
-                        // Clear the output variable to avoid double printing at the end
-                        output.push_str(&generator.indent());
-                        output.push_str(&format!("${} = '';\n", output_var));
-                        // Set the flag to indicate output has been printed
-                        output.push_str(&generator.indent());
-                        output.push_str(&format!("$output_printed_{} = 1;\n", output_var.replace("output_", "")));
+                        // Execute the right operand of the AND operation (echo "found")
+                        output.push_str(&generator.generate_command(and_right));
                         generator.indent_level -= 1;
                         output.push_str(&generator.indent());
                         output.push_str("} else {\n");
                         generator.indent_level += 1;
                         output.push_str(&generator.indent());
+                        // Execute the right operand of the OR operation (echo "not found")
                         output.push_str(&generator.generate_command(right));
                         generator.indent_level -= 1;
                         output.push_str(&generator.indent());
@@ -221,7 +195,11 @@ fn generate_command_using_builtins(
                         // Set pipeline success to 1 since either grep succeeded or fallback was executed
                         output.push_str(&generator.indent());
                         output.push_str(&format!("$pipeline_success_{} = 1;\n", output_var.replace("output_", "")));
+                        // Clear the output variable to avoid printing input data for grep -q
+                        output.push_str(&generator.indent());
+                        output.push_str(&format!("${} = '';\n", output_var));
                         return output;
+                        }
                     }
                 }
             }
@@ -240,7 +218,23 @@ fn generate_command_using_builtins(
                 // For pipeline context, we need to handle input properly
                 output.push_str(&format!("my $temp_input_{} = ${};\n", unique_id, input_var));
                 output.push_str(&generator.indent());
-                output.push_str(&generator.generate_command(left));
+                
+                // Check if left command is a grep command that needs input
+                if let Command::Simple(simple_cmd) = &**left {
+                    if let Word::Literal(name) = &simple_cmd.name {
+                        if name == "grep" {
+                            // Generate grep command with input
+                            let grep_output = crate::generator::commands::grep::generate_grep_command(generator, simple_cmd, &format!("temp_input_{}", unique_id), &unique_id.to_string(), true);
+                            output.push_str(&grep_output);
+                        } else {
+                            output.push_str(&generator.generate_command(left));
+                        }
+                    } else {
+                        output.push_str(&generator.generate_command(left));
+                    }
+                } else {
+                    output.push_str(&generator.generate_command(left));
+                }
             }
             
             output.push_str(&generator.indent());
@@ -254,6 +248,13 @@ fn generate_command_using_builtins(
             output.push_str(&generator.indent());
             output.push_str(&generator.generate_command(right));
             generator.indent_level -= 1;
+            output.push_str(&generator.indent());
+            output.push_str("} else {\n");
+            output.push_str(&generator.indent());
+            if !output_var.is_empty() {
+                let var_name = output_var.replace("output_", "");
+                output.push_str(&format!("    $output_printed_{} = 1;  # Mark as printed to avoid double output\n", var_name));
+            }
             output.push_str(&generator.indent());
             output.push_str("}\n");
             output
