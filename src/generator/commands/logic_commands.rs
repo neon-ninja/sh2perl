@@ -46,14 +46,9 @@ pub fn generate_logical_and(generator: &mut Generator, left: &Command, right: &C
                 }
                 
                 output.push_str(&generator.indent());
-                // Check if grep found matches by checking if the result is non-empty
-                if !grep_result_var.is_empty() {
-                    output.push_str(&format!("$? = {} ne '' ? 0 : 1;\n", grep_result_var));
-                    output.push_str(&format!("{} ne ''\n", grep_result_var));
-                } else {
-                    output.push_str("$? = 1;\n");
-                    output.push_str("1\n"); // Default to true if we can't find the variable
-                }
+                // For grep commands, check if matches were found by looking at the filtered array
+                // The grep command should have already set $? correctly
+                output.push_str("$? == 0\n");
                 
                 generator.indent_level -= 1;
                 output.push_str(&generator.indent());
@@ -101,105 +96,41 @@ pub fn generate_logical_or(generator: &mut Generator, left: &Command, right: &Co
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("}\n");
+    } else if let Command::And(and_left, and_right) = left {
+        // Special handling for AND operations in OR context
+        // Generate: if (!(left && right)) { or_right }
+        output.push_str("my $and_success = 0;\n");
+        output.push_str(&generator.indent());
+        output.push_str(&generator.generate_command(and_left));
+        output.push_str(&generator.indent());
+        output.push_str("if ($? == 0) {\n");
+        generator.indent_level += 1;
+        output.push_str(&generator.indent());
+        output.push_str(&generator.generate_command(and_right));
+        output.push_str(&generator.indent());
+        output.push_str("$and_success = 1;\n");
+        generator.indent_level -= 1;
+        output.push_str(&generator.indent());
+        output.push_str("}\n");
+        output.push_str(&generator.indent());
+        output.push_str("if ($and_success == 0) {\n");
+        generator.indent_level += 1;
+        output.push_str(&generator.indent());
+        output.push_str(&generator.generate_command(right));
+        generator.indent_level -= 1;
+        output.push_str(&generator.indent());
+        output.push_str("}\n");
+        return output;
     } else {
         // For commands that generate Perl code (like grep), we need to handle them specially
         // to avoid embedding Perl code inside shell backticks
         if let Command::Simple(simple_cmd) = left {
             if let Word::Literal(name) = &simple_cmd.name {
                 if name == "grep" {
-                    // For grep commands in logical OR, we need to generate the complete conditional structure
-                    // including proper variable declarations and exit code checking
-                    let unique_id = generator.get_unique_id();
-                    output.push_str(&format!("my $grep_exit_code_{};\n", unique_id));
+                    // For grep commands in logical OR, generate the command and check exit code
+                    output.push_str(&generator.generate_command(left));
                     output.push_str(&generator.indent());
-                    output.push_str(&format!("{{\n"));
-                    generator.indent_level += 1;
-                    
-                    // Pre-declare all the variables that the grep command might use
-                    // The grep command will use variables like $grep_result_X, where X is some identifier
-                    // We need to analyze the grep output to see what variables it's trying to use
-                    let grep_result = generator.generate_command(left);
-                    
-                    // Extract variable names from the grep result and declare them
-                    let mut declared_vars = std::collections::HashSet::new();
-                    for line in grep_result.lines() {
-                        // Look for patterns like $grep_result_... that are not declared
-                        if line.contains("$grep_result_") && !line.trim_start().starts_with("my ") {
-                            // Extract the variable name
-                            if let Some(start) = line.find("$grep_result_") {
-                                let var_part = &line[start..];
-                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
-                                    let var_name = &var_part[1..end]; // Remove the $
-                                    if !declared_vars.contains(var_name) {
-                                        output.push_str(&generator.indent());
-                                        output.push_str(&format!("my ${};\n", var_name));
-                                        declared_vars.insert(var_name.to_string());
-                                    }
-                                }
-                            }
-                        }
-                        // Also look for @grep_lines_ and @grep_filenames_ variables
-                        if line.contains("@grep_lines_") && !line.trim_start().starts_with("my ") {
-                            // Extract the variable name
-                            if let Some(start) = line.find("@grep_lines_") {
-                                let var_part = &line[start..];
-                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
-                                    let var_name = &var_part[..end]; // Keep the @
-                                    if !declared_vars.contains(var_name) {
-                                        output.push_str(&generator.indent());
-                                        output.push_str(&format!("my {};\n", var_name));
-                                        declared_vars.insert(var_name.to_string());
-                                    }
-                                }
-                            }
-                        }
-                        if line.contains("@grep_filenames_") && !line.trim_start().starts_with("my ") {
-                            // Extract the variable name
-                            if let Some(start) = line.find("@grep_filenames_") {
-                                let var_part = &line[start..];
-                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
-                                    let var_name = &var_part[..end]; // Keep the @
-                                    if !declared_vars.contains(var_name) {
-                                        output.push_str(&generator.indent());
-                                        output.push_str(&format!("my {};\n", var_name));
-                                        declared_vars.insert(var_name.to_string());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Now output the grep command, but skip variable declarations that are already handled
-                    for line in grep_result.lines() {
-                        if !line.trim().is_empty() && !line.trim().starts_with("my $grep_result_") && !line.trim().starts_with("my @grep_lines_") && !line.trim().starts_with("my @grep_filenames_") {
-                            output.push_str(&generator.indent());
-                            output.push_str(line);
-                            output.push_str("\n");
-                        }
-                    }
-                    
-                    // Set the exit code based on grep result
-                    // Extract the grep_filtered variable name from the generated grep code
-                    let mut grep_filtered_var = format!("@grep_filtered_{}", unique_id);
-                    for line in grep_result.lines() {
-                        if line.contains("@grep_filtered_") {
-                            if let Some(start) = line.find("@grep_filtered_") {
-                                let var_part = &line[start..];
-                                if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
-                                    grep_filtered_var = var_part[..end].to_string();
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    output.push_str(&generator.indent());
-                    output.push_str(&format!("$grep_exit_code_{} = scalar({}) > 0 ? 0 : 1;\n", unique_id, grep_filtered_var));
-                    
-                    generator.indent_level -= 1;
-                    output.push_str(&generator.indent());
-                    output.push_str(&format!("}}\n"));
-                    output.push_str(&generator.indent());
-                    output.push_str(&format!("if ($grep_exit_code_{} != 0) {{\n", unique_id));
+                    output.push_str("if ($? != 0) {\n");
                     generator.indent_level += 1;
                     output.push_str(&generator.indent());
                     output.push_str(&generator.generate_command(right));

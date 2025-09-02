@@ -507,10 +507,9 @@ pub fn generate_grep_command(generator: &mut Generator, cmd: &SimpleCommand, inp
             }
         }
         
-        // Set exit status for quiet mode
-        if quiet_mode {
-            // In pipelines or logical ops, caller should inspect @grep_filtered_*
-        }
+        // Set exit status for all grep commands
+        // For quiet mode, set exit code based on whether matches were found
+        output.push_str(&format!("$? = scalar(@grep_filtered_{}) > 0 ? 0 : 1;\n", command_index));
     }
     
     output

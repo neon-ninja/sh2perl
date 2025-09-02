@@ -154,12 +154,12 @@ fn generate_command_using_builtins(
                         }
                         
                         // Extract the grep_filtered variable name from the generated grep code
-                        let mut grep_filtered_var = format!("@grep_filtered_{}", unique_id);
+                        let mut grep_filtered_var = format!("@grep_filtered_{}", command_index);
                         for line in grep_output.lines() {
-                            if line.contains("@grep_filtered_") {
+                            if line.contains("@grep_filtered_") && line.contains(" = ") {
                                 if let Some(start) = line.find("@grep_filtered_") {
                                     let var_part = &line[start..];
-                                    if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
+                                    if let Some(end) = var_part.find([' ', ';', '=', ')', ',']) {
                                         grep_filtered_var = var_part[..end].to_string();
                                         break;
                                     }
@@ -175,12 +175,12 @@ fn generate_command_using_builtins(
                         generator.indent_level += 1;
                         output.push_str(&generator.indent());
                         // Extract the actual grep result variable name from the generated grep code
-                        let mut grep_result_var = format!("$grep_result_{}_{}", unique_id, command_index);
+                        let mut grep_result_var = format!("$grep_result_{}", command_index);
                         for line in grep_output.lines() {
-                            if line.contains("$grep_result_") {
+                            if line.contains("$grep_result_") && line.contains(" = ") {
                                 if let Some(start) = line.find("$grep_result_") {
                                     let var_part = &line[start..];
-                                    if let Some(end) = var_part.find([' ', ';', '=', ')', ',', '\n']) {
+                                    if let Some(end) = var_part.find([' ', ';', '=']) {
                                         grep_result_var = var_part[..end].to_string();
                                         break;
                                     }
@@ -703,7 +703,7 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
         output.push_str(&generator.indent());
         output.push_str(&format!("$main_exit_code = 1 unless $pipeline_success_{};\n", unique_id));
         output.push_str(&generator.indent());
-        output.push_str("exit(1) if $main_exit_code == 1;\n");
+        // output.push_str("exit(1) if $main_exit_code == 1;\n");
         
         generator.indent_level -= 1;
         output.push_str("}\n");
@@ -772,7 +772,7 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                 output.push_str(&generator.indent());
                 output.push_str(&format!("$main_exit_code = 1 unless $pipeline_success_{};\n", unique_id));
                 output.push_str(&generator.indent());
-                output.push_str("exit(1) if $main_exit_code == 1;\n");
+                // output.push_str("exit(1) if $main_exit_code == 1;\n");
             } else {
                 // Generic 2-command pipeline
                 let unique_id = generator.get_unique_id();
@@ -844,7 +844,7 @@ fn generate_buffered_pipeline(generator: &mut Generator, pipeline: &Pipeline, sh
                 output.push_str(&generator.indent());
                 output.push_str(&format!("$main_exit_code = 1 unless $pipeline_success_{};\n", unique_id));
                 output.push_str(&generator.indent());
-                output.push_str("exit(1) if $main_exit_code == 1;\n");
+                // output.push_str("exit(1) if $main_exit_code == 1;\n");
             }
         }
         generator.indent_level -= 1;
