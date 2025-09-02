@@ -65,9 +65,13 @@ pub fn generate_test_expression_impl(generator: &mut Generator, test_expr: &Test
         } else {
             "0".to_string()
         }
-    } else if expr.contains(" = ") {
-        // String equality: [[ $var = value ]]
-        let parts: Vec<&str> = expr.split(" = ").collect();
+    } else if expr.contains(" = ") || expr.contains("=") {
+        // String equality: [[ $var = value ]] or [[ $var=value ]]
+        let parts: Vec<&str> = if expr.contains(" = ") {
+            expr.split(" = ").collect()
+        } else {
+            expr.split("=").collect()
+        };
         if parts.len() == 2 {
             let var = parts[0].trim();
             let value = parts[1].trim();

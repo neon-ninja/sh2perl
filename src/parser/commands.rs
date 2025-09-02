@@ -1002,6 +1002,21 @@ impl Parser {
                     expression_parts.push(pattern_text);
                     self.lexer.next();
                 }
+                Some(Token::Tilde) => {
+                    // Handle tilde expansion: ~ or ~/path
+                    expression_parts.push("~".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Slash) => {
+                    // Handle path separators after tilde
+                    expression_parts.push("/".to_string());
+                    self.lexer.next();
+                }
+                Some(Token::Assign) => {
+                    // Handle assignment operator in test expressions
+                    expression_parts.push("=".to_string());
+                    self.lexer.next();
+                }
                 None => {
                     return Err(ParserError::InvalidSyntax("Unexpected end of input in test expression".to_string()));
                 }

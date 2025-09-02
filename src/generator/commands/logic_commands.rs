@@ -19,6 +19,10 @@ pub fn generate_logical_and(generator: &mut Generator, left: &Command, right: &C
         generator.indent_level -= 1;
         output.push_str(&generator.indent());
         output.push_str("} == 0");
+    } else if let Command::TestExpression(_) = left {
+        // For test expressions, generate the test condition directly
+        let test_result = generator.generate_command(left);
+        output.push_str(&test_result);
     } else if let Command::Simple(simple_cmd) = left {
         if let Word::Literal(name) = &simple_cmd.name {
             if name == "grep" {
