@@ -1,0 +1,5 @@
+=== Output and Formatting Commands ===
+Echo result: Hello from backticks
+Printf result: Number: 42, String: test
+Tee result: test output
+=== Output and Formatting Commands Complete ===

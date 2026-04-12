@@ -1,0 +1,6 @@
+15
+50
+Replacing start of: hello world with: hi
+Replacing end of: hello world with: bye
+Setting first element of my_array to new_value
+Setting last element of my_array to final_value

@@ -1,0 +1,20 @@
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_hard_to_parse.sh: line 7: (a + b) * (c - d) / (e % f) + (g ** h) - (i << j) | (k & l) ^ (m | n) : division by 0 (error token is "f) + (g ** h) - (i << j) | (k & l) ^ (m | n) ")
+computed
+
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_hard_to_parse.sh: line 22: ${!prefix*[@]:0:3}: bad substitution
+  $(echo "Command substitution")
+  ${var:-default}
+  $(( 1 + 2 * 3 ))
+Starting
+Processing
+All done
+No numbers
+head: grep: invalid number of lines: ''
+: No such file or directory
+2
+sort: cannot read: file1.txt: No such file or directory
+sort: cannot read: file2.txt: No such file or directory
+a1x a1y a1z a2x a2y a2z a3x a3y a3z b1x b1y b1z b2x b2y b2z b3x b3y b3z c1x c1y c1z c2x c2y c2z c3x c3y c3z
+upper: 
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_hard_to_parse.sh: line 166: syntax error near unexpected token `('
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_hard_to_parse.sh: line 166: `    --array-option=("item1" "item2" "item3") \'

@@ -1,0 +1,46 @@
+=== Comprehensive Numeric Computation Examples ===
+
+1. Fibonacci Sequence (first 20 numbers):
+    0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181
+
+2. Number Factorization:
+Factors of 12: 2 * 2 * 3
+Factors of 28: 2 * 2 * 7
+Factors of 100: 2 * 2 * 5 * 5
+Factors of 12345: 3 * 5 * 823
+
+3. Prime Number Generation:
+Finding first 100 prime numbers...
+Found 100 primes so far...
+First 100 primes found!
+First 10: 2 3 5 7 11 13 17 19 23 29
+Last 10: 467 479 487 491 499 503 509 521 523 541
+
+4. Greatest Common Divisor Examples:
+   gcd(48, 18) = 6
+   gcd(54, 24) = 6
+   gcd(7, 13) = 1
+   gcd(100, 25) = 25
+   gcd(12345, 67890) = 15
+
+5. Least Common Multiple Examples:
+   lcm(12, 18) = 36
+   lcm(15, 20) = 60
+   lcm(8, 12) = 24
+
+6. Performance Benchmarks:
+   Computing fibonacci(30):
+Duration: 1 ms
+   Factorizing 12345:
+Duration: 1 ms
+   Finding first 50 primes:
+Duration: 207 ms
+
+=== All numeric computations complete! ===
+
+You can now test these scripts with your translator:
+  ./sh2perl parse --perl examples/fibonacci.sh
+  ./sh2perl parse --rust examples/factorize.sh
+  ./sh2perl parse --python examples/primes.sh
+  ./sh2perl parse --lua examples/gcd.sh
+  ./sh2perl parse --js examples/numeric_computations.sh

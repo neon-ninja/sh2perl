@@ -1,0 +1,10 @@
+== Indexed arrays ==
+two
+3
+one two three 
+== Associative arrays ==
+bar
+42
+answer => 42
+foo => bar
+two => 1 + 1

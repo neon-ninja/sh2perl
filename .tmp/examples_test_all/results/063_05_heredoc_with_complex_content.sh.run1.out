@@ -1,0 +1,3 @@
+  $(echo "Command substitution")
+  ${var:-default}
+  $(( 1 + 2 * 3 ))

@@ -1,0 +1,2 @@
+Inner: LOG_LEVEL=verbose, DEBUG=unset
+Outer: LOG_LEVEL=verbose, DEBUG=1

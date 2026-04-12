@@ -1,0 +1,10 @@
+=== Greatest Common Divisor Examples ===
+GCD calculations:
+gcd(48, 18) = 6
+gcd(54, 24) = 6
+gcd(7, 13) = 1
+gcd(100, 25) = 25
+gcd(12345, 67890) = 15
+
+Enter two numbers to calculate their GCD (or press Ctrl+C to exit):
+First number: GCD calculation complete!

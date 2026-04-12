@@ -1,0 +1,16 @@
+== Case modification in parameter expansion ==
+WORLD
+world
+World
+== Advanced parameter expansion ==
+file.txt
+/tmp
+aXXa
+== More parameter expansion ==
+ world
+hello 
+hell0 w0rld
+== Default values ==
+default
+default
+default

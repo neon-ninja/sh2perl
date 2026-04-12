@@ -1,0 +1,43 @@
+=== Text Processing Commands ===
+cat: src/main.rs: No such file or directory
+First 5 lines of main.rs:
+
+grep: src/main.rs: No such file or directory
+Lines containing 'fn':
+
+Sed result: Hello Universe
+Awk sum result: 3
+Sorted words:
+apple
+banana
+zebra
+Unique words:
+apple
+banana
+cherry
+Word count: 2
+Line count: 3
+First 3 numbers: 1
+2
+3
+Last 3 numbers: 8
+9
+10
+Second field: banana
+Pasted columns:
+1 a
+2 b
+3 c
+Common lines:
+banana
+cherry
+File differences:
+1d0
+< apple
+3a3
+> date
+Lowercase: hello world
+Xargs result:
+Number: 1
+Number: 2
+Number: 3

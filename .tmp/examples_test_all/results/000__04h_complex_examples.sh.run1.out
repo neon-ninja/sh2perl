@@ -1,0 +1,15 @@
+=== Complex Backtick Examples ===
+Nested backticks: Three wells: well
+well
+well
+File count: 1
+Running as root
+Running on macOS
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/000__04h_complex_examples.sh: line 41: 000__01_file_directory_operations.sh: No such file or directory
+File 000__01_file_directory_operations.sh has  bytes
+Shell scripts found: 0
+Process substitution result:
+apple
+Here string result: HELLO WORLD
+Perl result: Hello from Perl
+=== Complex Backtick Examples Complete ===

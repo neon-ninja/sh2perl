@@ -1,0 +1,2 @@
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_01_deeply_nested_arithmetic.sh: line 4: (a + b) * (c - d) / (e % f) + (g ** h) - (i << j) | (k & l) ^ (m | n) : division by 0 (error token is "f) + (g ** h) - (i << j) | (k & l) ^ (m | n) ")
+Deeply nested arithmetic result: 

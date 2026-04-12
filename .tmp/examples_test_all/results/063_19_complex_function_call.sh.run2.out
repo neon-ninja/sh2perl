@@ -1,0 +1,2 @@
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_19_complex_function_call.sh: line 6: syntax error near unexpected token `('
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_19_complex_function_call.sh: line 6: `    --array-option=("item1" "item2" "item3") \'

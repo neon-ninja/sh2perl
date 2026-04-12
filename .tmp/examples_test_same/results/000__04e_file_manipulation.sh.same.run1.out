@@ -1,0 +1,15 @@
+=== File Manipulation Commands ===
+Copy result: Copy successful
+test_file.txt
+test_file_copy.txt
+No test files found
+Move result: Move successful
+test_file.txt
+test_file_moved.txt
+No test files found
+Remove result: Remove successful
+No test files found
+Mkdir result: Directory created
+file
+Touch result: File touched
+=== File Manipulation Commands Complete ===

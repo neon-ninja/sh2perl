@@ -1,0 +1,27 @@
+Warmup 1
+Fruit: apple
+
+=== Example 1: Simple Perl one-liner ===
+Hello from Perl!
+
+=== Example 2: Perl with arguments ===
+Argument: first
+Argument: second
+Argument: third
+
+=== Example 3: Perl processing shell variables ===
+Shell variable: 
+Shell variable: Hello World
+
+=== Example 4: Perl reading from pipeline ===
+Fruit: apple
+Fruit: banana
+Fruit: cherry
+
+=== Example 5: Perl script with here document ===
+Added 1, sum is now 1
+Added 2, sum is now 3
+Added 3, sum is now 6
+Added 4, sum is now 10
+Added 5, sum is now 15
+Final sum: 15

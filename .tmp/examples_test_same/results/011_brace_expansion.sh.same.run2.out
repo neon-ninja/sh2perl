@@ -1,0 +1,14 @@
+== Basic brace expansion ==
+1 2 3 4 5
+a b c
+00 02 04
+== Advanced brace expansion ==
+a1 a2 a3 b1 b2 b3 c1 c2 c3
+1 3 5 7 9
+a d g j m p s v y
+== Practical examples ==
+file_001.txt
+file_002.txt
+file_003.txt
+file_004.txt
+file_005.txt

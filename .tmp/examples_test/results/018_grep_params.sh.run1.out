@@ -1,0 +1,38 @@
+== Basic grep parameters ==
+text with pattern
+line1
+line3
+3
+== Context parameters ==
+TARGET
+line4
+line5
+line1
+line2
+TARGET
+line2
+TARGET
+line4
+== File handling parameters ==
+temp_file.txt:content
+content
+temp_file.txt
+temp_file.txt
+== Output formatting parameters ==
+pattern
+0:text with pattern in it
+1:text with pattern in it
+== Recursive and include/exclude parameters ==
+test_dir/file1.txt:pattern here
+test_dir/file2.txt:no pattern
+test_dir/file1.txt:pattern here
+test_dir/file2.txt:no pattern
+test_dir/file1.txt:pattern here
+test_dir/file2.txt:no pattern
+test_dir/file1.txt:1
+test_dir/file2.txt:1
+2
+== Advanced parameters ==
+match1
+match2
+found

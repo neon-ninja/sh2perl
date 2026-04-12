@@ -1,0 +1,25 @@
+=== File Manipulation Commands ===
+=== cp command ===
+
+Copy result: Copy successful
+test_file.txt
+test_file_copy.txt
+No test files found
+
+=== mv command ===
+Move result: Move successful
+test_file.txt
+test_file_moved.txt
+No test files found
+
+=== rm command ===
+Remove result: Remove successful
+No test files found
+
+=== mkdir command ===
+Mkdir result: Directory created
+file
+
+=== touch command ===
+Touch result: File touched
+

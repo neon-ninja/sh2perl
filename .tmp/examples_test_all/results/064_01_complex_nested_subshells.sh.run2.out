@@ -1,0 +1,75 @@
+1c1,4
+< _apt
+---
+> _ssh
+> adm
+> admin
+> audio
+3a7,8
+> cdrom
+> crontab
+6c11,14
+< dhcpcd
+---
+> dialout
+> dip
+> disk
+> docker
+7a16,17
+> fax
+> floppy
+9a20
+> input
+10a22,23
+> kmem
+> kvm
+19a33
+> netdev
+21,31c35,37
+< nixbld1
+< nixbld10
+< nixbld2
+< nixbld3
+< nixbld4
+< nixbld5
+< nixbld6
+< nixbld7
+< nixbld8
+< nixbld9
+< nobody
+---
+> nix-users
+> nixbld
+> nogroup
+32a39,42
+> operator
+> pipewire
+> plocate
+> plugdev
+34a45,46
+> rdma
+> render
+37c49,55
+< sync
+---
+> sasl
+> sgx
+> shadow
+> src
+> ssl-cert
+> staff
+> sudo
+39a58
+> systemd-journal
+42a62
+> tape
+44c64
+< usbmux
+---
+> tty
+45a66,67
+> users
+> utmp
+47a70,71
+> video
+> voice

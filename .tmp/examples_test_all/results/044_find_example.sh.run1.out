@@ -1,0 +1,21 @@
+#find . -name "*.txt" -type f | sort
+
+find . -mtime -7 -type f  | sort
+
+find . -mtime -1 -type f  | sort
+
+find . -mmin -60 -type f  | sort
+
+find . -size +1M -type f  | sort
+
+find . -empty  | sort
+./home
+touch/ls/rm
+a.logtmp.sav
+find .. -type f -not -path "./.git/*" -not -path "./node_modules/*"  | sort
+../018_grep_params.sh_1/temp_file.txt
+../018_grep_params.sh_1/test_dir/file1.txt
+../018_grep_params.sh_1/test_dir/file2.txt
+../018_grep_params.sh_2/temp_file.txt
+../018_grep_params.sh_2/test_dir/file1.txt
+../018_grep_params.sh_2/test_dir/file2.txt

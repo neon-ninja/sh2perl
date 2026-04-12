@@ -1,0 +1,3 @@
+computed
+
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/063_04_complex_parameter_expansion.sh: line 6: ${!prefix*[@]:0:3}: bad substitution

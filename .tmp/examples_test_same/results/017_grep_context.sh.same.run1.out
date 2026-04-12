@@ -1,0 +1,1611 @@
+TARGET
+line4
+line5
+line1
+line2
+TARGET
+line2
+TARGET
+line4
+Creating test files...
+Recursive search results:
+./temp_file1.txt:pattern in file1
+./perl_functions.txt:      97:                 perl_pattern = perl_pattern.replace("]", "\\]");
+./perl_functions.txt:      99:                 // Create condition: $operation =~ /^pattern$/
+./perl_functions.txt:      54:                     i += 1; // Skip the pattern argument
+./perl_functions.txt:     124:         } else if pattern.is_empty() {
+./perl_functions.txt:     125:             // First non-literal argument is the pattern
+./perl_functions.txt:>>>  126:             pattern = generator.word_to_perl(arg);
+./perl_functions.txt:      84:         // Handle multiple patterns in a single case clause
+./perl_functions.txt:      85:         let mut pattern_conditions = Vec::new();
+./perl_functions.txt:      86:         for pattern in &case_clause.patterns {
+./perl_functions.txt:>>>   87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_functions.txt:      88:             if pattern_str == "\"*\"" {
+./perl_functions.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_functions.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_functions.txt:>>>   92:                 // Convert bash glob patterns to Perl regex
+./perl_functions.txt:      93:                 let mut perl_pattern = pattern_str.trim_matches('"').to_string();
+./perl_functions.txt:      94:                 perl_pattern = perl_pattern.replace("*", ".*");
+./perl_functions.txt:      95:                 perl_pattern = perl_pattern.replace("?", ".");
+./perl_functions.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:>>>  224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:     225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_functions.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:>>>  225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_functions.txt:     228:     pub fn convert_glob_to_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:      32:             let pattern = parts[1].trim();
+./perl_functions.txt:      35:             format!("{} =~ /{}/", var, pattern)
+./perl_functions.txt:      47:                 // Handle extglob patterns
+./perl_functions.txt:>>>   48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_functions.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_functions.txt:>>>  419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_functions.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_functions.txt:     421:     let mut result = pattern.to_string();
+./perl_functions.txt:     419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_functions.txt:>>>  420:     // Convert extglob patterns to Perl regex
+./perl_functions.txt:     421:     let mut result = pattern.to_string();
+./perl_functions.txt:     421:     let mut result = pattern.to_string();
+./perl_functions.txt:>>>  424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_functions.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_functions.txt:     209:                 if let Some(ref include_pat) = include_pattern {
+./perl_functions.txt:>>>  210:                     // Convert shell glob pattern to Perl regex
+./perl_functions.txt:     212:                     let mut regex_pattern = include_pat.clone();
+./perl_functions.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_functions.txt:>>>  230:                     // Convert shell glob pattern to Perl regex for exclusion
+./perl_functions.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_functions.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_functions.txt:     233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_functions.txt:     368:                 escaped_pattern
+./perl_functions.txt:>>>  371:             // Convert shell regex patterns to Perl regex patterns
+./perl_functions.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_functions.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_functions.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_functions.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_functions.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_functions.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_functions.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_functions.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_functions.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_functions.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_functions.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_functions.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_functions.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_functions.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_functions.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_functions.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_functions.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_functions.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_functions.txt:     383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_functions.txt:>>>  147: /// Check if the generated Perl code contains forbidden patterns specified in PERL_MUST_NOT_CONTAIN comments
+./perl_functions.txt:     155:             if let Some(pattern_start) = line.find("#PERL_MUST_NOT_CONTAIN:") {
+./perl_functions.txt:     156:                 let pattern = line[pattern_start + "#PERL_MUST_NOT_CONTAIN:".len()..].trim();
+./perl_functions.txt:     157:                 if !pattern.is_empty() {
+./perl_functions.txt:>>>  158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_functions.txt:     159:                     if perl_code.contains(pattern) {
+./perl_functions.txt:     160:                         violations.push(format!("Line {}: Found forbidden pattern '{}' in generated Perl code", line_num + 1, pattern));
+./perl_functions.txt:     157:                 if !pattern.is_empty() {
+./perl_functions.txt:     158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_functions.txt:     159:                     if perl_code.contains(pattern) {
+./perl_functions.txt:>>>  160:                         violations.push(format!("Line {}: Found forbidden pattern '{}' in generated Perl code", line_num + 1, pattern));
+./perl_functions.txt:     571:             if let Some(pattern_arg) = cmd.args.iter().find(|arg| {
+./perl_functions.txt:>>>  574:                 let pattern = generator.strip_shell_quotes_for_regex(pattern_arg);
+./perl_functions.txt:     575:                 output.push_str(&format!("next unless $line =~ /{}/;\n", pattern));
+./perl_functions.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:>>>  224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:     225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_functions.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:>>>  225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_functions.txt:     228:     pub fn convert_glob_to_regex(&self, pattern: &str) -> String {
+./perl_functions.txt:      47:                 // Handle extglob patterns
+./perl_functions.txt:>>>   48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_functions.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_functions.txt:>>>  419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_functions.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_functions.txt:     421:     let mut result = pattern.to_string();
+./perl_functions.txt:     421:     let mut result = pattern.to_string();
+./perl_functions.txt:>>>  424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_functions.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file1.txt:pattern here
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file2.txt:no pattern
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file1.txt:pattern here
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file2.txt:no pattern
+./.tmp/examples_test_all/summary.txt:010_pattern_matching.sh: deterministic (rc1=0 rc2=0)
+./.tmp/examples_test_all/summary.txt:036_pattern_matching_basic.sh: deterministic (rc1=0 rc2=0)
+./.tmp/examples_test_all/summary.txt:037_pattern_matching_extglob.sh: deterministic (rc1=0 rc2=0)
+./.tmp/examples_test_all/summary.txt:038_pattern_matching_nocase.sh: deterministic (rc1=0 rc2=0)
+./.tmp/examples_test_all/summary.txt:064_04_extended_glob_patterns.sh: deterministic (rc1=0 rc2=0)
+./.tmp/examples_test_all/summary.txt:064_19_complex_pattern_matching_extended_globs.sh: deterministic (rc1=2 rc2=2)
+./.tmp/examples_test_same/list.txt:examples/010_pattern_matching.sh
+./.tmp/examples_test_same/list.txt:examples/036_pattern_matching_basic.sh
+./.tmp/examples_test_same/list.txt:examples/037_pattern_matching_extglob.sh
+./.tmp/examples_test_same/list.txt:examples/038_pattern_matching_nocase.sh
+./.tmp/examples_test_same/list.txt:examples/064_04_extended_glob_patterns.sh
+./.tmp/examples_test_same/list.txt:examples/064_19_complex_pattern_matching_extended_globs.sh
+./.tmp/examples_test_same/summary.txt:010_pattern_matching.sh: deterministic (rc=0)
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file1.txt:pattern here
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file2.txt:no pattern
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file1.txt:pattern here
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file2.txt:no pattern
+./.tmp/examples_test/list.txt:examples/010_pattern_matching.sh
+./.tmp/examples_test/results/summary.txt:010_pattern_matching.sh: deterministic (rc=0)
+./shell_output.txt:  - examples/010_pattern_matching.sh
+./shell_output.txt:  - examples/036_pattern_matching_basic.sh
+./shell_output.txt:  - examples/037_pattern_matching_extglob.sh
+./shell_output.txt:  - examples/038_pattern_matching_nocase.sh
+./shell_output.txt:  - examples/064_04_extended_glob_patterns.sh
+./shell_output.txt:  - examples/064_19_complex_pattern_matching_extended_globs.sh
+./full_test_output.txt:warning: function `escape_glob_pattern` is never used
+./full_test_output.txt:4 | fn escape_glob_pattern(pattern: &str) -> String {
+./full_test_output.txt:-010_pattern_matching.sh
+./full_test_output.txt:-036_pattern_matching_basic.sh
+./full_test_output.txt:-037_pattern_matching_extglob.sh
+./full_test_output.txt:-038_pattern_matching_nocase.sh
+./full_test_output.txt:-064_04_extended_glob_patterns.sh
+./full_test_output.txt:-064_19_complex_pattern_matching_extended_globs.sh
+./full_test_output.txt:-./010_pattern_matching.sh
+./full_test_output.txt:-./036_pattern_matching_basic.sh
+./full_test_output.txt:-./037_pattern_matching_extglob.sh
+./full_test_output.txt:-./038_pattern_matching_nocase.sh
+./full_test_output.txt:-./064_04_extended_glob_patterns.sh
+./full_test_output.txt:-./064_19_complex_pattern_matching_extended_globs.sh
+./test_run.txt:warning: function `escape_glob_pattern` is never used
+./test_run.txt:4 | fn escape_glob_pattern(pattern: &str) -> String {
+./test_run.txt:-010_pattern_matching.sh
+./test_run.txt:-036_pattern_matching_basic.sh
+./test_run.txt:-037_pattern_matching_extglob.sh
+./test_run.txt:-038_pattern_matching_nocase.sh
+./test_run.txt:-064_04_extended_glob_patterns.sh
+./test_run.txt:-064_19_complex_pattern_matching_extended_globs.sh
+./test_run.txt:-./010_pattern_matching.sh
+./test_run.txt:-./036_pattern_matching_basic.sh
+./test_run.txt:-./037_pattern_matching_extglob.sh
+./test_run.txt:-./038_pattern_matching_nocase.sh
+./test_run.txt:-./064_04_extended_glob_patterns.sh
+./test_run.txt:-./064_19_complex_pattern_matching_extended_globs.sh
+./temp_file2.txt:no pattern in file2
+./perl_specific_results.txt:      97:                 perl_pattern = perl_pattern.replace("]", "\\]");
+./perl_specific_results.txt:      99:                 // Create condition: $operation =~ /^pattern$/
+./perl_specific_results.txt:      54:                     i += 1; // Skip the pattern argument
+./perl_specific_results.txt:     124:         } else if pattern.is_empty() {
+./perl_specific_results.txt:     125:             // First non-literal argument is the pattern
+./perl_specific_results.txt:>>>  126:             pattern = generator.word_to_perl(arg);
+./perl_specific_results.txt:      84:         // Handle multiple patterns in a single case clause
+./perl_specific_results.txt:      85:         let mut pattern_conditions = Vec::new();
+./perl_specific_results.txt:      86:         for pattern in &case_clause.patterns {
+./perl_specific_results.txt:>>>   87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_specific_results.txt:      88:             if pattern_str == "\"*\"" {
+./perl_specific_results.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_specific_results.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_specific_results.txt:>>>   92:                 // Convert bash glob patterns to Perl regex
+./perl_specific_results.txt:      93:                 let mut perl_pattern = pattern_str.trim_matches('"').to_string();
+./perl_specific_results.txt:      94:                 perl_pattern = perl_pattern.replace("*", ".*");
+./perl_specific_results.txt:      95:                 perl_pattern = perl_pattern.replace("?", ".");
+./perl_specific_results.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:     225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_specific_results.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_specific_results.txt:     228:     pub fn convert_glob_to_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:      32:             let pattern = parts[1].trim();
+./perl_specific_results.txt:      35:             format!("{} =~ /{}/", var, pattern)
+./perl_specific_results.txt:      47:                 // Handle extglob patterns
+./perl_specific_results.txt:>>>   48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_specific_results.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_specific_results.txt:>>>  419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:     419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  420:     // Convert extglob patterns to Perl regex
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:>>>  424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:     209:                 if let Some(ref include_pat) = include_pattern {
+./perl_specific_results.txt:>>>  210:                     // Convert shell glob pattern to Perl regex
+./perl_specific_results.txt:     212:                     let mut regex_pattern = include_pat.clone();
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:>>>  230:                     // Convert shell glob pattern to Perl regex for exclusion
+./perl_specific_results.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_specific_results.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     368:                 escaped_pattern
+./perl_specific_results.txt:>>>  371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_specific_results.txt:>>>  147: /// Check if the generated Perl code contains forbidden patterns specified in PERL_MUST_NOT_CONTAIN comments
+./perl_specific_results.txt:     155:             if let Some(pattern_start) = line.find("#PERL_MUST_NOT_CONTAIN:") {
+./perl_specific_results.txt:     156:                 let pattern = line[pattern_start + "#PERL_MUST_NOT_CONTAIN:".len()..].trim();
+./perl_specific_results.txt:     157:                 if !pattern.is_empty() {
+./perl_specific_results.txt:>>>  158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_specific_results.txt:     159:                     if perl_code.contains(pattern) {
+./perl_specific_results.txt:     160:                         violations.push(format!("Line {}: Found forbidden pattern '{}' in generated Perl code", line_num + 1, pattern));
+./perl_specific_results.txt:     157:                 if !pattern.is_empty() {
+./perl_specific_results.txt:     158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_specific_results.txt:     159:                     if perl_code.contains(pattern) {
+./perl_specific_results.txt:>>>  160:                         violations.push(format!("Line {}: Found forbidden pattern '{}' in generated Perl code", line_num + 1, pattern));
+./perl_specific_results.txt:     571:             if let Some(pattern_arg) = cmd.args.iter().find(|arg| {
+./perl_specific_results.txt:>>>  574:                 let pattern = generator.strip_shell_quotes_for_regex(pattern_arg);
+./perl_specific_results.txt:     575:                 output.push_str(&format!("next unless $line =~ /{}/;\n", pattern));
+./perl_specific_results.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:     225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_specific_results.txt:     224:     pub fn convert_extglob_to_perl_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  225:         test_expressions::convert_extglob_to_perl_regex_impl(self, pattern)
+./perl_specific_results.txt:     228:     pub fn convert_glob_to_regex(&self, pattern: &str) -> String {
+./perl_specific_results.txt:      47:                 // Handle extglob patterns
+./perl_specific_results.txt:>>>   48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_specific_results.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_specific_results.txt:>>>  419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:>>>  424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:>>>  157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:>>>  158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:>>>  159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     157:             ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{0}##{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:>>>  160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     158:             ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{0}#{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:>>>  161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     159:             ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{0}%%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     160:             ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{0}%{1}}}", self.variable, pattern),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     161:             ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{0}//{1}/{2}}}", self.variable, pattern, replacement),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     238:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => write!(f, "${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     239:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => write!(f, "${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     240:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => write!(f, "${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     241:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => write!(f, "${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     242:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => write!(f, "${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     312:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     313:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     314:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     315:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     316:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     363:                     ParameterExpansionOperator::RemoveLongestPrefix(pattern) => format!("${{{}}}##{}", pe.variable, pattern),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     364:                     ParameterExpansionOperator::RemoveShortestPrefix(pattern) => format!("${{{}}}#{}", pe.variable, pattern),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:>>>  367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     365:                     ParameterExpansionOperator::RemoveLongestSuffix(pattern) => format!("${{{}}}%%{}", pe.variable, pattern),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     366:                     ParameterExpansionOperator::RemoveShortestSuffix(pattern) => format!("${{{}}}%{}", pe.variable, pattern),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     367:                     ParameterExpansionOperator::SubstituteAll(pattern, replacement) => format!("${{{}}}//{}/{}", pe.variable, pattern, replacement),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     437:                                 ParameterExpansionOperator::RemoveLongestPrefix(pattern) => result.push_str(&format!("${{{}}}##{}", pe.variable, pattern)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     438:                                 ParameterExpansionOperator::RemoveShortestPrefix(pattern) => result.push_str(&format!("${{{}}}#{}", pe.variable, pattern)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:>>>  441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     439:                                 ParameterExpansionOperator::RemoveLongestSuffix(pattern) => result.push_str(&format!("${{{}}}%%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     440:                                 ParameterExpansionOperator::RemoveShortestSuffix(pattern) => result.push_str(&format!("${{{}}}%{}", pe.variable, pattern)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:     441:                                 ParameterExpansionOperator::SubstituteAll(pattern, replacement) => result.push_str(&format!("${{{}}}//{}/{}", pe.variable, pattern, replacement)),
+./perl_specific_results.txt:       8:             // Check if this contains array access patterns like arr[1] or map[foo]
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:      50:             format!("${{{}}} =~ s/{}$//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      52:         ParameterExpansionOperator::RemoveLongestSuffix(pattern) => {
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:>>>   50:             format!("${{{}}} =~ s/{}$//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      52:         ParameterExpansionOperator::RemoveLongestSuffix(pattern) => {
+./perl_specific_results.txt:      50:             format!("${{{}}} =~ s/{}$//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      52:         ParameterExpansionOperator::RemoveLongestSuffix(pattern) => {
+./perl_specific_results.txt:      54:             format!("${{{}}} =~ s/{}$//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      56:         ParameterExpansionOperator::RemoveShortestPrefix(pattern) => {
+./perl_specific_results.txt:      52:         ParameterExpansionOperator::RemoveLongestSuffix(pattern) => {
+./perl_specific_results.txt:>>>   54:             format!("${{{}}} =~ s/{}$//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      56:         ParameterExpansionOperator::RemoveShortestPrefix(pattern) => {
+./perl_specific_results.txt:      54:             format!("${{{}}} =~ s/{}$//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      56:         ParameterExpansionOperator::RemoveShortestPrefix(pattern) => {
+./perl_specific_results.txt:      58:             format!("${{{}}} =~ s/^{}//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      60:         ParameterExpansionOperator::RemoveLongestPrefix(pattern) => {
+./perl_specific_results.txt:      56:         ParameterExpansionOperator::RemoveShortestPrefix(pattern) => {
+./perl_specific_results.txt:>>>   58:             format!("${{{}}} =~ s/^{}//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      60:         ParameterExpansionOperator::RemoveLongestPrefix(pattern) => {
+./perl_specific_results.txt:      58:             format!("${{{}}} =~ s/^{}//r", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      60:         ParameterExpansionOperator::RemoveLongestPrefix(pattern) => {
+./perl_specific_results.txt:      62:             format!("${{{}}} =~ s/^{}//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      64:         ParameterExpansionOperator::SubstituteAll(pattern, replacement) => {
+./perl_specific_results.txt:      60:         ParameterExpansionOperator::RemoveLongestPrefix(pattern) => {
+./perl_specific_results.txt:>>>   62:             format!("${{{}}} =~ s/^{}//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      64:         ParameterExpansionOperator::SubstituteAll(pattern, replacement) => {
+./perl_specific_results.txt:      65:             // ${var//pattern/replacement} - substitute all occurrences
+./perl_specific_results.txt:      62:             format!("${{{}}} =~ s/^{}//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      64:         ParameterExpansionOperator::SubstituteAll(pattern, replacement) => {
+./perl_specific_results.txt:>>>   65:             // ${var//pattern/replacement} - substitute all occurrences
+./perl_specific_results.txt:      68:                    escape_regex_pattern(pattern),
+./perl_specific_results.txt:      64:         ParameterExpansionOperator::SubstituteAll(pattern, replacement) => {
+./perl_specific_results.txt:      65:             // ${var//pattern/replacement} - substitute all occurrences
+./perl_specific_results.txt:      68:                    escape_regex_pattern(pattern),
+./perl_specific_results.txt:>>> 1025:             // This is ${var//pattern/replacement} - split the second part by the first '/'
+./perl_specific_results.txt:    1026:             let pattern_replacement = parts[1];
+./perl_specific_results.txt:    1027:             if let Some(slash_pos) = pattern_replacement.find('/') {
+./perl_specific_results.txt:    1028:                 let pattern = &pattern_replacement[..slash_pos];
+./perl_specific_results.txt:>>>  437:                                         modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:     438:                                         eprintln!("DEBUG: Inserted file argument: ${} at position {}", pattern_file.0, i + 1);
+./perl_specific_results.txt:     437:                                         modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:>>>  438:                                         eprintln!("DEBUG: Inserted file argument: ${} at position {}", pattern_file.0, i + 1);
+./perl_specific_results.txt:>>>  553:                                             modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:     554:                                             eprintln!("DEBUG: Inserted file argument: ${}", pattern_file.0);
+./perl_specific_results.txt:     553:                                             modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:>>>  554:                                             eprintln!("DEBUG: Inserted file argument: ${}", pattern_file.0);
+./perl_specific_results.txt:     102:                         pattern_file = Some(next_arg.clone());
+./perl_specific_results.txt:>>>  105:                         pattern_file = Some(format!("${}", temp_file));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     117:         // Join multiple patterns with 'or'
+./perl_specific_results.txt:>>>  118:         output.push_str(&pattern_conditions.join(" or "));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:      28:             args.push(pattern);
+./perl_specific_results.txt:     252:     let patterns: Vec<String> = content
+./perl_specific_results.txt:      28:         // Regex matching: [[ $var =~ pattern ]]
+./perl_specific_results.txt:      32:             let pattern = parts[1].trim();
+./perl_specific_results.txt:      40:         // Pattern matching: [[ $var == pattern ]]
+./perl_specific_results.txt:      44:             let pattern = parts[1].trim();
+./perl_specific_results.txt:    1025:             // This is ${var//pattern/replacement} - split the second part by the first '/'
+./perl_specific_results.txt:    1026:             let pattern_replacement = parts[1];
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:      18:                 // Basic substitution: s/pattern/replacement/
+./perl_specific_results.txt:      21:                     let pattern = parts[1];
+./perl_specific_results.txt:     252:     let patterns: Vec<String> = content
+./perl_specific_results.txt:       4: fn escape_glob_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:>>>    5:     pattern.chars().map(|c| match c {
+./perl_specific_results.txt:      21:             let pattern = interp.parts.iter()
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:      18:         // For glob patterns, use Perl's glob function
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:>>>  324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:>>>  327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     153:                 // For non-glob patterns, use the original logic
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:      96:                 perl_pattern = perl_pattern.replace("[", "\\[");
+./perl_specific_results.txt:      97:                 perl_pattern = perl_pattern.replace("]", "\\]");
+./perl_specific_results.txt:>>>   99:                 // Create condition: $operation =~ /^pattern$/
+./perl_specific_results.txt:>>>  113:                 pattern_conditions.push(format!("{} =~ /^{}$/", processed_word, perl_pattern));
+./perl_specific_results.txt:      32:             let pattern = parts[1].trim();
+./perl_specific_results.txt:>>>   35:             format!("{} =~ /{}/", var, pattern)
+./perl_specific_results.txt:      47:                 // Handle extglob patterns
+./perl_specific_results.txt:      48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_specific_results.txt:>>>   50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_specific_results.txt:      52:                     format!("{} =~ /{}/", var, regex_pattern)
+./perl_specific_results.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_specific_results.txt:>>>   52:                     format!("{} =~ /{}/", var, regex_pattern)
+./perl_specific_results.txt:      55:                 // Regular glob pattern matching - convert glob to regex
+./perl_specific_results.txt:      56:                 let regex_pattern = generator.convert_glob_to_regex(pattern);
+./perl_specific_results.txt:>>>   59:                     format!("{} =~ /^{}$/i", var, regex_pattern)
+./perl_specific_results.txt:      62:                     format!("{} =~ /^{}$/", var, regex_pattern)
+./perl_specific_results.txt:      59:                     format!("{} =~ /^{}$/i", var, regex_pattern)
+./perl_specific_results.txt:>>>   62:                     format!("{} =~ /^{}$/", var, regex_pattern)
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     220:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     221:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:>>>  223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     574:                 let pattern = generator.strip_shell_quotes_for_regex(pattern_arg);
+./perl_specific_results.txt:>>>  575:                 output.push_str(&format!("next unless $line =~ /{}/;\n", pattern));
+./perl_specific_results.txt:     235:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     236:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:>>>  238:                     conditions.push(format!("$file !~ /{}/", regex_pattern));
+./perl_specific_results.txt:     154:             // Extract the forbidden pattern after the comment
+./perl_specific_results.txt:     155:             if let Some(pattern_start) = line.find("#PERL_MUST_NOT_CONTAIN:") {
+./perl_specific_results.txt:>>>  156:                 let pattern = line[pattern_start + "#PERL_MUST_NOT_CONTAIN:".len()..].trim();
+./perl_specific_results.txt:     157:                 if !pattern.is_empty() {
+./perl_specific_results.txt:     158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_specific_results.txt:     159:                     if perl_code.contains(pattern) {
+./perl_specific_results.txt:     181:             // Extract the forbidden patterns after the comment
+./perl_specific_results.txt:     182:             if let Some(pattern_start) = line.find("#AST_MUST_NOT_CONTAIN:") {
+./perl_specific_results.txt:>>>  183:                 let pattern_text = line[pattern_start + "#AST_MUST_NOT_CONTAIN:".len()..].trim();
+./perl_specific_results.txt:     184:                 if !pattern_text.is_empty() {
+./perl_specific_results.txt:     185:                     // Parse the pattern list like [Literal("-"), Literal("1")]
+./perl_specific_results.txt:     186:                     if let Some(patterns) = parse_ast_pattern_list(pattern_text) {
+./perl_specific_results.txt:     214:             // Extract the required patterns after the comment
+./perl_specific_results.txt:     215:             if let Some(pattern_start) = line.find("#AST_MUST_CONTAIN:") {
+./perl_specific_results.txt:>>>  216:                 let pattern_text = line[pattern_start + "#AST_MUST_CONTAIN:".len()..].trim();
+./perl_specific_results.txt:     217:                 if !pattern_text.is_empty() {
+./perl_specific_results.txt:     218:                     // Parse the pattern list like [Literal("-1")]
+./perl_specific_results.txt:     219:                     if let Some(patterns) = parse_ast_pattern_list(pattern_text) {
+./perl_specific_results.txt:     252:     let patterns: Vec<String> = content
+./perl_specific_results.txt:     452:                 // The pattern might be incomplete due to parser issues
+./perl_specific_results.txt:>>>  458:                     // Extract the pattern inside !(...) and after it
+./perl_specific_results.txt:     459:                     let negated_pattern = &result[actual_open + 1..actual_close];
+./perl_specific_results.txt:     460:                     let after_pattern = &result[actual_close + 1..];
+./perl_specific_results.txt:     458:                     // Extract the pattern inside !(...) and after it
+./perl_specific_results.txt:>>>  459:                     let negated_pattern = &result[actual_open + 1..actual_close];
+./perl_specific_results.txt:     460:                     let after_pattern = &result[actual_close + 1..];
+./perl_specific_results.txt:     462:                     eprintln!("DEBUG: negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:     458:                     // Extract the pattern inside !(...) and after it
+./perl_specific_results.txt:     459:                     let negated_pattern = &result[actual_open + 1..actual_close];
+./perl_specific_results.txt:>>>  460:                     let after_pattern = &result[actual_close + 1..];
+./perl_specific_results.txt:     462:                     eprintln!("DEBUG: negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:>>>  475:                     // No closing parenthesis found, but we have !(... pattern
+./perl_specific_results.txt:     476:                     // This suggests the parser didn't complete the pattern
+./perl_specific_results.txt:     479:                     // Try to split the pattern to find the negated part and the after part
+./perl_specific_results.txt:>>>  481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:     483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     484:                     if let Some(last_dot_pos) = pattern_after_open.rfind('.') {
+./perl_specific_results.txt:     483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     484:                     if let Some(last_dot_pos) = pattern_after_open.rfind('.') {
+./perl_specific_results.txt:>>>  485:                         let negated_pattern = &pattern_after_open[..last_dot_pos];
+./perl_specific_results.txt:     486:                         let after_pattern = &pattern_after_open[last_dot_pos..];
+./perl_specific_results.txt:     488:                         eprintln!("DEBUG: Split pattern - negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:     483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     484:                     if let Some(last_dot_pos) = pattern_after_open.rfind('.') {
+./perl_specific_results.txt:     485:                         let negated_pattern = &pattern_after_open[..last_dot_pos];
+./perl_specific_results.txt:>>>  486:                         let after_pattern = &pattern_after_open[last_dot_pos..];
+./perl_specific_results.txt:     488:                         eprintln!("DEBUG: Split pattern - negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:    1025:             // This is ${var//pattern/replacement} - split the second part by the first '/'
+./perl_specific_results.txt:    1026:             let pattern_replacement = parts[1];
+./perl_specific_results.txt:    1027:             if let Some(slash_pos) = pattern_replacement.find('/') {
+./perl_specific_results.txt:>>> 1028:                 let pattern = &pattern_replacement[..slash_pos];
+./perl_specific_results.txt:    1029:                 let replacement = &pattern_replacement[slash_pos + 1..];
+./perl_specific_results.txt:    1026:             let pattern_replacement = parts[1];
+./perl_specific_results.txt:    1027:             if let Some(slash_pos) = pattern_replacement.find('/') {
+./perl_specific_results.txt:    1028:                 let pattern = &pattern_replacement[..slash_pos];
+./perl_specific_results.txt:>>> 1029:                 let replacement = &pattern_replacement[slash_pos + 1..];
+./perl_specific_results.txt:    1032:                     operator: ParameterExpansionOperator::SubstituteAll(pattern.to_string(), replacement.to_string()),
+./perl_specific_results.txt:>>>   48:                     let pattern = s[10..].to_string(); // Remove "--include=" prefix
+./perl_specific_results.txt:      50:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      51:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      48:                     let pattern = s[10..].to_string(); // Remove "--include=" prefix
+./perl_specific_results.txt:      50:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:>>>   51:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      52:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      53:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      50:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      51:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      52:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:>>>   53:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      55:                         pattern
+./perl_specific_results.txt:>>>   65:                     let pattern = s[10..].to_string(); // Remove "--exclude=" prefix
+./perl_specific_results.txt:      67:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      68:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      65:                     let pattern = s[10..].to_string(); // Remove "--exclude=" prefix
+./perl_specific_results.txt:      67:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:>>>   68:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      69:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      70:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      67:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      68:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      69:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:>>>   70:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      72:                         pattern
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     361:             let escaped_pattern = pattern.to_string();
+./perl_specific_results.txt:     362:             // Remove quotes if they exist around the pattern
+./perl_specific_results.txt:     363:             regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+./perl_specific_results.txt:>>>  364:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     365:             } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+./perl_specific_results.txt:     366:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     363:             regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+./perl_specific_results.txt:     364:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     365:             } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+./perl_specific_results.txt:>>>  366:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     368:                 escaped_pattern
+./perl_specific_results.txt:>>>  364:     // Regex pattern content (for bash test expressions)
+./perl_specific_results.txt:>>>   13:     /// Convert glob pattern to regex pattern    // Removed unused convert_extglob_to_regex function
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:>>>  121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:>>>   28:         // Regex matching: [[ $var =~ pattern ]]
+./perl_specific_results.txt:      32:             let pattern = parts[1].trim();
+./perl_specific_results.txt:      35:             format!("{} =~ /{}/", var, pattern)
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:>>>  424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:     462:                     eprintln!("DEBUG: negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:     464:                     // Convert the negated pattern to regex
+./perl_specific_results.txt:>>>  465:                     let negated_regex = convert_glob_to_regex_impl(generator, negated_pattern);
+./perl_specific_results.txt:     466:                     let after_regex = convert_glob_to_regex_impl(generator, after_pattern);
+./perl_specific_results.txt:     464:                     // Convert the negated pattern to regex
+./perl_specific_results.txt:     465:                     let negated_regex = convert_glob_to_regex_impl(generator, negated_pattern);
+./perl_specific_results.txt:>>>  466:                     let after_regex = convert_glob_to_regex_impl(generator, after_pattern);
+./perl_specific_results.txt:     488:                         eprintln!("DEBUG: Split pattern - negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:     490:                         // Convert the negated pattern to regex
+./perl_specific_results.txt:>>>  491:                         let negated_regex = convert_glob_to_regex_impl(generator, negated_pattern);
+./perl_specific_results.txt:     492:                         let after_regex = convert_glob_to_regex_impl(generator, after_pattern);
+./perl_specific_results.txt:     490:                         // Convert the negated pattern to regex
+./perl_specific_results.txt:     491:                         let negated_regex = convert_glob_to_regex_impl(generator, negated_pattern);
+./perl_specific_results.txt:>>>  492:                         let after_regex = convert_glob_to_regex_impl(generator, after_pattern);
+./perl_specific_results.txt:     505:                         eprintln!("DEBUG: No dot found - negated_pattern: '{}', after_pattern: '{}'", negated_pattern, after_pattern);
+./perl_specific_results.txt:     507:                         // Convert the negated pattern to regex
+./perl_specific_results.txt:>>>  508:                         let negated_regex = convert_glob_to_regex_impl(generator, negated_pattern);
+./perl_specific_results.txt:     522:     eprintln!("DEBUG: No extglob pattern found, escaping special characters");
+./perl_specific_results.txt:     542:     let mut result = pattern.to_string();
+./perl_specific_results.txt:>>>  545:     eprintln!("DEBUG: convert_glob_to_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     547:     // Normalize the pattern by removing extra spaces around glob characters
+./perl_specific_results.txt:>>>  561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:>>>  575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:     576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:     575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:>>>  576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:>>>  197:             // Treat regex patterns as literals
+./perl_specific_results.txt:>>>  451:             // Treat regex patterns as literals
+./perl_specific_results.txt:>>>    8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:     214:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     216:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     218:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     220:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:>>>  230:                     // Convert shell glob pattern to Perl regex for exclusion
+./perl_specific_results.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_specific_results.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     368:                 escaped_pattern
+./perl_specific_results.txt:>>>  371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_specific_results.txt:>>>    8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:     124:                 // Check if we have a pattern like: literal + brace_expansion + literal
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:       6:     // Try to find pattern " at line:col" we emit in our errors
+./perl_specific_results.txt:     157:                 if !pattern.is_empty() {
+./perl_specific_results.txt:     158:                     // Check if the forbidden pattern exists in the generated Perl code
+./perl_specific_results.txt:     159:                     if perl_code.contains(pattern) {
+./perl_specific_results.txt:>>>  160:                         violations.push(format!("Line {}: Found forbidden pattern '{}' in generated Perl code", line_num + 1, pattern));
+./perl_specific_results.txt:     187:                         // Check if ALL forbidden patterns exist in the AST string
+./perl_specific_results.txt:     188:                         let all_patterns_found = patterns.iter().all(|pattern| ast_string.contains(pattern));
+./perl_specific_results.txt:     189:                         if all_patterns_found {
+./perl_specific_results.txt:>>>  190:                             violations.push(format!("Line {}: Found all forbidden AST patterns {:?} in AST string", line_num + 1, patterns));
+./perl_specific_results.txt:     193:                         violations.push(format!("Line {}: Invalid AST_MUST_NOT_CONTAIN pattern format: {}", line_num + 1, pattern_text));
+./perl_specific_results.txt:     190:                             violations.push(format!("Line {}: Found all forbidden AST patterns {:?} in AST string", line_num + 1, patterns));
+./perl_specific_results.txt:>>>  193:                         violations.push(format!("Line {}: Invalid AST_MUST_NOT_CONTAIN pattern format: {}", line_num + 1, pattern_text));
+./perl_specific_results.txt:     223:                             let missing_patterns: Vec<_> = patterns.iter()
+./perl_specific_results.txt:     224:                                 .filter(|pattern| !ast_string.contains(pattern.as_str()))
+./perl_specific_results.txt:>>>  226:                             violations.push(format!("Line {}: Missing required AST patterns {:?} in AST string", line_num + 1, missing_patterns));
+./perl_specific_results.txt:     229:                         violations.push(format!("Line {}: Invalid AST_MUST_CONTAIN pattern format: {}", line_num + 1, pattern_text));
+./perl_specific_results.txt:     226:                             violations.push(format!("Line {}: Missing required AST patterns {:?} in AST string", line_num + 1, missing_patterns));
+./perl_specific_results.txt:>>>  229:                         violations.push(format!("Line {}: Invalid AST_MUST_CONTAIN pattern format: {}", line_num + 1, pattern_text));
+./perl_specific_results.txt:       8:             // Check if this contains array access patterns like arr[1] or map[foo]
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:      28:         // Regex matching: [[ $var =~ pattern ]]
+./perl_specific_results.txt:     424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:>>>  426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:>>>  433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:>>>  436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:     280:                 let mut patterns = Vec::new();
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:>>>  314:         // Handle pattern source - either from command line or from file
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:>>>  333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:>>>  471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:>>>  603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     571:             if let Some(pattern_arg) = cmd.args.iter().find(|arg| {
+./perl_specific_results.txt:     574:                 let pattern = generator.strip_shell_quotes_for_regex(pattern_arg);
+./perl_specific_results.txt:>>>  575:                 output.push_str(&format!("next unless $line =~ /{}/;\n", pattern));
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:      21:                     let pattern = parts[1];
+./perl_specific_results.txt:>>>   23:                     output.push_str(&format!("$line =~ s/{}/{}/g;\n", pattern, replacement));
+./perl_specific_results.txt:     195:     SubstituteAll(String, String), // //pattern/replacement
+./perl_specific_results.txt:      86:         for pattern in &case_clause.patterns {
+./perl_specific_results.txt:      87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_specific_results.txt:      88:             if pattern_str == "\"*\"" {
+./perl_specific_results.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_specific_results.txt:      92:                 // Convert bash glob patterns to Perl regex
+./perl_specific_results.txt:     419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_specific_results.txt:>>>  421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:     424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:>>>  431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:>>>  434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:>>>  437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     470:                     // Create negative lookahead: (?!negated_pattern)after_pattern
+./perl_specific_results.txt:     496:                         // Create negative lookahead with after pattern: ^(?!negated_pattern).*after_pattern$
+./perl_specific_results.txt:     512:                         // Create negative lookahead: ^(?!negated_pattern).*$
+./perl_specific_results.txt:     522:     eprintln!("DEBUG: No extglob pattern found, escaping special characters");
+./perl_specific_results.txt:     541: pub fn convert_glob_to_regex_impl(_generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:>>>  542:     let mut result = pattern.to_string();
+./perl_specific_results.txt:     545:     eprintln!("DEBUG: convert_glob_to_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:     547:     // Normalize the pattern by removing extra spaces around glob characters
+./perl_specific_results.txt:     547:     // Normalize the pattern by removing extra spaces around glob characters
+./perl_specific_results.txt:     561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:     561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:     575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:     576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:     575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:     576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:     223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:>>>   84:         // Handle multiple patterns in a single case clause
+./perl_specific_results.txt:      85:         let mut pattern_conditions = Vec::new();
+./perl_specific_results.txt:      86:         for pattern in &case_clause.patterns {
+./perl_specific_results.txt:      87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_specific_results.txt:      99:                 // Create condition: $operation =~ /^pattern$/
+./perl_specific_results.txt:>>>  117:         // Join multiple patterns with 'or'
+./perl_specific_results.txt:     118:         output.push_str(&pattern_conditions.join(" or "));
+./perl_specific_results.txt:      44:             let pattern = parts[1].trim();
+./perl_specific_results.txt:>>>   47:                 // Handle extglob patterns
+./perl_specific_results.txt:      48:                 let regex_pattern = generator.convert_extglob_to_perl_regex(pattern);
+./perl_specific_results.txt:      50:                     format!("{} =~ /{}/i", var, regex_pattern)
+./perl_specific_results.txt:     424:     eprintln!("DEBUG: convert_extglob_to_perl_regex called with pattern: '{}'", pattern);
+./perl_specific_results.txt:>>>  426:     // Handle @(pattern1|pattern2) - one of the patterns
+./perl_specific_results.txt:>>>  430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:>>>  433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:>>>  436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:>>>  439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     441:     // Handle patterns with extra spaces like "! ( * . min . js"
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:>>>  441:     // Handle patterns with extra spaces like "! ( * . min . js"
+./perl_specific_results.txt:     443:         eprintln!("DEBUG: Found ! and ( in pattern: '{}'", result);
+./perl_specific_results.txt:>>>  501:                         // No dot found, treat the whole pattern as negated
+./perl_specific_results.txt:     502:                         let negated_pattern = pattern_after_open;
+./perl_specific_results.txt:     503:                         let after_pattern = "";
+./perl_specific_results.txt:     283:                 patterns.push(parse_word(&mut parser.lexer)?);
+./perl_specific_results.txt:     285:                 // Parse additional patterns separated by '|'
+./perl_specific_results.txt:     289:                     patterns.push(parse_word(&mut parser.lexer)?);
+./perl_specific_results.txt:>>>    8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:>>>  427:                             let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:     429:                             // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     427:                             let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:>>>  429:                             // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     429:                             // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     437:                                         modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:     438:                                         eprintln!("DEBUG: Inserted file argument: ${} at position {}", pattern_file.0, i + 1);
+./perl_specific_results.txt:     437:                                         modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:>>>  438:                                         eprintln!("DEBUG: Inserted file argument: ${} at position {}", pattern_file.0, i + 1);
+./perl_specific_results.txt:>>>  543:                                 let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:     545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     543:                                 let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:>>>  545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     553:                                             modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:     554:                                             eprintln!("DEBUG: Inserted file argument: ${}", pattern_file.0);
+./perl_specific_results.txt:     553:                                             modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:>>>  554:                                             eprintln!("DEBUG: Inserted file argument: ${}", pattern_file.0);
+./perl_specific_results.txt:     597:                                 result.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:      28:     let mut include_pattern = None;
+./perl_specific_results.txt:      29:     let mut exclude_pattern = None;
+./perl_specific_results.txt:>>>   30:     let mut pattern_file = None;
+./perl_specific_results.txt:      32:     // First pass: identify options and find the pattern
+./perl_specific_results.txt:      32:     // First pass: identify options and find the pattern
+./perl_specific_results.txt:      48:                     let pattern = s[10..].to_string(); // Remove "--include=" prefix
+./perl_specific_results.txt:      65:                     let pattern = s[10..].to_string(); // Remove "--exclude=" prefix
+./perl_specific_results.txt:>>>  102:                         pattern_file = Some(next_arg.clone());
+./perl_specific_results.txt:     105:                         pattern_file = Some(format!("${}", temp_file));
+./perl_specific_results.txt:     102:                         pattern_file = Some(next_arg.clone());
+./perl_specific_results.txt:     105:                         pattern_file = Some(format!("${}", temp_file));
+./perl_specific_results.txt:     102:                         pattern_file = Some(next_arg.clone());
+./perl_specific_results.txt:     105:                         pattern_file = Some(format!("${}", temp_file));
+./perl_specific_results.txt:     102:                         pattern_file = Some(next_arg.clone());
+./perl_specific_results.txt:>>>  105:                         pattern_file = Some(format!("${}", temp_file));
+./perl_specific_results.txt:>>>  137:     // Second pass: collect file arguments (arguments that are not options and not the pattern)
+./perl_specific_results.txt:     137:     // Second pass: collect file arguments (arguments that are not options and not the pattern)
+./perl_specific_results.txt:     142:                 if !s.starts_with('-') && s != &pattern {
+./perl_specific_results.txt:     143:                     // Check if this is a pattern file (skip it from file_args)
+./perl_specific_results.txt:     142:                 if !s.starts_with('-') && s != &pattern {
+./perl_specific_results.txt:>>>  143:                     // Check if this is a pattern file (skip it from file_args)
+./perl_specific_results.txt:     144:                     if let Some(ref pf) = pattern_file {
+./perl_specific_results.txt:     146:                             i += 1; // Skip the pattern file argument
+./perl_specific_results.txt:     142:                 if !s.starts_with('-') && s != &pattern {
+./perl_specific_results.txt:     143:                     // Check if this is a pattern file (skip it from file_args)
+./perl_specific_results.txt:>>>  144:                     if let Some(ref pf) = pattern_file {
+./perl_specific_results.txt:     146:                             i += 1; // Skip the pattern file argument
+./perl_specific_results.txt:     143:                     // Check if this is a pattern file (skip it from file_args)
+./perl_specific_results.txt:     144:                     if let Some(ref pf) = pattern_file {
+./perl_specific_results.txt:>>>  146:                             i += 1; // Skip the pattern file argument
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:>>>  206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:     209:                 if let Some(ref include_pat) = include_pattern {
+./perl_specific_results.txt:     220:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     221:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:>>>  223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:     235:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     236:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:>>>  238:                     conditions.push(format!("$file !~ /{}/", regex_pattern));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:>>>  273:                         // Handle glob patterns
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:>>>  314:         // Handle pattern source - either from command line or from file
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:>>>  318:         if let Some(pattern_file_name) = &pattern_file {
+./perl_specific_results.txt:     319:             // Read patterns from file (-f option)
+./perl_specific_results.txt:     320:             output.push_str(&format!("my @patterns_{} = ();\n", command_index));
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:     318:         if let Some(pattern_file_name) = &pattern_file {
+./perl_specific_results.txt:>>>  319:             // Read patterns from file (-f option)
+./perl_specific_results.txt:     320:             output.push_str(&format!("my @patterns_{} = ();\n", command_index));
+./perl_specific_results.txt:     319:             // Read patterns from file (-f option)
+./perl_specific_results.txt:     320:             output.push_str(&format!("my @patterns_{} = ();\n", command_index));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:>>>  338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:      38:         // Process each file/pattern
+./perl_specific_results.txt:      40:             // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:>>>    8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:     124:                 // Check if we have a pattern like: literal + brace_expansion + literal
+./perl_specific_results.txt:       8:             // Check if this contains array access patterns like arr[1] or map[foo]
+./perl_specific_results.txt:      48:         ParameterExpansionOperator::RemoveShortestSuffix(pattern) => {
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     441:     // Handle patterns with extra spaces like "! ( * . min . js"
+./perl_specific_results.txt:     443:         eprintln!("DEBUG: Found ! and ( in pattern: '{}'", result);
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:     427:                             let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:     543:                                 let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:      54:                     i += 1; // Skip the pattern argument
+./perl_specific_results.txt:      48:                     let pattern = s[10..].to_string(); // Remove "--include=" prefix
+./perl_specific_results.txt:>>>   50:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      51:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      52:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      53:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      50:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      51:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:>>>   52:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      53:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      55:                         pattern
+./perl_specific_results.txt:      65:                     let pattern = s[10..].to_string(); // Remove "--exclude=" prefix
+./perl_specific_results.txt:>>>   67:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      68:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      69:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      70:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      67:                     let clean_pattern = if pattern.starts_with('"') && pattern.ends_with('"') {
+./perl_specific_results.txt:      68:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:>>>   69:                     } else if pattern.starts_with("'") && pattern.ends_with("'") {
+./perl_specific_results.txt:      70:                         pattern[1..pattern.len()-1].to_string()
+./perl_specific_results.txt:      72:                         pattern
+./perl_specific_results.txt:>>>  130:     if pattern.is_empty() && pattern_file.is_none() {
+./perl_specific_results.txt:     131:         // No pattern provided, return error
+./perl_specific_results.txt:     132:         output.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:>>>  142:                 if !s.starts_with('-') && s != &pattern {
+./perl_specific_results.txt:     143:                     // Check if this is a pattern file (skip it from file_args)
+./perl_specific_results.txt:     144:                     if let Some(ref pf) = pattern_file {
+./perl_specific_results.txt:     161:                     // Check if this is part of a glob pattern (like *.txt)
+./perl_specific_results.txt:     360:             // Use pattern from command line
+./perl_specific_results.txt:     361:             let escaped_pattern = pattern.to_string();
+./perl_specific_results.txt:     362:             // Remove quotes if they exist around the pattern
+./perl_specific_results.txt:>>>  363:             regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+./perl_specific_results.txt:     364:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     365:             } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+./perl_specific_results.txt:     366:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     362:             // Remove quotes if they exist around the pattern
+./perl_specific_results.txt:     363:             regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+./perl_specific_results.txt:     364:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:>>>  365:             } else if escaped_pattern.starts_with("'") && escaped_pattern.ends_with("'") {
+./perl_specific_results.txt:     366:                 escaped_pattern[1..escaped_pattern.len()-1].to_string()
+./perl_specific_results.txt:     368:                 escaped_pattern
+./perl_specific_results.txt:     244: pub fn parse_ast_pattern_list(pattern_text: &str) -> Option<Vec<String>> {
+./perl_specific_results.txt:     246:     let trimmed = pattern_text.trim();
+./perl_specific_results.txt:>>>   66:     } else if lower_filename.contains("pattern_matching") || lower_filename.contains("extglob") || lower_filename.contains("nocase") {
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:      14:     // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:      18:         // For glob patterns, use Perl's glob function
+./perl_specific_results.txt:      38:         // Process each file/pattern
+./perl_specific_results.txt:      40:             // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:       6:     // Try to find pattern " at line:col" we emit in our errors
+./perl_specific_results.txt:     243: /// Parse a pattern list like [Literal("-"), Literal("1")] into a vector of strings
+./perl_specific_results.txt:     244: pub fn parse_ast_pattern_list(pattern_text: &str) -> Option<Vec<String>> {
+./perl_specific_results.txt:     246:     let trimmed = pattern_text.trim();
+./perl_specific_results.txt:     441:     // Handle patterns with extra spaces like "! ( * . min . js"
+./perl_specific_results.txt:>>>  443:         eprintln!("DEBUG: Found ! and ( in pattern: '{}'", result);
+./perl_specific_results.txt:     441:     // Handle patterns with extra spaces like "! ( * . min . js"
+./perl_specific_results.txt:     443:         eprintln!("DEBUG: Found ! and ( in pattern: '{}'", result);
+./perl_specific_results.txt:>>>  458:                     // Extract the pattern inside !(...) and after it
+./perl_specific_results.txt:     459:                     let negated_pattern = &result[actual_open + 1..actual_close];
+./perl_specific_results.txt:     460:                     let after_pattern = &result[actual_close + 1..];
+./perl_specific_results.txt:     476:                     // This suggests the parser didn't complete the pattern
+./perl_specific_results.txt:>>>  479:                     // Try to split the pattern to find the negated part and the after part
+./perl_specific_results.txt:     481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:     479:                     // Try to split the pattern to find the negated part and the after part
+./perl_specific_results.txt:     481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:     483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:>>>  483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     484:                     if let Some(last_dot_pos) = pattern_after_open.rfind('.') {
+./perl_specific_results.txt:     485:                         let negated_pattern = &pattern_after_open[..last_dot_pos];
+./perl_specific_results.txt:     486:                         let after_pattern = &pattern_after_open[last_dot_pos..];
+./perl_specific_results.txt:     561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:     575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:>>>  576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:      29:     commands.insert("grep", BuiltinCommand::new("grep", "Search for patterns in text", true));
+./perl_specific_results.txt:      29:     commands.insert("grep", BuiltinCommand::new("grep", "Search for patterns in text", true));
+./perl_specific_results.txt:     427:                             let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:     429:                             // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     427:                             let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:>>>  429:                             // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     543:                                 let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:     545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     543:                                 let pattern_file = &process_sub_files[0];
+./perl_specific_results.txt:>>>  545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     545:                                 // Create a modified grep command that uses the temporary file as the pattern file
+./perl_specific_results.txt:     553:                                             modified_grep_cmd.args.insert(i + 1, Word::Literal(format!("${}", pattern_file.0)));
+./perl_specific_results.txt:     554:                                             eprintln!("DEBUG: Inserted file argument: ${}", pattern_file.0);
+./perl_specific_results.txt:>>>    7:     // Parse grep options and pattern
+./perl_specific_results.txt:       8:     let mut pattern = String::new();
+./perl_specific_results.txt:      29:     let mut exclude_pattern = None;
+./perl_specific_results.txt:      30:     let mut pattern_file = None;
+./perl_specific_results.txt:>>>   32:     // First pass: identify options and find the pattern
+./perl_specific_results.txt:>>>  137:     // Second pass: collect file arguments (arguments that are not options and not the pattern)
+./perl_specific_results.txt:>>>  314:         // Handle pattern source - either from command line or from file
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:>>>  360:             // Use pattern from command line
+./perl_specific_results.txt:     361:             let escaped_pattern = pattern.to_string();
+./perl_specific_results.txt:     362:             // Remove quotes if they exist around the pattern
+./perl_specific_results.txt:     363:             regex_pattern = if escaped_pattern.starts_with('"') && escaped_pattern.ends_with('"') {
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     571:             if let Some(pattern_arg) = cmd.args.iter().find(|arg| {
+./perl_specific_results.txt:>>>   44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:>>>  364:     // Regex pattern content (for bash test expressions)
+./perl_specific_results.txt:       6:     // Try to find pattern " at line:col" we emit in our errors
+./perl_specific_results.txt:       6:     // Try to find pattern " at line:col" we emit in our errors
+./perl_specific_results.txt:     154:             // Extract the forbidden pattern after the comment
+./perl_specific_results.txt:     155:             if let Some(pattern_start) = line.find("#PERL_MUST_NOT_CONTAIN:") {
+./perl_specific_results.txt:     181:             // Extract the forbidden patterns after the comment
+./perl_specific_results.txt:     182:             if let Some(pattern_start) = line.find("#AST_MUST_NOT_CONTAIN:") {
+./perl_specific_results.txt:     214:             // Extract the required patterns after the comment
+./perl_specific_results.txt:     215:             if let Some(pattern_start) = line.find("#AST_MUST_CONTAIN:") {
+./perl_specific_results.txt:>>>  243: /// Parse a pattern list like [Literal("-"), Literal("1")] into a vector of strings
+./perl_specific_results.txt:     244: pub fn parse_ast_pattern_list(pattern_text: &str) -> Option<Vec<String>> {
+./perl_specific_results.txt:     246:     let trimmed = pattern_text.trim();
+./perl_specific_results.txt:      84:         // Handle multiple patterns in a single case clause
+./perl_specific_results.txt:      85:         let mut pattern_conditions = Vec::new();
+./perl_specific_results.txt:>>>   86:         for pattern in &case_clause.patterns {
+./perl_specific_results.txt:      87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_specific_results.txt:      88:             if pattern_str == "\"*\"" {
+./perl_specific_results.txt:     117:         // Join multiple patterns with 'or'
+./perl_specific_results.txt:>>>  118:         output.push_str(&pattern_conditions.join(" or "));
+./perl_specific_results.txt:       8:             // Check if this contains array access patterns like arr[1] or map[foo]
+./perl_specific_results.txt:>>>    8:             // Check if this contains array access patterns like arr[1] or map[foo]
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     419: pub fn convert_extglob_to_perl_regex_impl(generator: &Generator, pattern: &str) -> String {
+./perl_specific_results.txt:     420:     // Convert extglob patterns to Perl regex
+./perl_specific_results.txt:     421:     let mut result = pattern.to_string();
+./perl_specific_results.txt:>>>  430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     430:     // Handle *(pattern1|pattern2) - zero or more of the patterns
+./perl_specific_results.txt:     431:     result = result.replace("*(pattern1|pattern2)", "(?:pattern1|pattern2)*");
+./perl_specific_results.txt:>>>  433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:     436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     433:     // Handle +(pattern1|pattern2) - one or more of the patterns
+./perl_specific_results.txt:     434:     result = result.replace("+(pattern1|pattern2)", "(?:pattern1|pattern2)+");
+./perl_specific_results.txt:>>>  436:     // Handle ?(pattern1|pattern2) - zero or one of the patterns
+./perl_specific_results.txt:     437:     result = result.replace("?(pattern1|pattern2)", "(?:pattern1|pattern2)?");
+./perl_specific_results.txt:     439:     // Handle !(pattern1|pattern2) - anything except the patterns
+./perl_specific_results.txt:     443:         eprintln!("DEBUG: Found ! and ( in pattern: '{}'", result);
+./perl_specific_results.txt:     452:                 // The pattern might be incomplete due to parser issues
+./perl_specific_results.txt:     479:                     // Try to split the pattern to find the negated part and the after part
+./perl_specific_results.txt:     481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:     483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     481:                     let pattern_after_open = &result[actual_open + 1..];
+./perl_specific_results.txt:>>>  483:                     // Look for common patterns like "*.min.js" -> split into "*.min" and ".js"
+./perl_specific_results.txt:     484:                     if let Some(last_dot_pos) = pattern_after_open.rfind('.') {
+./perl_specific_results.txt:     485:                         let negated_pattern = &pattern_after_open[..last_dot_pos];
+./perl_specific_results.txt:     486:                         let after_pattern = &pattern_after_open[last_dot_pos..];
+./perl_specific_results.txt:>>>  124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:     939:     // Check longer patterns first to avoid partial matches
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:>>>   29:     commands.insert("grep", BuiltinCommand::new("grep", "Search for patterns in text", true));
+./perl_specific_results.txt:     216:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     218:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     220:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     221:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:     223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:>>>  230:                     // Convert shell glob pattern to Perl regex for exclusion
+./perl_specific_results.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_specific_results.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:>>>  314:         // Handle pattern source - either from command line or from file
+./perl_specific_results.txt:     316:         let mut regex_pattern = String::new();
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:>>>  516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:>>>   34:     // For other commands, use the original pattern with exit code checking
+./perl_specific_results.txt:      34:     // For other commands, use the original pattern with exit code checking
+./perl_specific_results.txt:      14:     // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:>>>   14:     // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:>>>   18:         // For glob patterns, use Perl's glob function
+./perl_specific_results.txt:     571:             if let Some(pattern_arg) = cmd.args.iter().find(|arg| {
+./perl_specific_results.txt:      38:         // Process each file/pattern
+./perl_specific_results.txt:      40:             // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:      38:         // Process each file/pattern
+./perl_specific_results.txt:>>>   40:             // Check if this is a glob pattern (contains * or ?)
+./perl_specific_results.txt:>>>   44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:>>>  153:                 // For non-glob patterns, use the original logic
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:     575:     // Convert glob patterns to regex AFTER escaping
+./perl_specific_results.txt:>>>  576:     // This ensures that * and ? are converted to regex patterns, not escaped
+./perl_specific_results.txt:     141:             // Treat case statement patterns like *.txt as literals.
+./perl_specific_results.txt:     395:             // Treat case statement patterns like *.txt as literals.
+./perl_specific_results.txt:>>>  137:     // Second pass: collect file arguments (arguments that are not options and not the pattern)
+./perl_specific_results.txt:     212:                     let mut regex_pattern = include_pat.clone();
+./perl_specific_results.txt:     214:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     216:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     218:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:>>>  516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     192:     RemoveShortestSuffix(String), // %pattern
+./perl_specific_results.txt:>>>  195:     SubstituteAll(String, String), // //pattern/replacement
+./perl_specific_results.txt:      62:             format!("${{{}}} =~ s/^{}//gr", pe.variable, escape_regex_pattern(pattern))
+./perl_specific_results.txt:      64:         ParameterExpansionOperator::SubstituteAll(pattern, replacement) => {
+./perl_specific_results.txt:>>>   65:             // ${var//pattern/replacement} - substitute all occurrences
+./perl_specific_results.txt:      68:                    escape_regex_pattern(pattern),
+./perl_specific_results.txt:>>> 1025:             // This is ${var//pattern/replacement} - split the second part by the first '/'
+./perl_specific_results.txt:    1026:             let pattern_replacement = parts[1];
+./perl_specific_results.txt:    1027:             if let Some(slash_pos) = pattern_replacement.find('/') {
+./perl_specific_results.txt:    1028:                 let pattern = &pattern_replacement[..slash_pos];
+./perl_specific_results.txt:>>>   18:                 // Basic substitution: s/pattern/replacement/
+./perl_specific_results.txt:      21:                     let pattern = parts[1];
+./perl_specific_results.txt:>>>   18:                 // Basic substitution: s/pattern/replacement/
+./perl_specific_results.txt:      21:                     let pattern = parts[1];
+./perl_specific_results.txt:     364:     // Regex pattern content (for bash test expressions)
+./perl_specific_results.txt:     117:         // Join multiple patterns with 'or'
+./perl_specific_results.txt:     118:         output.push_str(&pattern_conditions.join(" or "));
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:>>>  597:                                 result.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:     597:                                 result.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     130:     if pattern.is_empty() && pattern_file.is_none() {
+./perl_specific_results.txt:     131:         // No pattern provided, return error
+./perl_specific_results.txt:>>>  132:         output.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:     130:     if pattern.is_empty() && pattern_file.is_none() {
+./perl_specific_results.txt:     131:         // No pattern provided, return error
+./perl_specific_results.txt:     132:         output.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:>>>  197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     197:                 output.push_str(&format!("    my ($dir, $pattern) = @_;\n"));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:>>>  204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     206:                 // Handle file filtering with include/exclude patterns
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:>>>  256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     273:                         // Handle glob patterns
+./perl_specific_results.txt:     314:         // Handle pattern source - either from command line or from file
+./perl_specific_results.txt:     318:         if let Some(pattern_file_name) = &pattern_file {
+./perl_specific_results.txt:     319:             // Read patterns from file (-f option)
+./perl_specific_results.txt:>>>  320:             output.push_str(&format!("my @patterns_{} = ();\n", command_index));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:>>>  324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:>>>  327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:>>>  333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     333:             output.push_str(&format!("        push @patterns_{}, $line if $line ne '';\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     338:             // Apply grep filtering with multiple patterns
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:>>>  344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     342:             output.push_str(&format!("    for my $pattern (@patterns_{}) {{\n", command_index));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     344:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:>>>  351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     351:                 output.push_str(&format!("        if ($line =~ /$pattern/{}) {{\n", regex_flags));
+./perl_specific_results.txt:     360:             // Use pattern from command line
+./perl_specific_results.txt:     361:             let escaped_pattern = pattern.to_string();
+./perl_specific_results.txt:     387:                 // Negative grep: exclude lines that match the pattern
+./perl_specific_results.txt:>>>  388:                 output.push_str(&format!("my @grep_filtered_{} = grep !/{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+./perl_specific_results.txt:     390:                 // Positive grep: include lines that match the pattern
+./perl_specific_results.txt:     391:                 output.push_str(&format!("my @grep_filtered_{} = grep /{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+./perl_specific_results.txt:     388:                 output.push_str(&format!("my @grep_filtered_{} = grep !/{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+./perl_specific_results.txt:     390:                 // Positive grep: include lines that match the pattern
+./perl_specific_results.txt:>>>  391:                 output.push_str(&format!("my @grep_filtered_{} = grep /{}/{}, @grep_lines_{};\n", command_index, regex_pattern, regex_flags, command_index));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:>>>  471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     471:             output.push_str(&format!("    if ($line =~ /({})/) {{\n", regex_pattern));
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     484:                     // For glob patterns, output the actual filenames that contain matches
+./perl_specific_results.txt:     516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:     516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     516:                     // For glob patterns, output the actual filenames that do NOT contain matches
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     521:                     // First, collect all files that match the glob pattern
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:>>>  603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:      18:         // For glob patterns, use Perl's glob function
+./perl_specific_results.txt:     574:                 let pattern = generator.strip_shell_quotes_for_regex(pattern_arg);
+./perl_specific_results.txt:>>>  575:                 output.push_str(&format!("next unless $line =~ /{}/;\n", pattern));
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:      44:                 // For glob patterns, expand them first
+./perl_specific_results.txt:     153:                 // For non-glob patterns, use the original logic
+./perl_specific_results.txt:     153:                 // For non-glob patterns, use the original logic
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./perl_specific_results.txt:      21:                     let pattern = parts[1];
+./perl_specific_results.txt:>>>   23:                     output.push_str(&format!("$line =~ s/{}/{}/g;\n", pattern, replacement));
+./perl_specific_results.txt:     364:     // Regex pattern content (for bash test expressions)
+./perl_specific_results.txt:      85:         let mut pattern_conditions = Vec::new();
+./perl_specific_results.txt:      86:         for pattern in &case_clause.patterns {
+./perl_specific_results.txt:      87:             let pattern_str = generator.perl_string_literal(pattern);
+./perl_specific_results.txt:>>>   88:             if pattern_str == "\"*\"" {
+./perl_specific_results.txt:      90:                 pattern_conditions.push("1".to_string()); // Always true
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:>>>  122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:>>>  597:                                 result.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:     130:     if pattern.is_empty() && pattern_file.is_none() {
+./perl_specific_results.txt:     131:         // No pattern provided, return error
+./perl_specific_results.txt:>>>  132:         output.push_str("warn \"grep: no pattern specified\";\n");
+./perl_specific_results.txt:     204:                 output.push_str(&format!("                @files = (@files, find_files_recursive_{}($path, $pattern));\n", command_index));
+./perl_specific_results.txt:     256:                     output.push_str(&format!("my @files_{} = find_files_recursive_{}('{}', '{}');\n", command_index, command_index, file, include_pattern.as_ref().unwrap_or(&"*".to_string())));
+./perl_specific_results.txt:     323:             if pattern_file_name.starts_with('$') {
+./perl_specific_results.txt:     324:                 output.push_str(&format!("if (-f {}) {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:     328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     325:                 output.push_str(&format!("    open(my $fh_{}, '<', {}) or die \"Cannot open pattern file: $!\";\n", command_index, pattern_file_name));
+./perl_specific_results.txt:     327:                 output.push_str(&format!("if (-f '{}') {{\n", pattern_file_name));
+./perl_specific_results.txt:>>>  328:                 output.push_str(&format!("    open(my $fh_{}, '<', '{}') or die \"Cannot open pattern file {}: $!\";\n", command_index, pattern_file_name, pattern_file_name));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     364:     // Regex pattern content (for bash test expressions)
+./perl_specific_results.txt:      93:                 let mut perl_pattern = pattern_str.trim_matches('"').to_string();
+./perl_specific_results.txt:      94:                 perl_pattern = perl_pattern.replace("*", ".*");
+./perl_specific_results.txt:      95:                 perl_pattern = perl_pattern.replace("?", ".");
+./perl_specific_results.txt:>>>   96:                 perl_pattern = perl_pattern.replace("[", "\\[");
+./perl_specific_results.txt:      97:                 perl_pattern = perl_pattern.replace("]", "\\]");
+./perl_specific_results.txt:      99:                 // Create condition: $operation =~ /^pattern$/
+./perl_specific_results.txt:      94:                 perl_pattern = perl_pattern.replace("*", ".*");
+./perl_specific_results.txt:      95:                 perl_pattern = perl_pattern.replace("?", ".");
+./perl_specific_results.txt:      96:                 perl_pattern = perl_pattern.replace("[", "\\[");
+./perl_specific_results.txt:>>>   97:                 perl_pattern = perl_pattern.replace("]", "\\]");
+./perl_specific_results.txt:      99:                 // Create condition: $operation =~ /^pattern$/
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:>>>  122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     120: fn escape_regex_pattern(pattern: &str) -> String {
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     121:     // Escape special regex characters in the pattern
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     122:     pattern.replace("\\", "\\\\")
+./perl_specific_results.txt:     522:     eprintln!("DEBUG: No extglob pattern found, escaping special characters");
+./perl_specific_results.txt:     561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:     561:     // Escape regex special characters BEFORE converting glob patterns
+./perl_specific_results.txt:     124:                     // Use a simpler approach with string replacement for the specific pattern
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex awk patterns
+./perl_specific_results.txt:       5:     pattern.chars().map(|c| match c {
+./perl_specific_results.txt:>>>  173:             output.push_str(&format!("if ($file =~ /^\\Q{}\\E$/) {{\n", escape_glob_pattern(&find_value)));
+./perl_specific_results.txt:     214:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:>>>  216:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     218:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     216:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:>>>  218:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     220:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     221:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:     223:                     conditions.push(format!("$file =~ /{}/", regex_pattern));
+./perl_specific_results.txt:     229:                 if let Some(ref exclude_pat) = exclude_pattern {
+./perl_specific_results.txt:     230:                     // Convert shell glob pattern to Perl regex for exclusion
+./perl_specific_results.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_specific_results.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:>>>  233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:     234:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     235:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     236:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:     231:                     let mut regex_pattern = exclude_pat.clone();
+./perl_specific_results.txt:     232:                     regex_pattern = regex_pattern.replace("*", ".*");
+./perl_specific_results.txt:     233:                     regex_pattern = regex_pattern.replace(".", "\\.");
+./perl_specific_results.txt:>>>  234:                     regex_pattern = regex_pattern.replace("\\.*", ".*");
+./perl_specific_results.txt:     235:                     if !regex_pattern.ends_with("$") {
+./perl_specific_results.txt:     236:                         regex_pattern.push_str("$");
+./perl_specific_results.txt:     371:             // Convert shell regex patterns to Perl regex patterns
+./perl_specific_results.txt:>>>  373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     373:             regex_pattern = regex_pattern.replace("\\+", "+");
+./perl_specific_results.txt:>>>  375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:>>>  377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     375:             regex_pattern = regex_pattern.replace("\\?", "?");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:>>>  378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     377:             regex_pattern = regex_pattern.replace("\\(", "(");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:>>>  380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_specific_results.txt:     378:             regex_pattern = regex_pattern.replace("\\)", ")");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:>>>  381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:     383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_specific_results.txt:     380:             regex_pattern = regex_pattern.replace("\\{", "{");
+./perl_specific_results.txt:     381:             regex_pattern = regex_pattern.replace("\\}", "}");
+./perl_specific_results.txt:>>>  383:             regex_pattern = regex_pattern.replace("\\|", "|");
+./perl_specific_results.txt:>>>  603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:     603:                 output.push_str(&format!("    $colored_line =~ s/({})/\\x1b[01;31m\\x1b[K$1\\x1b[m\\x1b[K/g;\n", regex_pattern));
+./perl_specific_results.txt:       8:     // This can be extended to handle more complex sed patterns
+./temp_file3.txt:pattern in file3
+./test_details.txt:warning: function `escape_glob_pattern` is never used
+./test_details.txt:4 | fn escape_glob_pattern(pattern: &str) -> String {
+./test_details.txt:-010_pattern_matching.sh
+./test_details.txt:-036_pattern_matching_basic.sh
+./test_details.txt:-037_pattern_matching_extglob.sh
+./test_details.txt:-038_pattern_matching_nocase.sh
+./test_details.txt:-064_04_extended_glob_patterns.sh
+./test_details.txt:-064_19_complex_pattern_matching_extended_globs.sh
+./test_details.txt:-./010_pattern_matching.sh
+./test_details.txt:-./036_pattern_matching_basic.sh
+./test_details.txt:-./037_pattern_matching_extglob.sh
+./test_details.txt:-./038_pattern_matching_nocase.sh
+./test_details.txt:-./064_04_extended_glob_patterns.sh
+./test_details.txt:-./064_19_complex_pattern_matching_extended_globs.sh
+./perl_output.txt:  - examples/010_pattern_matching.sh
+./perl_output.txt:  - examples/036_pattern_matching_basic.sh
+./perl_output.txt:  - examples/037_pattern_matching_extglob.sh
+./perl_output.txt:  - examples/038_pattern_matching_nocase.sh
+./perl_output.txt:  - examples/064_04_extended_glob_patterns.sh
+./perl_output.txt:  - examples/064_19_complex_pattern_matching_extended_globs.sh
+./test_output.txt:warning: function `escape_glob_pattern` is never used
+./test_output.txt:4 | fn escape_glob_pattern(pattern: &str) -> String {
+./test_output.txt:-010_pattern_matching.sh
+./test_output.txt:-036_pattern_matching_basic.sh
+./test_output.txt:-037_pattern_matching_extglob.sh
+./test_output.txt:-038_pattern_matching_nocase.sh
+./test_output.txt:-064_04_extended_glob_patterns.sh
+./test_output.txt:-064_19_complex_pattern_matching_extended_globs.sh
+./test_output.txt:-./010_pattern_matching.sh
+./test_output.txt:-./036_pattern_matching_basic.sh
+./test_output.txt:-./037_pattern_matching_extglob.sh
+./test_output.txt:-./038_pattern_matching_nocase.sh
+./test_output.txt:-./064_04_extended_glob_patterns.sh
+./test_output.txt:-./064_19_complex_pattern_matching_extended_globs.sh
+Result 2...
+full_test_output.txt
+perl_functions.txt
+perl_output.txt
+perl_specific_results.txt
+shell_output.txt
+temp_file1.txt
+temp_file2.txt
+temp_file3.txt
+test_details.txt
+test_output.txt
+test_run.txt
+Result 3...
+TODO.txt
+after_test.txt
+debug_lines.txt
+debug_output.txt
+first_n_tests_passed.MAX.txt
+first_n_tests_passed.txt
+full_output.txt
+generated_code.txt
+highest_tests_and_lines.txt
+output.txt
+perl_code.txt
+perl_result.txt
+perltidy_output.txt
+temp_debashc_output_17296.txt
+temp_debashc_output_36952.txt
+temp_output.txt
+temp_stderr.txt
+test1.txt
+test2.txt
+test_000_01_debug.txt
+test_000_01_output.txt
+test_binary.txt
+test_full.txt
+test_mv_preserve.txt
+test_output2.txt
+test_output3.txt
+test_perl_output.txt
+test_pipeline.txt
+test_tidied_output.txt
+tidied_code.txt

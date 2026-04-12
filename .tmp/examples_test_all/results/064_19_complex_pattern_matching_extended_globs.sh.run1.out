@@ -1,0 +1,2 @@
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/064_19_complex_pattern_matching_extended_globs.sh: line 6: syntax error near unexpected token `('
+/home/llm/src/sh2perl/.tmp/examples_test_all/scripts/064_19_complex_pattern_matching_extended_globs.sh: line 6: `        @(*.txt|*.log)) echo "Text file: $file";;'

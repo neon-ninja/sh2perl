@@ -1,0 +1,8 @@
+== [[ pattern and regex ]]
+pattern-match
+regex-match
+== extglob ==
+f1-ok
+f2-filtered
+== nocasematch ==
+ci-match

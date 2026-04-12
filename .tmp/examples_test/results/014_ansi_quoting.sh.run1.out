@@ -1,0 +1,19 @@
+== ANSI-C quoting ==
+line1
+line2	Tabbed
+== Escape sequences ==
+bell
+backspace
+formfeed
+newline
+
+carriagereturn
+tab	separated
+verticaltab
+== Unicode and hex ==
+Hello
+Hello
+== Practical examples ==
+Name       Age        City
+John       25         NYC
+Jane       30         LA

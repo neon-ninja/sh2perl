@@ -1,0 +1,6 @@
+== Associative arrays ==
+bar
+42
+answer => 42
+foo => bar
+two => 1 + 1

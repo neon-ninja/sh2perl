@@ -1,0 +1,19 @@
+TARGET
+line4
+line5
+line1
+line2
+TARGET
+line2
+TARGET
+line4
+Creating test files...
+Recursive search results:
+./temp_file1.txt:pattern in file1
+./temp_file2.txt:no pattern in file2
+./temp_file3.txt:pattern in file3
+Result 2...
+temp_file1.txt
+temp_file2.txt
+temp_file3.txt
+Result 3...

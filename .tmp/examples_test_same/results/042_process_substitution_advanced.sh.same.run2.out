@@ -1,0 +1,8 @@
+== More process substitution examples ==
+3c3
+< c
+---
+> d
+Files differ
+name1	value1
+name2	value2

@@ -1,0 +1,7 @@
+match1
+match2
+0:text with pattern in it
+content
+temp_file.txt:content
+text with [01;31m[Kpattern[m[K in it
+not found

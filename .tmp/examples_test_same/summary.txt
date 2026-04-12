@@ -1,0 +1,664 @@
+000__01_file_directory_operations.sh: deterministic (rc=0)
+000__02_output_formatting_commands.sh: deterministic (rc=0)
+000__03_file_manipulation_commands.sh: deterministic (rc=0)
+000__04a_basic_command_substitution.sh: deterministic (rc=0)
+000__04b_file_directory_operations.sh: deterministic (rc=0)
+000__04c_text_processing_commands.sh: deterministic (rc=0)
+000__04d_system_utilities.sh: deterministic (rc=0)
+000__04e_file_manipulation.sh: deterministic (rc=0)
+000__04f_output_formatting.sh: deterministic (rc=0)
+000__04g_checksum_commands.sh: deterministic (rc=0)
+000__04h_complex_examples.sh: deterministic (rc=0)
+000__05_system_utilities.sh: deterministic (rc=0)
+000__06_text_processing_commands.sh: deterministic (rc=0)
+000__07_find_path_commands.sh: deterministic (rc=0)
+001_simple.sh: deterministic (rc=0)
+002_control_flow.sh: deterministic (rc=0)
+003_pipeline.sh: deterministic (rc=0)
+004_test_quoted.sh: deterministic (rc=0)
+005_args.sh: deterministic (rc=0)
+006_misc.sh: deterministic (rc=0)
+007_cat_EOF.sh: deterministic (rc=0)
+008_simple_backup.sh: deterministic (rc=0)
+009_arrays.sh: deterministic (rc=0)
+010_pattern_matching.sh: deterministic (rc=0)
+011_brace_expansion.sh: deterministic (rc=0)
+012_process_substitution.sh: deterministic (rc=0)
+013_parameter_expansion.sh: deterministic (rc=0)
+014_ansi_quoting.sh: deterministic (rc=0)
+015_grep_advanced.sh: deterministic (rc=0)
+016_grep_basic.sh: deterministic (rc=0)
+017_grep_context.sh: deterministic (rc=0)
+018_grep_params.sh: deterministic (rc=0)
+019_grep_regex.sh: deterministic (rc=0)
+020_ansi_quoting_basic.sh: deterministic (rc=0)
+021_ansi_quoting_escape.sh: deterministic (rc=0)
+022_ansi_quoting_unicode.sh: deterministic (rc=0)
+023_ansi_quoting_practical.sh: deterministic (rc=0)
+024_parameter_expansion_case.sh: deterministic (rc=0)
+025_parameter_expansion_advanced.sh: deterministic (rc=0)
+026_parameter_expansion_more.sh: deterministic (rc=0)
+027_parameter_expansion_defaults.sh: deterministic (rc=0)
+028_arrays_indexed.sh: deterministic (rc=0)
+029_arrays_associative.sh: deterministic (rc=0)
+030_control_flow_if.sh: deterministic (rc=0)
+031_control_flow_loops.sh: deterministic (rc=0)
+032_control_flow_function.sh: deterministic (rc=0)
+033_brace_expansion_basic.sh: deterministic (rc=0)
+034_brace_expansion_advanced.sh: deterministic (rc=0)
+035_brace_expansion_practical.sh: deterministic (rc=0)
+036_pattern_matching_basic.sh: deterministic (rc=0)
+037_pattern_matching_extglob.sh: deterministic (rc=0)
+038_pattern_matching_nocase.sh: deterministic (rc=0)
+039_process_substitution_here.sh: deterministic (rc=0)
+040_process_substitution_comm.sh: deterministic (rc=0)
+041_process_substitution_mapfile.sh: deterministic (rc=0)
+042_process_substitution_advanced.sh: deterministic (rc=0)
+043_home.sh: deterministic (rc=0)
+044_find_example.sh: NON-DETERMINISTIC (rc1=0 rc2=0)
+--- run1 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/044_find_example.sh.same.run1.out) ---
+#find . -name "*.txt" -type f | sort
+./.test-work/purify-run-1.txt
+./.test-work/purify/023_mv_basic/test_mv_preserve.txt
+./.tmp/examples_test/list.txt
+./.tmp/examples_test/results/summary.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/temp_file.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file1.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file2.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/temp_file.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file1.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file2.txt
+./.tmp/examples_test_all/summary.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/temp_file.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file1.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file2.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/temp_file.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file1.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file2.txt
+./.tmp/examples_test_all/work/063_14_complex_redirects.sh_1/comparison.txt
+./.tmp/examples_test_all/work/063_14_complex_redirects.sh_2/comparison.txt
+./.tmp/examples_test_all/work/063_20_final_complex_construct.sh_1/final_result.txt
+./.tmp/examples_test_all/work/063_20_final_complex_construct.sh_2/final_result.txt
+./.tmp/examples_test_all/work/063_hard_to_parse.sh_1/comparison.txt
+./.tmp/examples_test_all/work/063_hard_to_parse.sh_2/comparison.txt
+./.tmp/examples_test_all/work/064_08_heredocs_with_variable_interpolation.sh_1/config.txt
+./.tmp/examples_test_all/work/064_08_heredocs_with_variable_interpolation.sh_2/config.txt
+./.tmp/examples_test_all/work/064_15_complex_pipeline_multiple_redirects.sh_1/users.txt
+./.tmp/examples_test_all/work/064_15_complex_pipeline_multiple_redirects.sh_2/users.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_1/config.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_1/users.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_2/config.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_2/users.txt
+./.tmp/examples_test_same/list.txt
+./.tmp/examples_test_same/summary.txt
+./TODO.txt
+./after_test.txt
+./debug_lines.txt
+./debug_output.txt
+./examples/comparison.txt
+./examples/config.txt
+./examples/stderr.txt
+./examples/test_binary.txt
+./first_n_tests_passed.MAX.txt
+./first_n_tests_passed.txt
+./full_output.txt
+./full_test_output.txt
+./generated_code.txt
+./highest_tests_and_lines.txt
+./output.txt
+./perl_code.txt
+./perl_functions.txt
+./perl_output.txt
+./perl_result.txt
+./perl_specific_results.txt
+./perltidy_output.txt
+./shell_output.txt
+./temp_debashc_output_17296.txt
+./temp_debashc_output_36952.txt
+./temp_file.txt
+./temp_output.txt
+./temp_stderr.txt
+./test1.txt
+./test2.txt
+./test_000_01_debug.txt
+./test_000_01_output.txt
+./test_binary.txt
+./test_details.txt
+./test_dir/file1.txt
+./test_dir/file2.txt
+./test_full.txt
+./test_mv_preserve.txt
+./test_output.txt
+./test_output2.txt
+./test_output3.txt
+./test_perl_output.txt
+./test_pipeline.txt
+./test_run.txt
+./test_tidied_output.txt
+./tidied_code.txt
+
+find . -mtime -7 -type f  | sort
+./.git/COMMIT_EDITMSG
+./.git/index
+./.git/logs/HEAD
+./.git/logs/refs/heads/main
+./.git/objects/00/1ecff1cd2a6e311fc57420a787642235171621
+./.git/objects/02/a7670823b0cc14fb3807f6f2373bfd19aab578
+./.git/objects/03/b44f3b603ce21dbffb3e505f6349803c6bea6b
+./.git/objects/05/80008b9f1ca283160c57b87db1be52a1b7daa5
+./.git/objects/05/eb1986a47ed29ead18fa6dd92d1452a355dae1
+./.git/objects/06/0fbcf7343fbcdee2e63f150be9bfe9b6f8a8b4
+./.git/objects/06/391a4d6e5feed5d8f7ee78b7b92ce784c57239
+./.git/objects/0a/5415b48cb85994dbd39f04bca379bb53ecdb82
+./.git/objects/0d/6fc4ac7e4997591ec6e2211525e179aed82317
+./.git/objects/0e/b98ebe31d7bc1a079935291e953c67848598df
+./.git/objects/10/e5f66ebf1ebff6ad1ecf2950635c5069878ceb
+./.git/objects/11/526ec88a041850858cd0b59bfd5b0e4226bfae
+./.git/objects/12/840ef2df20daa649fd66b73fc474a09be76ecd
+./.git/objects/13/f1d8550c714ed96ba492211c7c5043cd7483db
+./.git/objects/15/041a0bf67fcabbff39359a352834d2f2c34219
+./.git/objects/15/766dbe7a2ead9b05b254b14b15830e1fa91b38
+./.git/objects/15/c2b88f55dd8756c1fa51afc6413192920264dd
+./.git/objects/15/f8d2497f6ac60212032ce71caed0806335929b
+./.git/objects/16/5fb702d4bbc766185729c54772f4a0ad341322
+./.git/objects/1c/37c39084d4707098b9634ac9fb36471e485dfe
+./.git/objects/1c/5583aff852803796c5827750ef475e8886808c
+./.git/objects/1e/f6665b3e6d402853d6e2260daf18b200f7a828
+./.git/objects/29/be306ca374b05b439ecb812b6695aecd045c05
+./.git/objects/2a/1ad8839be28143acc234818aeaf4346683870e
+./.git/objects/2b/3cecc59ea46da13e43cd579e4c4b0fb8f3e05f
+./.git/objects/2f/48ec56ea186d5abf9fc9938a7f5c6bdeeedcac
+./.git/objects/32/230557565d883c08d7bd7a11047edc57413708
+./.git/objects/32/71d9c26f405d3021dd0419f16103ffa46faf90
+./.git/objects/32/8d928f2ed63ade2fb79ff052dd8caca581a091
+./.git/objects/33/42ced377043d27dce9a375c9237a34be2bbde5
+./.git/objects/35/9416845fe134ed612076fa870b8f38a736c285
+./.git/objects/37/6cd55182b09ba23818ffca7d2b0d7635678bcf
+./.git/objects/37/bf61a6bd08c395bfe3c79c92ef61bf4718ed9b
+./.git/objects/38/61725d39adbfe5180ad527fd04ae7e4ab7441e
+./.git/objects/38/c0c3c673722800f49d343f411c84c3a1f4f5d3
+./.git/objects/44/b941e1bfaa58b892bb803943452ca435f52280
+./.git/objects/46/f26550916f41ca9da5e1b1b60a6ef16493f0ca
+./.git/objects/47/50388734bd4d6939986d4b1163711270b5f8d9
+./.git/objects/49/0b8ad79671bc7073ac6be508bbe03624ea7e13
+./.git/objects/4a/e776755db16ceba9cd0b5f045d76989955035a
+./.git/objects/4f/77f09827a47488a112e703433f8799971f4666
+./.git/objects/52/e3f5db39b0e8122ecb19bee6a5ec7361d9fd80
+./.git/objects/53/877ff6f0a7bc9841b890fdf903dc5cb894497e
+./.git/objects/55/6e19fde7396295240e0d4031881ed6607f98b6
+./.git/objects/59/7540c77541b8fd891cadaa5d231b3fd5d92ede
+./.git/objects/5a/7643ce04ce6291eca0a081649e597535b3b8a5
+./.git/objects/5e/dda17f77d22cd28dfb90311b347a908c5a60b3
+./.git/objects/64/965b1cdb2df747e6911fd7cce9aa8ff271c548
+./.git/objects/68/60927eb9ddf61e0f84c6aac5520537d815d17e
+./.git/objects/68/e542c5188bb28925c6a26c59a2644c1d268b26
+./.git/objects/6a/d827e45ac25926c0ddf562d8adf3b2456cc1d1
+./.git/objects/6f/1315f54526c8de011d962191c22d4ca646ece7
+./.git/objects/71/6b8faf17cd877439fead93107b3c20c9d31362
+./.git/objects/72/150cf0ba8dd26a9b178c631e7adf4868848e89
+./.git/objects/72/d07e2af83b2520739a8cdeda10d4dff1a4b72a
+./.git/objects/74/991b4ffce40144a1dca3767adb9f3f61803b42
+./.git/objects/75/b88dcd5ec9adcbc9a0bb32b16a33bbfe5b8d65
+./.git/objects/78/8d62dcc011b0a1ceb30a884044afee861a520b
+./.git/objects/7c/fe798801418e71e07c84c639d5618e525ecc72
+./.git/objects/7d/f69c51bba621878306ab8560816ffe0aa6e107
+./.git/objects/80/c33ca95948088ecbbc9dc7bcef3b16b2801ec2
+./.git/objects/80/e6e0ade784a7c2e0a02edd17a0ea7fa28ac46f
+./.git/objects/83/3271b6ba8746e3bb4ed2da4ae1198011aa8e26
+./.git/objects/84/3cf5e5c60358ee9445ab1ecd81fac916976440
+./.git/objects/84/ef985804b2a81a15a7026d7cd01d019391bd44
+./.git/objects/87/12bb4f194f732237eb2924fd491ede50417b2f
+./.git/objects/88/5795aa43bd9c7578ef1a42536f616f491571c1
+./.git/objects/89/a4a02fce075e398ca6bf11316ae8d07b3b7984
+./.git/objects/8e/bd561dda6056c446d18185b208915c7b978f94
+./.git/objects/92/3fa3fb74dd50289a5ca483ee67a1b412b0763f
+./.git/objects/92/456ff85a78418d649e79dbeb8bf3df25cf1c0d
+./.git/objects/92/cf99cf14b551c0f423cced045d0dd799f1bcf6
+./.git/objects/96/277672c399bcedb20b77c0dd87089a1be805a2
+./.git/objects/96/7fe803212c5f57a6d146eb6af02e9b91ac3292
+./.git/objects/97/e97326fef11e482b1786abeb300cb9f50dc9ed
+./.git/objects/98/9d00563e9b78e5763acf74dcc9cd4a42b1512d
+./.git/objects/99/f2d66ea80d9e184c94fc5deb8dd09da6ee3c21
+./.git/objects/9a/43ccdd5971cddf23dfafc7e99f0bfdee236c5f
+./.git/objects/9b/9dc5ac83c30045ba1b4070f0ff98c088676a8c
+./.git/objects/9d/197d838e32f1507df4eae87cc616cbb34c3a23
+./.git/objects/9d/d0ca775ff5684fc21f54cadfd3512b674652e6
+./.git/objects/9d/f4b3ae5b14b6bb98d629f73e0c01b94ffa50d5
+./.git/objects/a0/ccdbb5a3eddb29250c31652cbf11939a3467ea
+./.git/objects/a4/4d0915f739eeb59e649eeb79602be48616283b
+./.git/objects/a7/5b34e64ddeef859330976c8e61734236ad3928
+./.git/objects/a7/92b88bb933fa300f6a0c0414225f79ce97bf65
+./.git/objects/aa/5adffde07ccd6b44fe445d9ab7dbd63654d52c
+./.git/objects/ac/735f54a23b71f1404b2373fb2dfc2f9153fe4c
+./.git/objects/ad/39ed4d59989103fb47e9203e60298eb2b09a67
+./.git/objects/ad/bf95ced89dc898e640c339b6ff51153216ea4c
+./.git/objects/b0/8f9975d7096fec974dc648ffc3f151c66dbd23
+./.git/objects/b1/696b6060d3a4029a8873dff18f137dc80e265e
+./.git/objects/b3/9119928ac0cdbcee8800676edbc3e71a64cd6a
+./.git/objects/b4/4e97ec59e48d745134c91121e10b38c47e4d8f
+./.git/objects/b5/d187fbcde3a3103ed254ca5a36f331449b51c0
+./.git/objects/b8/1d5ab03e9fc0c85b4fb0f46f53b97fedd13417
+./.git/objects/b9/2d785350dc902084450a25958b95d8e921da9f
+./.git/objects/b9/7858078a71e1cf2927d4f7f9b010d6e2191a4f
+./.git/objects/bb/643fe3108be6da118b0a247c8b4585c7291161
+./.git/objects/bb/8a87d81b3c9ea76e7dcb53707b430539fc228d
+./.git/objects/bc/e33ba1c7fb8a206075f25321546b73530773d2
+./.git/objects/be/68ee66366ebeb20a52442fdf746003933b136b
+./.git/objects/c1/3516f90f223cfcf4c31d3c05a7446b543f3836
+./.git/objects/c1/98c4f6563bb55980b1ae869d7dc1071be3ec12
+./.git/objects/c3/edf28789fb66de8e725f6290aa2a0e1a84cece
+./.git/objects/c4/e49bceb2188498ed7441f7267420926ef6e492
+./.git/objects/ca/cfcba434abe1f304da287057f5da8204e4b2e7
+./.git/objects/cb/9f21865c59a1dcf1327947a5c03cf592aa429e
+./.git/objects/cd/2fc65ac8d04ecf7815232a529d3d7586bff790
+./.git/objects/cf/cc99fa183f8e59d7e2b842fdb8baa5fb53cc57
+./.git/objects/d0/3d709d7534481f613dc4da6fcdaa046a411fce
+./.git/objects/d1/1b5b2c78f4f57628388cf263374097f9beee1a
+./.git/objects/d1/4478802c337b3fa820db038fd7261767c9c3ca
+./.git/objects/d2/e1daa26b175e742eac458ab993f49e23ec560a
+./.git/objects/d7/14ba9e16913eadb1e53eea8e92bc25f57923e9
+--- run2 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/044_find_example.sh.same.run2.out) ---
+#find . -name "*.txt" -type f | sort
+./.test-work/purify-run-1.txt
+./.test-work/purify/023_mv_basic/test_mv_preserve.txt
+./.tmp/examples_test/list.txt
+./.tmp/examples_test/results/summary.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/temp_file.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file1.txt
+./.tmp/examples_test/work/018_grep_params.sh_1/test_dir/file2.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/temp_file.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file1.txt
+./.tmp/examples_test/work/018_grep_params.sh_2/test_dir/file2.txt
+./.tmp/examples_test_all/summary.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/temp_file.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file1.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_1/test_dir/file2.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/temp_file.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file1.txt
+./.tmp/examples_test_all/work/018_grep_params.sh_2/test_dir/file2.txt
+./.tmp/examples_test_all/work/063_14_complex_redirects.sh_1/comparison.txt
+./.tmp/examples_test_all/work/063_14_complex_redirects.sh_2/comparison.txt
+./.tmp/examples_test_all/work/063_20_final_complex_construct.sh_1/final_result.txt
+./.tmp/examples_test_all/work/063_20_final_complex_construct.sh_2/final_result.txt
+./.tmp/examples_test_all/work/063_hard_to_parse.sh_1/comparison.txt
+./.tmp/examples_test_all/work/063_hard_to_parse.sh_2/comparison.txt
+./.tmp/examples_test_all/work/064_08_heredocs_with_variable_interpolation.sh_1/config.txt
+./.tmp/examples_test_all/work/064_08_heredocs_with_variable_interpolation.sh_2/config.txt
+./.tmp/examples_test_all/work/064_15_complex_pipeline_multiple_redirects.sh_1/users.txt
+./.tmp/examples_test_all/work/064_15_complex_pipeline_multiple_redirects.sh_2/users.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_1/config.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_1/users.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_2/config.txt
+./.tmp/examples_test_all/work/064_hard_to_generate.sh_2/users.txt
+./.tmp/examples_test_same/list.txt
+./.tmp/examples_test_same/summary.txt
+./TODO.txt
+./after_test.txt
+./debug_lines.txt
+./debug_output.txt
+./examples/comparison.txt
+./examples/config.txt
+./examples/stderr.txt
+./examples/test_binary.txt
+./first_n_tests_passed.MAX.txt
+./first_n_tests_passed.txt
+./full_output.txt
+./full_test_output.txt
+./generated_code.txt
+./highest_tests_and_lines.txt
+./output.txt
+./perl_code.txt
+./perl_functions.txt
+./perl_output.txt
+./perl_result.txt
+./perl_specific_results.txt
+./perltidy_output.txt
+./shell_output.txt
+./temp_debashc_output_17296.txt
+./temp_debashc_output_36952.txt
+./temp_file.txt
+./temp_output.txt
+./temp_stderr.txt
+./test1.txt
+./test2.txt
+./test_000_01_debug.txt
+./test_000_01_output.txt
+./test_binary.txt
+./test_details.txt
+./test_dir/file1.txt
+./test_dir/file2.txt
+./test_full.txt
+./test_mv_preserve.txt
+./test_output.txt
+./test_output2.txt
+./test_output3.txt
+./test_perl_output.txt
+./test_pipeline.txt
+./test_run.txt
+./test_tidied_output.txt
+./tidied_code.txt
+
+find . -mtime -7 -type f  | sort
+./.git/COMMIT_EDITMSG
+./.git/index
+./.git/logs/HEAD
+./.git/logs/refs/heads/main
+./.git/objects/00/1ecff1cd2a6e311fc57420a787642235171621
+./.git/objects/02/a7670823b0cc14fb3807f6f2373bfd19aab578
+./.git/objects/03/b44f3b603ce21dbffb3e505f6349803c6bea6b
+./.git/objects/05/80008b9f1ca283160c57b87db1be52a1b7daa5
+./.git/objects/05/eb1986a47ed29ead18fa6dd92d1452a355dae1
+./.git/objects/06/0fbcf7343fbcdee2e63f150be9bfe9b6f8a8b4
+./.git/objects/06/391a4d6e5feed5d8f7ee78b7b92ce784c57239
+./.git/objects/0a/5415b48cb85994dbd39f04bca379bb53ecdb82
+./.git/objects/0d/6fc4ac7e4997591ec6e2211525e179aed82317
+./.git/objects/0e/b98ebe31d7bc1a079935291e953c67848598df
+./.git/objects/10/e5f66ebf1ebff6ad1ecf2950635c5069878ceb
+./.git/objects/11/526ec88a041850858cd0b59bfd5b0e4226bfae
+./.git/objects/12/840ef2df20daa649fd66b73fc474a09be76ecd
+./.git/objects/13/f1d8550c714ed96ba492211c7c5043cd7483db
+./.git/objects/15/041a0bf67fcabbff39359a352834d2f2c34219
+./.git/objects/15/766dbe7a2ead9b05b254b14b15830e1fa91b38
+./.git/objects/15/c2b88f55dd8756c1fa51afc6413192920264dd
+./.git/objects/15/f8d2497f6ac60212032ce71caed0806335929b
+./.git/objects/16/5fb702d4bbc766185729c54772f4a0ad341322
+./.git/objects/1c/37c39084d4707098b9634ac9fb36471e485dfe
+./.git/objects/1c/5583aff852803796c5827750ef475e8886808c
+./.git/objects/1e/f6665b3e6d402853d6e2260daf18b200f7a828
+./.git/objects/29/be306ca374b05b439ecb812b6695aecd045c05
+./.git/objects/2a/1ad8839be28143acc234818aeaf4346683870e
+./.git/objects/2b/3cecc59ea46da13e43cd579e4c4b0fb8f3e05f
+./.git/objects/2f/48ec56ea186d5abf9fc9938a7f5c6bdeeedcac
+./.git/objects/32/230557565d883c08d7bd7a11047edc57413708
+./.git/objects/32/71d9c26f405d3021dd0419f16103ffa46faf90
+./.git/objects/32/8d928f2ed63ade2fb79ff052dd8caca581a091
+./.git/objects/33/42ced377043d27dce9a375c9237a34be2bbde5
+./.git/objects/35/9416845fe134ed612076fa870b8f38a736c285
+./.git/objects/37/6cd55182b09ba23818ffca7d2b0d7635678bcf
+./.git/objects/37/bf61a6bd08c395bfe3c79c92ef61bf4718ed9b
+./.git/objects/38/61725d39adbfe5180ad527fd04ae7e4ab7441e
+./.git/objects/38/c0c3c673722800f49d343f411c84c3a1f4f5d3
+./.git/objects/44/b941e1bfaa58b892bb803943452ca435f52280
+./.git/objects/46/f26550916f41ca9da5e1b1b60a6ef16493f0ca
+./.git/objects/47/50388734bd4d6939986d4b1163711270b5f8d9
+./.git/objects/49/0b8ad79671bc7073ac6be508bbe03624ea7e13
+./.git/objects/4a/e776755db16ceba9cd0b5f045d76989955035a
+./.git/objects/4f/77f09827a47488a112e703433f8799971f4666
+./.git/objects/52/e3f5db39b0e8122ecb19bee6a5ec7361d9fd80
+./.git/objects/53/877ff6f0a7bc9841b890fdf903dc5cb894497e
+./.git/objects/55/6e19fde7396295240e0d4031881ed6607f98b6
+./.git/objects/59/7540c77541b8fd891cadaa5d231b3fd5d92ede
+./.git/objects/5a/7643ce04ce6291eca0a081649e597535b3b8a5
+./.git/objects/5e/dda17f77d22cd28dfb90311b347a908c5a60b3
+./.git/objects/64/965b1cdb2df747e6911fd7cce9aa8ff271c548
+./.git/objects/68/60927eb9ddf61e0f84c6aac5520537d815d17e
+./.git/objects/68/e542c5188bb28925c6a26c59a2644c1d268b26
+./.git/objects/6a/d827e45ac25926c0ddf562d8adf3b2456cc1d1
+./.git/objects/6f/1315f54526c8de011d962191c22d4ca646ece7
+./.git/objects/71/6b8faf17cd877439fead93107b3c20c9d31362
+./.git/objects/72/150cf0ba8dd26a9b178c631e7adf4868848e89
+./.git/objects/72/d07e2af83b2520739a8cdeda10d4dff1a4b72a
+./.git/objects/74/991b4ffce40144a1dca3767adb9f3f61803b42
+./.git/objects/75/b88dcd5ec9adcbc9a0bb32b16a33bbfe5b8d65
+./.git/objects/78/8d62dcc011b0a1ceb30a884044afee861a520b
+./.git/objects/7c/fe798801418e71e07c84c639d5618e525ecc72
+./.git/objects/7d/f69c51bba621878306ab8560816ffe0aa6e107
+./.git/objects/80/c33ca95948088ecbbc9dc7bcef3b16b2801ec2
+./.git/objects/80/e6e0ade784a7c2e0a02edd17a0ea7fa28ac46f
+./.git/objects/83/3271b6ba8746e3bb4ed2da4ae1198011aa8e26
+./.git/objects/84/3cf5e5c60358ee9445ab1ecd81fac916976440
+./.git/objects/84/ef985804b2a81a15a7026d7cd01d019391bd44
+./.git/objects/87/12bb4f194f732237eb2924fd491ede50417b2f
+./.git/objects/88/5795aa43bd9c7578ef1a42536f616f491571c1
+./.git/objects/89/a4a02fce075e398ca6bf11316ae8d07b3b7984
+./.git/objects/8e/bd561dda6056c446d18185b208915c7b978f94
+./.git/objects/92/3fa3fb74dd50289a5ca483ee67a1b412b0763f
+./.git/objects/92/456ff85a78418d649e79dbeb8bf3df25cf1c0d
+./.git/objects/92/cf99cf14b551c0f423cced045d0dd799f1bcf6
+./.git/objects/96/277672c399bcedb20b77c0dd87089a1be805a2
+./.git/objects/96/7fe803212c5f57a6d146eb6af02e9b91ac3292
+./.git/objects/97/e97326fef11e482b1786abeb300cb9f50dc9ed
+./.git/objects/98/9d00563e9b78e5763acf74dcc9cd4a42b1512d
+./.git/objects/99/f2d66ea80d9e184c94fc5deb8dd09da6ee3c21
+./.git/objects/9a/43ccdd5971cddf23dfafc7e99f0bfdee236c5f
+./.git/objects/9b/9dc5ac83c30045ba1b4070f0ff98c088676a8c
+./.git/objects/9d/197d838e32f1507df4eae87cc616cbb34c3a23
+./.git/objects/9d/d0ca775ff5684fc21f54cadfd3512b674652e6
+./.git/objects/9d/f4b3ae5b14b6bb98d629f73e0c01b94ffa50d5
+./.git/objects/a0/ccdbb5a3eddb29250c31652cbf11939a3467ea
+./.git/objects/a4/4d0915f739eeb59e649eeb79602be48616283b
+./.git/objects/a7/5b34e64ddeef859330976c8e61734236ad3928
+./.git/objects/a7/92b88bb933fa300f6a0c0414225f79ce97bf65
+./.git/objects/aa/5adffde07ccd6b44fe445d9ab7dbd63654d52c
+./.git/objects/ac/735f54a23b71f1404b2373fb2dfc2f9153fe4c
+./.git/objects/ad/39ed4d59989103fb47e9203e60298eb2b09a67
+./.git/objects/ad/bf95ced89dc898e640c339b6ff51153216ea4c
+./.git/objects/b0/8f9975d7096fec974dc648ffc3f151c66dbd23
+./.git/objects/b1/696b6060d3a4029a8873dff18f137dc80e265e
+./.git/objects/b3/9119928ac0cdbcee8800676edbc3e71a64cd6a
+./.git/objects/b4/4e97ec59e48d745134c91121e10b38c47e4d8f
+./.git/objects/b5/d187fbcde3a3103ed254ca5a36f331449b51c0
+./.git/objects/b8/1d5ab03e9fc0c85b4fb0f46f53b97fedd13417
+./.git/objects/b9/2d785350dc902084450a25958b95d8e921da9f
+./.git/objects/b9/7858078a71e1cf2927d4f7f9b010d6e2191a4f
+./.git/objects/bb/643fe3108be6da118b0a247c8b4585c7291161
+./.git/objects/bb/8a87d81b3c9ea76e7dcb53707b430539fc228d
+./.git/objects/bc/e33ba1c7fb8a206075f25321546b73530773d2
+./.git/objects/be/68ee66366ebeb20a52442fdf746003933b136b
+./.git/objects/c1/3516f90f223cfcf4c31d3c05a7446b543f3836
+./.git/objects/c1/98c4f6563bb55980b1ae869d7dc1071be3ec12
+./.git/objects/c3/edf28789fb66de8e725f6290aa2a0e1a84cece
+./.git/objects/c4/e49bceb2188498ed7441f7267420926ef6e492
+./.git/objects/ca/cfcba434abe1f304da287057f5da8204e4b2e7
+./.git/objects/cb/9f21865c59a1dcf1327947a5c03cf592aa429e
+./.git/objects/cd/2fc65ac8d04ecf7815232a529d3d7586bff790
+./.git/objects/cf/cc99fa183f8e59d7e2b842fdb8baa5fb53cc57
+./.git/objects/d0/3d709d7534481f613dc4da6fcdaa046a411fce
+./.git/objects/d1/1b5b2c78f4f57628388cf263374097f9beee1a
+./.git/objects/d1/4478802c337b3fa820db038fd7261767c9c3ca
+./.git/objects/d2/e1daa26b175e742eac458ab993f49e23ec560a
+./.git/objects/d7/14ba9e16913eadb1e53eea8e92bc25f57923e9
+--- end ---
+045_shell_calling_perl.sh: deterministic (rc=0)
+046_cd..sh: deterministic (rc=0)
+047_for_arithematic.sh: deterministic (rc=0)
+048_subprocess.sh: deterministic (rc=0)
+049_local.sh: deterministic (rc=0)
+050_test_ls_star_dot_sh.sh: deterministic (rc=0)
+051_primes.sh: deterministic (rc=0)
+052_numeric_computations.sh: NON-DETERMINISTIC (rc1=0 rc2=0)
+--- run1 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/052_numeric_computations.sh.same.run1.out) ---
+=== Comprehensive Numeric Computation Examples ===
+
+1. Fibonacci Sequence (first 20 numbers):
+    0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181
+
+2. Number Factorization:
+Factors of 12: 2 * 2 * 3
+Factors of 28: 2 * 2 * 7
+Factors of 100: 2 * 2 * 5 * 5
+Factors of 12345: 3 * 5 * 823
+
+3. Prime Number Generation:
+Finding first 100 prime numbers...
+Found 100 primes so far...
+First 100 primes found!
+First 10: 2 3 5 7 11 13 17 19 23 29
+Last 10: 467 479 487 491 499 503 509 521 523 541
+
+4. Greatest Common Divisor Examples:
+   gcd(48, 18) = 6
+   gcd(54, 24) = 6
+   gcd(7, 13) = 1
+   gcd(100, 25) = 25
+   gcd(12345, 67890) = 15
+
+5. Least Common Multiple Examples:
+   lcm(12, 18) = 36
+   lcm(15, 20) = 60
+   lcm(8, 12) = 24
+
+6. Performance Benchmarks:
+   Computing fibonacci(30):
+Duration: 1 ms
+   Factorizing 12345:
+Duration: 1 ms
+   Finding first 50 primes:
+Duration: 208 ms
+
+=== All numeric computations complete! ===
+
+You can now test these scripts with your translator:
+  ./sh2perl parse --perl examples/fibonacci.sh
+  ./sh2perl parse --rust examples/factorize.sh
+  ./sh2perl parse --python examples/primes.sh
+  ./sh2perl parse --lua examples/gcd.sh
+  ./sh2perl parse --js examples/numeric_computations.sh
+--- run2 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/052_numeric_computations.sh.same.run2.out) ---
+=== Comprehensive Numeric Computation Examples ===
+
+1. Fibonacci Sequence (first 20 numbers):
+    0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181
+
+2. Number Factorization:
+Factors of 12: 2 * 2 * 3
+Factors of 28: 2 * 2 * 7
+Factors of 100: 2 * 2 * 5 * 5
+Factors of 12345: 3 * 5 * 823
+
+3. Prime Number Generation:
+Finding first 100 prime numbers...
+Found 100 primes so far...
+First 100 primes found!
+First 10: 2 3 5 7 11 13 17 19 23 29
+Last 10: 467 479 487 491 499 503 509 521 523 541
+
+4. Greatest Common Divisor Examples:
+   gcd(48, 18) = 6
+   gcd(54, 24) = 6
+   gcd(7, 13) = 1
+   gcd(100, 25) = 25
+   gcd(12345, 67890) = 15
+
+5. Least Common Multiple Examples:
+   lcm(12, 18) = 36
+   lcm(15, 20) = 60
+   lcm(8, 12) = 24
+
+6. Performance Benchmarks:
+   Computing fibonacci(30):
+Duration: 1 ms
+   Factorizing 12345:
+Duration: 1 ms
+   Finding first 50 primes:
+Duration: 207 ms
+
+=== All numeric computations complete! ===
+
+You can now test these scripts with your translator:
+  ./sh2perl parse --perl examples/fibonacci.sh
+  ./sh2perl parse --rust examples/factorize.sh
+  ./sh2perl parse --python examples/primes.sh
+  ./sh2perl parse --lua examples/gcd.sh
+  ./sh2perl parse --js examples/numeric_computations.sh
+--- end ---
+053_gcd.sh: NON-DETERMINISTIC (rc1=0 rc2=0)
+--- run1 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/053_gcd.sh.same.run1.out) ---
+=== Greatest Common Divisor Examples ===
+GCD calculations:
+gcd(48, 18) = 6
+gcd(54, 24) = 6
+gcd(7, 13) = 1
+gcd(100, 25) = 25
+gcd(12345, 67890) = 15
+
+Enter two numbers to calculate their GCD (or press Ctrl+C to exit):
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: Please enter valid positive integers.
+
+First number: Second number: GCD calculation complete!
+--- run2 (/home/llm/src/sh2perl/.tmp/examples_test_same/results/053_gcd.sh.same.run2.out) ---
+=== Greatest Common Divisor Examples ===
+GCD calculations:
+gcd(48, 18) = 6
+gcd(54, 24) = 6
+gcd(7, 13) = 1
+gcd(100, 25) = 25
+gcd(12345, 67890) = 15
+
+Enter two numbers to calculate their GCD (or press Ctrl+C to exit):
+First number: GCD calculation complete!
+--- end ---
