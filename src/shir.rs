@@ -27668,12 +27668,17 @@ fn try_native_param(args: &[IrExpr]) -> Option<Expr> {
         positional_read(name).or_else(|| {
             // param ops need the actual store value even when the var
             // appears never-written (the optimizer may have eliminated
-            // the only write while preserving the param read).
+            // the only write while preserving the param read, and a
+            // never-written name may still be SET in the caller's
+            // environment). The native plain-object store read keeps
+            // the env fallback (`sh2.vars.<n> ?? process.env.<n> ?? ''`)
+            // — the exact value getVar would yield for a plain name,
+            // without the dispatch.
             let r = store_var_read(name);
             if matches!(&r, Expr::Literal { value, .. } if value == "")
                 && never_written_read(name)
             {
-                Some(sh2_call("getVar", vec![str_lit(name)]))
+                Some(store_var_read_no_fold(name))
             } else {
                 Some(r)
             }
