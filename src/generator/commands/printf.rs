@@ -12,6 +12,36 @@ pub fn generate_printf_command(
     let mut output = String::new();
     let is_expression = output_var.is_none() && as_expression;
 
+    // `printf -v NAME fmt args…` assigns the formatted text to NAME
+    // instead of printing (the -v used to be printf'd as the format).
+    if let Some(Word::Literal(flag, _)) = cmd.args.first() {
+        if flag == "-v" && cmd.args.len() >= 3 {
+            if let Some(Word::Literal(var_name, _)) = cmd.args.get(1) {
+                let mut sub = cmd.clone();
+                sub.args = cmd.args[2..].to_vec();
+                let mut inner = generate_printf_command(
+                    generator, &sub, _input_var, _command_index, None, true,
+                );
+                if inner.ends_with('\n') {
+                    inner.pop();
+                }
+                if inner.ends_with(';') {
+                    inner.pop();
+                }
+                // Reads of the var go through the declared local if one
+                // exists, else $ENV{name} — set both to be safe.
+                let target = if generator.declared_locals.contains(var_name)
+                    || generator.function_level_vars.contains(var_name)
+                {
+                    format!("${}", var_name)
+                } else {
+                    format!("$ENV{{{}}}", var_name)
+                };
+                return format!("{} = {};\n$CHILD_ERROR = 0;\n", target, inner.trim());
+            }
+        }
+    }
+
     // Parse printf format string and arguments
     let mut format_string = String::new();
     // decoded_format stores the raw decoded format string (without surrounding
@@ -108,6 +138,53 @@ pub fn generate_printf_command(
                 args.push(generator.word_to_perl(arg));
             }
         }
+    }
+
+    // bash %b prints the ARG with backslash escapes expanded — Perl's %b
+    // is binary. Convert to %s and decode the escapes in literal args.
+    if decoded_format.contains("%b") {
+        decoded_format = decoded_format.replace("%b", "%s");
+        format_string = generator.perl_string_literal(&Word::literal(decoded_format.clone()));
+        args = cmd
+            .args
+            .iter()
+            .skip(1)
+            .map(|arg| {
+                let literal_text = match arg {
+                    Word::Literal(s, _) => Some(s.clone()),
+                    Word::StringInterpolation(si, _)
+                        if si
+                            .parts
+                            .iter()
+                            .all(|p| matches!(p, crate::ast::StringPart::Literal(_))) =>
+                    {
+                        Some(
+                            si.parts
+                                .iter()
+                                .map(|p| match p {
+                                    crate::ast::StringPart::Literal(s) => s.clone(),
+                                    _ => String::new(),
+                                })
+                                .collect(),
+                        )
+                    }
+                    _ => None,
+                };
+                match literal_text {
+                    Some(mut raw) => {
+                        if (raw.starts_with('"') && raw.ends_with('"'))
+                            || (raw.starts_with('\'') && raw.ends_with('\''))
+                        {
+                            raw = raw[1..raw.len() - 1].to_string();
+                        }
+                        let decoded =
+                            crate::generator::utils::decode_shell_escapes_impl(&raw);
+                        generator.perl_string_literal(&Word::literal(decoded))
+                    }
+                    None => generator.word_to_perl(arg),
+                }
+            })
+            .collect();
     }
 
     if format_string.is_empty() {
