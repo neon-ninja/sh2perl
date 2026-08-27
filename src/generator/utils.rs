@@ -300,7 +300,13 @@ pub fn array_element_word_to_perl_impl(generator: &mut Generator, w: &Word) -> S
                 }
                 return format!("(sort @{})", var_name);
             }
-            generator.word_to_perl(w)
+            // arr=($(cmd)) word-splits the capture; a bare capture put the
+            // WHOLE output (or an empty string) in as one element —
+            // files=(`ls … 2>/dev/null`) with no matches must be ().
+            format!(
+                "(grep {{ $_ ne q{{}} }} split /\\s+/, ({}))",
+                generator.word_to_perl(w)
+            )
         }
         Word::ParameterExpansion(pe, _) => match &pe.operator {
             crate::ast::ParameterExpansionOperator::ArraySlice(offset, length) => {

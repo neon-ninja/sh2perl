@@ -1001,12 +1001,14 @@ pub fn generate_grep_command(
             ));
         }
         if should_print && !quiet_mode {
-            output.push_str(&format!("print $grep_result_{};\n", command_index));
-            if null_terminated {
-                output.push_str("print \"\\0\";\n");
-            } else {
-                output.push_str("print \"\\n\";\n");
-            }
+            // no trailing newline when nothing matched — bash's grep -l/-L
+            // prints NOTHING, not a blank line
+            output.push_str(&format!(
+                "if ($grep_result_{} ne q{{}}) {{ print $grep_result_{}; print \"{}\"; }}\n",
+                command_index,
+                command_index,
+                if null_terminated { "\\0" } else { "\\n" }
+            ));
         }
     } else if files_without_match {
         // Handle -L flag: only show filenames that do NOT contain matches
@@ -1082,12 +1084,14 @@ pub fn generate_grep_command(
             ));
         }
         if should_print && !quiet_mode {
-            output.push_str(&format!("print $grep_result_{};\n", command_index));
-            if null_terminated {
-                output.push_str("print \"\\0\";\n");
-            } else {
-                output.push_str("print \"\\n\";\n");
-            }
+            // no trailing newline when nothing matched — bash's grep -l/-L
+            // prints NOTHING, not a blank line
+            output.push_str(&format!(
+                "if ($grep_result_{} ne q{{}}) {{ print $grep_result_{}; print \"{}\"; }}\n",
+                command_index,
+                command_index,
+                if null_terminated { "\\0" } else { "\\n" }
+            ));
         }
     } else {
         // Default case: output matching lines with various formatting options

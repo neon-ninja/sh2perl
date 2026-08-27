@@ -2099,6 +2099,17 @@ pub fn hoist_my_declarations(
     output: &mut String,
 ) {
     for var in vars {
+        // Only plain identifiers can be hoisted — a collected name like
+        // `options["$key"]` (an assoc-array element assignment) would emit
+        // the Perl syntax error `my $options["$key"];`.
+        if !var
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+            || var.is_empty()
+            || var.chars().next().is_some_and(|c| c.is_ascii_digit())
+        {
+            continue;
+        }
         if !generator.declared_locals.contains(var) && !generator.function_level_vars.contains(var)
         {
             // Ensure there's a newline before the declaration if the output
