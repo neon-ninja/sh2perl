@@ -863,6 +863,13 @@ fn expr_from(v: &Value, where_: &str) -> Result<IrExpr, String> {
     let o = require_obj(v, where_)?;
     let t = req_str(o, "type", where_)?;
     if !KNOWN_EXPR.contains(&t) {
+        // A transform-declared expression node (shir_nodes): the generated
+        // union parses its own tag, so a primitive node emitted by the
+        // reductions (StrLen, FieldExtract, CaseTransform, …) round-trips
+        // through the A1 contract like the statement-position nodes do.
+        if let Some(ctor) = crate::shir_nodes::expr_node_ctor(&t) {
+            return Ok(IrExpr::Ext(ctor(v)?));
+        }
         return Err(format!("{where_}.type: unknown expr type {t:?}"));
     }
     Ok(match t {
@@ -2155,5 +2162,23 @@ mod tests {
         let json2 = serde_json::to_string(&crate::shir::shir_to_estree(&prog2)).unwrap();
         assert!(json2.contains("\"type\":\"DoWhileStatement\""));
         assert!(json2.contains("\"operator\":\"!\""), "until:true must negate");
+    }
+}
+
+#[cfg(test)]
+mod ext_expr_ingress_tests {
+    use super::*;
+
+    /// An expression-position declared node (a reduction primitive) in the
+    /// A1 JSON parses back into IrExpr::Ext — the export of a reduced
+    /// program is consumable by the ingress.
+    #[test]
+    fn expr_position_ext_node_decodes() {
+        let v: Value = serde_json::json!({
+            "type": "StrLen",
+            "text": {"kind": "Str", "value": "hello"}
+        });
+        let e = expr_from(&v, "test").expect("StrLen decodes");
+        assert!(matches!(e, crate::ir::IrExpr::Ext(_)));
     }
 }
