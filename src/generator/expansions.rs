@@ -416,6 +416,31 @@ pub fn generate_parameter_expansion_impl(
                     } else {
                         "scalar(@ARGV)".to_string()
                     }
+                } else if pe.variable.ends_with("[@]") || pe.variable.ends_with("[*]") {
+                    // ${arr[@]:off:len} where the parser kept the [@] in the
+                    // name — an ARRAY slice; substr($ENV{arr[@]},…) was a
+                    // Perl syntax error.
+                    let base = pe
+                        .variable
+                        .trim_end_matches("[@]")
+                        .trim_end_matches("[*]")
+                        .to_string();
+                    let var_ref = format!("@main::{}", base);
+                    if let Some(length_str) = length {
+                        format!(
+                            "join(q{{ }}, grep {{ defined }} ({})[{off}..({off})+({len})-1])",
+                            var_ref,
+                            off = offset,
+                            len = length_str
+                        )
+                    } else {
+                        format!(
+                            "join(q{{ }}, grep {{ defined }} ({})[{off}..$#main::{}])",
+                            var_ref,
+                            base,
+                            off = offset
+                        )
+                    }
                 } else {
                     // Check if the variable is a scalar (not an array).
                     // If scalar, use substr(); otherwise use array slice.

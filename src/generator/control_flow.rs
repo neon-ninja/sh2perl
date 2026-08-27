@@ -1894,8 +1894,14 @@ pub fn generate_continue_statement_impl(_generator: &Generator, level: &Option<S
 pub fn generate_return_statement_impl(generator: &mut Generator, value: &Option<Word>) -> String {
     match value {
         Some(word) => {
+            // Shell `return N` sets the function's EXIT STATUS — callers
+            // read it as $CHILD_ERROR (`if is_prime "$n"` tests the status,
+            // not the Perl return value), so set both.
             let perl_value = generator.perl_string_literal(word);
-            format!("return {};", perl_value)
+            format!(
+                "$CHILD_ERROR = {}; return {};",
+                perl_value, perl_value
+            )
         }
         None => "return;".to_string(),
     }

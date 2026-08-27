@@ -1331,7 +1331,7 @@ pub fn shir_to_perl_embed(prog: &IrProgram, ctx: &EmbedCtx) -> EmbedResult {
         // Perl `qx` does NOT strip trailing newlines (bash `$()` does); the
         // standalone's command-substitution chomp is wrong inside a Perl
         // backtick replacement.
-        out = out.replace("chomp $_r; ", "");
+        out = out.replace("$_r =~ s/\\n+\\z//; ", "");
     }
 
     if !ctx.english_names {
@@ -2383,7 +2383,7 @@ pub(crate) fn emit_stmt(out: &mut String, stmt: &IrStmt, indent: usize) {
                 // Use open()-based capture with safe quoting
                 emit_indent(out, indent);
                 out.push_str(&format!(
-                    "my ${} = do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }};\n",
+                    "my ${} = do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $_r =~ s/\\n+\\z//; $CHILD_ERROR = $? >> 8; $_r; }};\n",
                     var,
                     exports,
                     safe_perl_q_string(&full_cmd)
@@ -6469,7 +6469,7 @@ pub(crate) fn cmd_str_to_open_perl(cmd: &str) -> String {
         )
     };
     format!(
-        "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
+        "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $_r =~ s/\\n+\\z//; $CHILD_ERROR = $? >> 8; $_r; }}",
         exports, quoted
     )
 }
@@ -6554,7 +6554,7 @@ pub(crate) fn expr_to_open_perl(cmd_expr: &str, chomp_result: bool) -> String {
     if chomp_result {
         // chomp must happen without local $/ in scope (see cmd_str_to_open_perl).
         format!(
-            "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
+            "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $_r =~ s/\\n+\\z//; $CHILD_ERROR = $? >> 8; $_r; }}",
             exports, cmd_expr
         )
     } else {

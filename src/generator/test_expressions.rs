@@ -70,7 +70,7 @@ fn convert_shell_var_to_perl(generator: &Generator, var: &str) -> String {
                     let cmd: String = result[cmd_start..cmd_end].to_string();
                     let quoted = crate::ir::safe_perl_q_string(&cmd);
                     let replacement = format!(
-                        "(do {{ open(my $__fh, '-|', 'bash', '-c', {}) or croak \"cmd failed: $!\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }})",
+                        "(do {{ open(my $__fh, '-|', 'bash', '-c', {}) or croak \"cmd failed: $!\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $_r =~ s/\\n+\\z//; $CHILD_ERROR = $? >> 8; $_r; }})",
                         quoted
                     );
                     result.truncate(start.unwrap());
