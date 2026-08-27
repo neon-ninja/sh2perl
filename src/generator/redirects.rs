@@ -511,22 +511,6 @@ pub fn generate_bash_command_string(cmd: &Command) -> String {
             }
         }
         Command::Pipeline(pipeline) => {
-            // The parser keeps the ORIGINAL pipeline text — for stages the
-            // per-command serializer can't reconstruct (a while loop headed
-            // into `| head`), the verbatim source is the faithful shell-out.
-            if let Some(src) = &pipeline.source_text {
-                let needs_source = pipeline.commands.iter().any(|c| match c {
-                    Command::Simple(_) | Command::BuiltinCommand(_) => false,
-                    Command::Redirect(rc) => !matches!(
-                        &*rc.command,
-                        Command::Simple(_) | Command::BuiltinCommand(_)
-                    ),
-                    _ => true,
-                });
-                if needs_source {
-                    return src.clone();
-                }
-            }
             let commands: Vec<String> = pipeline
                 .commands
                 .iter()
@@ -540,6 +524,41 @@ pub fn generate_bash_command_string(cmd: &Command) -> String {
                     result.push_str(" | "); // Default to pipe for now
                 }
                 result.push_str(command);
+            }
+            // A stage the per-command serializer could not reconstruct (a
+            // while-read loop headed into `| head`) leaves the refusal
+            // placeholder in the text — ONLY then fall back to the parser's
+            // verbatim source_text (it can over-span, so it is a last
+            // resort, gated on balanced braces/parens).
+            if result.contains("Complex command not supported") {
+                if let Some(src) = &pipeline.source_text {
+                    // Drop leading blank/comment lines (source_text can start
+                    // at the shebang), then require balanced braces/parens —
+                    // an unbalanced span (half a function definition) would
+                    // corrupt the bash -c text.
+                    let stripped: String = src
+                        .lines()
+                        .skip_while(|l| {
+                            let t = l.trim();
+                            t.is_empty() || t.starts_with('#')
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    let mut brace = 0i32;
+                    let mut paren = 0i32;
+                    for c in stripped.chars() {
+                        match c {
+                            '{' => brace += 1,
+                            '}' => brace -= 1,
+                            '(' => paren += 1,
+                            ')' => paren -= 1,
+                            _ => {}
+                        }
+                    }
+                    if !stripped.is_empty() && brace == 0 && paren == 0 {
+                        return stripped;
+                    }
+                }
             }
             result
         }

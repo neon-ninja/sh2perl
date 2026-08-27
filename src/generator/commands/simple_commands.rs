@@ -2139,10 +2139,20 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
             }
         }
     } else {
-        // Handle non-literal command names (e.g. variable expansion as command)
-        // These are almost certainly not valid commands - skip with no-op
+        // Non-literal command name (`"$INTERPRETER" -E -`): evaluate the
+        // name at runtime and exec it with the evaluated args — skipping
+        // with a no-op silently dropped the command (heredoc-binary-data's
+        // embedded interpreter never ran).
+        let name_expr = generator.word_to_perl(&cmd.name);
+        let mut all_args = vec![format!("({})", name_expr)];
+        for a in &cmd.args {
+            all_args.push(generator.word_to_perl(a));
+        }
         output.push_str(&generator.indent());
-        output.push_str("$CHILD_ERROR = 0;\n");
+        output.push_str(&format!(
+            "do {{ my @__dyn_cmd = ({}); $main_exit_code = $CHILD_ERROR = system(@__dyn_cmd) >> 8; }};\n",
+            all_args.join(", ")
+        ));
     }
 
     output
