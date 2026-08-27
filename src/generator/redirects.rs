@@ -120,11 +120,15 @@ pub fn generate_redirect_impl(generator: &mut Generator, redirect: &Redirect) ->
 
     match &redirect.operator {
         RedirectOperator::Input => {
-            // Input redirection: command < file
+            // Input redirection: command < file. A failed redirect must NOT
+            // kill the program — bash reports it on stderr, fails the one
+            // command (status 1) and continues. Reopen from /dev/null so
+            // any read in the body sees EOF instead of the old stdin.
             let target = generator.perl_string_literal(&redirect.target);
             output.push_str(&format!(
-                "open STDIN, '<', {} or croak \"Cannot read file: $OS_ERROR\\n\";\n",
-                target
+                "unless (open STDIN, '<', {}) {{ print STDERR \"sh: {}: $OS_ERROR\\n\"; $CHILD_ERROR = 1; open STDIN, '<', '/dev/null'; }}\n",
+                target,
+                target.trim_matches('"')
             ));
         }
         RedirectOperator::Output => {

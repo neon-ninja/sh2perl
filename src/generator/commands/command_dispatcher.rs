@@ -934,10 +934,10 @@ pub fn generate_command_impl_with_input(
                                     "      or die \"Cannot save STDOUT: $OS_ERROR\\n\";\n",
                                 );
                                 result.push_str(&generator.indent());
-                                result.push_str(&format!("open STDOUT, '{}', {}\n", mode, target));
-                                result.push_str(
-                                    "      or die \"Cannot access file: $OS_ERROR\\n\";\n",
-                                );
+                                result.push_str(&format!(
+                                    "unless (open STDOUT, '{}', {}) {{ print STDERR \"sh: cannot create output file: $OS_ERROR\\n\"; $CHILD_ERROR = 1; open STDOUT, '>', '/dev/null'; }}\n",
+                                    mode, target
+                                ));
                             }
 
                             // If there's a stderr redirect, add it inside the do block
@@ -1299,8 +1299,13 @@ pub fn generate_command_impl_with_input(
                         ">"
                     };
                     result.push_str(&generator.indent());
-                    result.push_str(&format!("open STDOUT, '{}', {}\n", mode, target));
-                    result.push_str("      or die \"Cannot access file: $OS_ERROR\\n\";\n");
+                    // A failed output redirect must not kill the program —
+                    // bash reports it, fails the command (status 1), and
+                    // continues. Discard the body's output via /dev/null.
+                    result.push_str(&format!(
+                        "unless (open STDOUT, '{}', {}) {{ print STDERR \"sh: cannot create output file: $OS_ERROR\\n\"; $CHILD_ERROR = 1; open STDOUT, '>', '/dev/null'; }}\n",
+                        mode, target
+                    ));
                 } else {
                     result.push_str(&generator.indent());
                     result.push_str("open STDOUT, '>', 'temp_file.txt'\n");

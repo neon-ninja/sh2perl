@@ -115,12 +115,15 @@ fn push_string_expr(parts: &mut Vec<String>, current_string: &mut String) {
                         } else {
                             None
                         };
+                        // Digits do NOT preserve interpolation: a shell
+                        // positional in a double-quoted string parses as a
+                        // Variable part, so a literal "$5" here came from
+                        // an escaped \$ ("price: \$5.00") — interpolating
+                        // it would read Perl's $5 capture var (empty).
                         let should_escape = match next {
-                            Some(b'a'..=b'z')
-                            | Some(b'A'..=b'Z')
-                            | Some(b'0'..=b'9')
-                            | Some(b'_')
-                            | Some(b'{') => false,
+                            Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'_') | Some(b'{') => {
+                                false
+                            }
                             _ => true,
                         };
                         if should_escape {
@@ -3807,6 +3810,92 @@ pub fn convert_arithmetic_to_perl_impl(generator: &Generator, expr: &str) -> Str
             .to_string();
     }
 
+    // C/bash gives `^` higher precedence than `|`; Perl puts them on the
+    // SAME level (left-assoc), so `x | y ^ z` parses as `(x | y) ^ z`
+    // instead of bash's `x | (y ^ z)`. Re-group: split on top-level
+    // single `|` and parenthesize any segment containing a top-level `^`.
+    {
+        let bytes: Vec<char> = result.chars().collect();
+        let mut depth = 0i32;
+        let mut segs: Vec<String> = Vec::new();
+        let mut cur = String::new();
+        let mut i = 0;
+        let mut had_pipe = false;
+        while i < bytes.len() {
+            let c = bytes[i];
+            match c {
+                '(' | '[' | '{' => depth += 1,
+                ')' | ']' | '}' => depth -= 1,
+                '|' if depth == 0 => {
+                    if bytes.get(i + 1) == Some(&'|') {
+                        cur.push_str("||");
+                        i += 2;
+                        continue;
+                    }
+                    if bytes.get(i + 1) != Some(&'=') {
+                        had_pipe = true;
+                        segs.push(std::mem::take(&mut cur));
+                        i += 1;
+                        continue;
+                    }
+                }
+                _ => {}
+            }
+            cur.push(c);
+            i += 1;
+        }
+        segs.push(cur);
+        if had_pipe {
+            let regrouped: Vec<String> = segs
+                .into_iter()
+                .map(|s| {
+                    let mut d = 0i32;
+                    let mut has_xor = false;
+                    let cs: Vec<char> = s.chars().collect();
+                    for (idx, &ch) in cs.iter().enumerate() {
+                        match ch {
+                            '(' | '[' | '{' => d += 1,
+                            ')' | ']' | '}' => d -= 1,
+                            '^' if d == 0 && cs.get(idx + 1) != Some(&'=') => has_xor = true,
+                            _ => {}
+                        }
+                    }
+                    if has_xor {
+                        format!("({})", s.trim())
+                    } else {
+                        s
+                    }
+                })
+                .collect();
+            result = regrouped.join("|");
+        }
+    }
+
+    // Bitwise complement and shifts are UNSIGNED in plain Perl (~0 →
+    // 18446744073709551615) but SIGNED 64-bit in bash (~0 → -1); `use
+    // integer` scopes Perl to signed integer semantics. Only wrap when
+    // such an operator is present — `use integer` also changes division
+    // to truncation, which int() already handles for the general case.
+    // Also: & | ^ on Perl STRING operands are bitwise STRING operators
+    // ("6" & "3" is "2" by ASCII, not 2) — and shell vars are assigned as
+    // strings. `use feature 'bitwise'` forces the numeric behavior.
+    let needs_signed = expr.contains('~')
+        || expr.contains("<<")
+        || expr.contains(">>")
+        || expr.contains('&')
+        || expr.contains('|')
+        || expr.contains('^');
+    let signed_wrap = |inner: String| -> String {
+        if needs_signed {
+            format!(
+                "(do {{ use integer; use feature 'bitwise'; no warnings; {} }})",
+                inner
+            )
+        } else {
+            inner
+        }
+    };
+
     // Wrap with int() to match bash integer arithmetic semantics.
     // Use eval {} // "" only when the expression contains division or
     // modulo, because those are the only operations that can trigger a
@@ -3814,9 +3903,9 @@ pub fn convert_arithmetic_to_perl_impl(generator: &Generator, expr: &str) -> Str
     // like addition, subtraction, multiplication, and bitwise ops,
     // int() is sufficient — Perl integer addition cannot die.
     if result.contains('/') || result.contains('%') {
-        format!("eval {{ int({}) }} // \"\"", result)
+        format!("eval {{ int({}) }} // \"\"", signed_wrap(result))
     } else {
-        format!("int({})", result)
+        format!("int({})", signed_wrap(result))
     }
 }
 
