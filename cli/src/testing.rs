@@ -409,9 +409,12 @@ pub fn test_file_equivalence_with_critic(
     // Read shell script content
     let shell_content = match fs::read_to_string(filename) {
         Ok(c) => c,
-        Err(e) => {
-            return Err(format!("Failed to read {}: {}", filename, e));
-        }
+        Err(_) => match fs::read(filename) {
+            Ok(bytes) => bytes.iter().map(|&b| b as char).collect(),
+            Err(e) => {
+                return Err(format!("Failed to read {}: {}", filename, e));
+            }
+        },
     };
 
     // Parse and generate target language code
@@ -817,11 +820,17 @@ pub fn test_file_equivalence_detailed_with_critic(
     // If no cached Perl code, we need to parse and generate
     if cached_perl_code.is_none() {
         // Read shell script content
+        // Scripts are not always valid UTF-8 (utf8-non-utf8-content.sh has
+        // a latin-1 byte); fall back to a byte-preserving latin-1 decode so
+        // a print of the char round-trips to the same byte.
         shell_content = match fs::read_to_string(filename) {
             Ok(c) => c,
-            Err(e) => {
-                return Err(format!("Failed to read {}: {}", filename, e));
-            }
+            Err(_) => match fs::read(filename) {
+                Ok(bytes) => bytes.iter().map(|&b| b as char).collect(),
+                Err(e) => {
+                    return Err(format!("Failed to read {}: {}", filename, e));
+                }
+            },
         };
 
         // Parse and generate target language code

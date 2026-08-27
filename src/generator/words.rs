@@ -115,15 +115,16 @@ fn push_string_expr(parts: &mut Vec<String>, current_string: &mut String) {
                         } else {
                             None
                         };
-                        // Digits do NOT preserve interpolation: a shell
+                        // Digits 1-9 do NOT preserve interpolation: a shell
                         // positional in a double-quoted string parses as a
                         // Variable part, so a literal "$5" here came from
                         // an escaped \$ ("price: \$5.00") — interpolating
                         // it would read Perl's $5 capture var (empty).
+                        // `$0` stays interpolated: Perl's $0 is the program
+                        // name, matching bash $0 (057_case's usage line).
                         let should_escape = match next {
-                            Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'_') | Some(b'{') => {
-                                false
-                            }
+                            Some(b'a'..=b'z') | Some(b'A'..=b'Z') | Some(b'_') | Some(b'{')
+                            | Some(b'0') => false,
                             _ => true,
                         };
                         if should_escape {
@@ -2986,7 +2987,20 @@ pub fn convert_string_interpolation_to_perl_impl(
             StringPart::Variable(var) => {
                 // Handle special shell variables
                 match var.as_str() {
-                    "#" => current_string.push_str("${scalar(@ARGV)}"), // $# -> ${scalar(@ARGV)} for interpolation
+                    "#" => {
+                        // $# — argument count. An expression part (the
+                        // in-string `${scalar(@ARGV)}` form is a symbolic
+                        // deref that dies under strict), and @_ inside a
+                        // function.
+                        if !current_string.is_empty() {
+                            push_string_expr(&mut parts, &mut current_string);
+                        }
+                        if generator.fn_nesting_depth > 0 {
+                            parts.push("scalar(@_)".to_string());
+                        } else {
+                            parts.push("scalar(@ARGV)".to_string());
+                        }
+                    }
                     "@" | "*" => {
                         // $@/$* in bash = all script arguments (top level) or
                         // function arguments (inside a function). Emit an

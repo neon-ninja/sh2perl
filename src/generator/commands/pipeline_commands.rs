@@ -96,8 +96,13 @@ fn generate_command_using_builtins(
                             if interp.parts.len() == 1 {
                                 if let StringPart::Variable(var) = &interp.parts[0] {
                                     match var.as_str() {
-                                        "@" => all_items.push("@ARGV".to_string()),
-                                        "*" => all_items.push("@ARGV".to_string()),
+                                        "@" | "*" => {
+                                            if generator.fn_nesting_depth > 0 {
+                                                all_items.push("@_".to_string())
+                                            } else {
+                                                all_items.push("@ARGV".to_string())
+                                            }
+                                        }
                                         _ => all_items.push(generator.word_to_perl(word)),
                                     }
                                 } else if let StringPart::ParameterExpansion(pe) = &interp.parts[0]

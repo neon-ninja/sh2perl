@@ -1077,8 +1077,15 @@ pub fn generate_for_loop_impl(generator: &mut Generator, for_loop: &ForLoop) -> 
                 if interp.parts.len() == 1 {
                     if let StringPart::Variable(var) = &interp.parts[0] {
                         match var.as_str() {
-                            "@" => all_items.push("@ARGV".to_string()), // $@ -> @ARGV (no quotes)
-                            "*" => all_items.push("@ARGV".to_string()), // $* -> @ARGV (no quotes)
+                            // $@ / $* — script args at top level, function
+                            // args (@_) inside a function
+                            "@" | "*" => {
+                                if generator.fn_nesting_depth > 0 {
+                                    all_items.push("@_".to_string())
+                                } else {
+                                    all_items.push("@ARGV".to_string())
+                                }
+                            }
                             _ => all_items.push(generator.word_to_perl(word)),
                         }
                     } else if let StringPart::ParameterExpansion(pe) = &interp.parts[0] {

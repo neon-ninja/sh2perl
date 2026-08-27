@@ -2371,6 +2371,15 @@ pub(crate) fn emit_stmt(out: &mut String, stmt: &IrStmt, indent: usize) {
                     .lines()
                     .map(|l| format!("local {} ", l))
                     .collect();
+                // `$name` text inside the command can also be embedded perl/awk
+                // code whose vars are NOT declared perl locals — soften strict
+                // for the export prologue so those export as empty instead of
+                // failing compilation.
+                let exports = if exports.is_empty() {
+                    exports
+                } else {
+                    format!("no strict 'vars'; no warnings; {}", exports)
+                };
                 // Use open()-based capture with safe quoting
                 emit_indent(out, indent);
                 out.push_str(&format!(
@@ -6445,9 +6454,23 @@ pub(crate) fn cmd_str_to_open_perl(cmd: &str) -> String {
     // fragile approach of escaping `}` as `\}` inside q{...}, which changed
     // the content (e.g. broke awk `{print ...}` programs).
     let quoted = safe_perl_q_string(cmd);
+    // Same env-export prologue as expr_to_open_perl — `$n` inside the
+    // single-quoted bash -c text must reach the child via %ENV.
+    let exports_raw = var_exports_str(cmd);
+    let exports: String = if exports_raw.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "no strict 'vars'; no warnings; {}",
+            exports_raw
+                .lines()
+                .map(|l| format!("local {} ", l))
+                .collect::<String>()
+        )
+    };
     format!(
-        "do {{ open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
-        quoted
+        "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
+        exports, quoted
     )
 }
 
@@ -6510,16 +6533,34 @@ pub(crate) fn safe_perl_q_string(s: &str) -> String {
 /// `cmd_expr` should be a Perl string expression like `'echo hello'`
 /// or `"head -n $count /etc/passwd"`.
 pub(crate) fn expr_to_open_perl(cmd_expr: &str, chomp_result: bool) -> String {
+    // Export the Perl vars the command text references into the bash
+    // child's env (localized to the capture block) — a `$n` inside a
+    // single-quoted bash -c string is otherwise unset in the child.
+    // `no strict` because some `$name` text is embedded awk/perl code
+    // whose names are not declared Perl locals (they export as empty,
+    // exactly bash's unset-var behavior).
+    let exports_raw = var_exports_str(cmd_expr);
+    let exports: String = if exports_raw.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "no strict 'vars'; no warnings; {}",
+            exports_raw
+                .lines()
+                .map(|l| format!("local {} ", l))
+                .collect::<String>()
+        )
+    };
     if chomp_result {
         // chomp must happen without local $/ in scope (see cmd_str_to_open_perl).
         format!(
-            "do {{ open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
-            cmd_expr
+            "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }}",
+            exports, cmd_expr
         )
     } else {
         format!(
-            "do {{ open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $CHILD_ERROR = $? >> 8; $_r; }}",
-            cmd_expr
+            "do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; $CHILD_ERROR = $? >> 8; $_r; }}",
+            exports, cmd_expr
         )
     }
 }
