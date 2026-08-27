@@ -358,11 +358,19 @@ pub(crate) fn perl_char_escape(c: char) -> String {
 
 pub fn perl_string_literal_impl(generator: &mut Generator, word: &Word) -> String {
     match word {
-        Word::Literal(s, _) => {
+        Word::Literal(s, quoted) => {
             // Apply bash quote removal: in unquoted words, \X → X
             // (backslash is removed, the following character is kept literally).
             // This matches how the shell processes unquoted words.
-            let s = apply_shell_quote_removal(s);
+            // QUOTED literals keep their backslashes verbatim (inside single
+            // quotes backslash is an ordinary character — '\\' is TWO
+            // backslashes); only the parser's `\'` marker for the '\''
+            // embedded-quote idiom needs decoding.
+            let s = if quoted.is_some() {
+                s.replace("\\'", "'")
+            } else {
+                apply_shell_quote_removal(s)
+            };
 
             let has_standalone_system = {
                 let mut found = false;

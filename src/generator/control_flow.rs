@@ -220,6 +220,45 @@ pub fn generate_case_statement_impl(
             if pattern_str == "*" {
                 // Default case (*)
                 pattern_conditions.push("1".to_string()); // Always true
+            } else if matches!(pattern, Word::CommandSubstitution(_, _))
+                || pattern_str.starts_with("$(")
+            {
+                // Pattern is a command substitution — its value only exists
+                // at runtime. Evaluate it and compare as a plain string
+                // (emitting the `$(...)` text literally can never match).
+                let pat_expr = if matches!(pattern, Word::CommandSubstitution(_, _)) {
+                    generator.word_to_perl(pattern)
+                } else {
+                    // The parser kept the `$(...)` as literal text — parse
+                    // the inner command and evaluate it as a cmdsub.
+                    let inner = pattern_str
+                        .trim_start_matches("$(")
+                        .trim_end_matches(')');
+                    match crate::parser::commands::parse_pipeline_from_text(inner) {
+                        Ok(cmd) => generator
+                            .word_to_perl(&Word::CommandSubstitution(Box::new(cmd), None)),
+                        Err(_) => generator.word_to_perl(pattern),
+                    }
+                };
+                let word_str = generator.word_to_perl(&case_stmt.word);
+                let processed_word = match &case_stmt.word {
+                    Word::Variable(var_name, _, _) => {
+                        if generator.declared_locals.contains(var_name)
+                            || generator.function_level_vars.contains(var_name)
+                            || matches!(
+                                var_name.as_str(),
+                                "#" | "@" | "*" | "-" | "?" | "$" | "!" | "0"
+                            )
+                            || var_name.chars().all(|c| c.is_ascii_digit())
+                        {
+                            word_str
+                        } else {
+                            format!("($ENV{{{}}} // q{{}})", var_name)
+                        }
+                    }
+                    _ => word_str,
+                };
+                pattern_conditions.push(format!("(({}) eq ({}))", processed_word, pat_expr));
             } else {
                 // Check whether this is a simple literal pattern (no glob characters).
                 // If so, use `eq` instead of a regex match — it's cleaner and avoids

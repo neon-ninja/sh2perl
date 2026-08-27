@@ -881,6 +881,14 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
 
                                                     result.push_str(&interpreted);
                                                 }
+                                                crate::ast::StringPart::Variable(v)
+                                                    if v == "@" || v == "*" =>
+                                                {
+                                                    // "$@"/"$*": args — placeholder
+                                                    // so the $/@ escaping below
+                                                    // doesn't kill the interpolation.
+                                                    result.push_str("__SH2_AT_ARGS__");
+                                                }
                                                 _ => {
                                                     // For other parts, use default processing
                                                     result.push_str(
@@ -904,7 +912,15 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                                             .replace("\t", "\\t")
                                             .replace("\r", "\\r")
                                             .replace("$", "\\$")
-                                            .replace("@", "\\@");
+                                            .replace("@", "\\@")
+                                            .replace(
+                                                "__SH2_AT_ARGS__",
+                                                if generator.fn_nesting_depth > 0 {
+                                                    "\" . join(q{ }, @_) . \""
+                                                } else {
+                                                    "\" . join(q{ }, @ARGV) . \""
+                                                },
+                                            );
                                         format!("\"{}\"", escaped)
                                     } else {
                                         generator.convert_string_interpolation_to_perl(interp)
@@ -1143,8 +1159,12 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                                                     // Handle variables in string interpolation
                                                     match var.as_str() {
                                                         "#" => result.push_str("scalar(@ARGV)"),
-                                                        "@" => result.push_str("@ARGV"),
-                                                        "*" => result.push_str("@ARGV"),
+                                                        // placeholder — resolved
+                                                        // after the $/@ escaping
+                                                        // below (else the escape
+                                                        // makes it literal text)
+                                                        "@" | "*" => result
+                                                            .push_str("__SH2_AT_ARGS__"),
                                                         "?" => result.push_str("$CHILD_ERROR"),
                                                         "!" => result.push_str(""),
                                                         "-" => result.push_str(""),
@@ -1185,6 +1205,14 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                                                         &generator.generate_parameter_expansion(pe),
                                                     );
                                                 }
+                                                crate::ast::StringPart::Variable(v)
+                                                    if v == "@" || v == "*" =>
+                                                {
+                                                    // "$@"/"$*": args — placeholder
+                                                    // so the $/@ escaping below
+                                                    // doesn't kill the interpolation.
+                                                    result.push_str("__SH2_AT_ARGS__");
+                                                }
                                                 _ => {
                                                     // For other parts, use default processing
                                                     result.push_str(
@@ -1208,7 +1236,15 @@ pub fn generate_simple_command_impl(generator: &mut Generator, cmd: &SimpleComma
                                             .replace("\t", "\\t")
                                             .replace("\r", "\\r")
                                             .replace("$", "\\$")
-                                            .replace("@", "\\@");
+                                            .replace("@", "\\@")
+                                            .replace(
+                                                "__SH2_AT_ARGS__",
+                                                if generator.fn_nesting_depth > 0 {
+                                                    "\" . join(q{ }, @_) . \""
+                                                } else {
+                                                    "\" . join(q{ }, @ARGV) . \""
+                                                },
+                                            );
                                         format!("\"{}\"", escaped)
                                     } else {
                                         generator.perl_string_literal(arg)

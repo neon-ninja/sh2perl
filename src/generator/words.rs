@@ -402,7 +402,7 @@ fn generate_shell_command_substitution(generator: &mut Generator, cmd: &Command)
 
 pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
     match word {
-        Word::Literal(s, _) => {
+        Word::Literal(s, lit_quoted) => {
             // Handle literal strings
             if s.len() >= 2 && s.starts_with('`') && s.ends_with('`') {
                 let command_str = s[1..s.len() - 1].to_string();
@@ -451,8 +451,10 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
                 // helper so quoting/escaping rules are consistent and we avoid
                 // accidental Perl interpolation of shell snippets (like awk/sed)
                 // which may contain "$" or "@". Using generator.perl_string_literal
-                // ensures single-quoting is used when safe.
-                generator.perl_string_literal(&Word::literal(s.clone()))
+                // ensures single-quoting is used when safe. Preserve the
+                // quoted flag — it decides whether backslashes are shell
+                // escapes (unquoted) or verbatim characters (quoted).
+                generator.perl_string_literal(&Word::Literal(s.clone(), *lit_quoted))
             }
         }
         Word::ParameterExpansion(pe, _) => generator.generate_parameter_expansion(pe),
@@ -2985,20 +2987,21 @@ pub fn convert_string_interpolation_to_perl_impl(
                 // Handle special shell variables
                 match var.as_str() {
                     "#" => current_string.push_str("${scalar(@ARGV)}"), // $# -> ${scalar(@ARGV)} for interpolation
-                    "@" => {
-                        // $@ in bash = all script arguments (top level) or function arguments
-                        // (inside a function).  In Perl, @ARGV / @_ is the corresponding array.
-                        if generator.fn_nesting_depth > 0 {
-                            current_string.push_str("@_");
-                        } else {
-                            current_string.push_str("@ARGV");
+                    "@" | "*" => {
+                        // $@/$* in bash = all script arguments (top level) or
+                        // function arguments (inside a function). Emit an
+                        // explicit join EXPRESSION part instead of in-string
+                        // "@_" text — downstream consumers (the IR bridge,
+                        // the echo -e escapers) re-escape @ in string
+                        // content, which turned it into the literal text
+                        // "@ARGV".
+                        if !current_string.is_empty() {
+                            push_string_expr(&mut parts, &mut current_string);
                         }
-                    }
-                    "*" => {
                         if generator.fn_nesting_depth > 0 {
-                            current_string.push_str("@_");
+                            parts.push("join(q{ }, @_)".to_string());
                         } else {
-                            current_string.push_str("@ARGV");
+                            parts.push("join(q{ }, @ARGV)".to_string());
                         }
                     }
                     _ => {
