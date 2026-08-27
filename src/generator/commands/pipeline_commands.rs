@@ -2515,7 +2515,18 @@ fn generate_buffered_pipeline(
                 capture: Some(output_var.clone()),
                 cmd_str: Some(reconstructed_cmd),
             };
-            output.push_str(&stmt_to_perl(&pipeline_stmt, 0));
+            if should_print {
+                // Statement-position pipeline output is printed VERBATIM by
+                // bash (all trailing newlines kept); the capture template's
+                // strip-all is for $() value semantics — swap it back to a
+                // single chomp, which the conditional print's added "\n"
+                // exactly restores.
+                let emitted = stmt_to_perl(&pipeline_stmt, 0)
+                    .replace("$_r =~ s/\\n+\\z//;", "chomp $_r;");
+                output.push_str(&emitted);
+            } else {
+                output.push_str(&stmt_to_perl(&pipeline_stmt, 0));
+            }
 
             if should_print {
                 // For top-level pipelines, print the captured output.  bash
@@ -2535,7 +2546,12 @@ fn generate_buffered_pipeline(
                 // `my $var = qx{...}; chomp $var;` which are statements, not expressions,
                 // so we wrap in a do{} to make it an expression for command substitution.
                 // The caller (generate_pipeline_for_substitution) may add further wrapping.
-                output.push_str(&format!("do {{ ${} }}\n", output_var));
+                // bash $() strips ALL trailing newlines — the capture's chomp
+                // only removed one.
+                output.push_str(&format!(
+                    "do {{ ${} =~ s/\\n+\\z//; ${} }}\n",
+                    output_var, output_var
+                ));
             }
 
             return output;

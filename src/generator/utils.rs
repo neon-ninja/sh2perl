@@ -185,8 +185,18 @@ fn single_nonempty_part(
 /// CommandSubstitution word — detect the `sort` + herestring shape
 /// directly instead of re-parsing reconstructed text.
 fn try_extract_sort_herestring_word(cmd: &crate::ast::Command) -> Option<String> {
-    let crate::ast::Command::Simple(sc) = cmd else {
-        return None;
+    // `sort <<< …` can parse as Simple-with-redirect OR as a Redirect
+    // wrapper around the Simple — accept both shapes.
+    let (sc, redirects): (&crate::ast::SimpleCommand, Vec<&crate::ast::Redirect>) = match cmd {
+        crate::ast::Command::Simple(sc) => (sc, sc.redirects.iter().collect()),
+        crate::ast::Command::Redirect(rc) => match &*rc.command {
+            crate::ast::Command::Simple(sc) => (
+                sc,
+                rc.redirects.iter().chain(sc.redirects.iter()).collect(),
+            ),
+            _ => return None,
+        },
+        _ => return None,
     };
     if !sc.args.is_empty() {
         return None;
@@ -197,10 +207,10 @@ fn try_extract_sort_herestring_word(cmd: &crate::ast::Command) -> Option<String>
     if name != "sort" {
         return None;
     }
-    if sc.redirects.len() != 1 {
+    if redirects.len() != 1 {
         return None;
     }
-    let r = &sc.redirects[0];
+    let r = redirects[0];
     if !matches!(r.operator, crate::ast::RedirectOperator::HereString) {
         return None;
     }
@@ -217,6 +227,19 @@ fn try_extract_sort_herestring_word(cmd: &crate::ast::Command) -> Option<String>
             crate::ast::ParameterExpansionOperator::ArraySlice(off, None) => {
                 if off == "*" || off == "@" {
                     return Some(pe.variable.clone());
+                }
+                None
+            }
+            // the parser can also keep the subscript in the NAME
+            // (`${config[*]}` → variable "config[*]", operator None)
+            crate::ast::ParameterExpansionOperator::None => {
+                if pe.variable.ends_with("[*]") || pe.variable.ends_with("[@]") {
+                    return Some(
+                        pe.variable
+                            .trim_end_matches("[*]")
+                            .trim_end_matches("[@]")
+                            .to_string(),
+                    );
                 }
                 None
             }

@@ -6474,6 +6474,14 @@ pub(crate) fn cmd_str_to_open_perl(cmd: &str) -> String {
     )
 }
 
+/// Command-substitution variant of `cmd_str_to_open_perl`: bash `$()`
+/// strips ALL trailing newlines, not just one — use this in VALUE
+/// contexts (assignments), and the chomp form in statement-position
+/// pipeline output (which bash prints verbatim).
+pub(crate) fn cmd_str_to_open_perl_stripped(cmd: &str) -> String {
+    cmd_str_to_open_perl(cmd).replacen("chomp $_r;", "$_r =~ s/\\n+\\z//;", 1)
+}
+
 /// Pick a safe Perl `q<delim>...<delim>` delimiter for a string that may
 /// contain arbitrary characters.  Returns a properly delimited Perl literal.
 pub(crate) fn safe_perl_q_string(s: &str) -> String {

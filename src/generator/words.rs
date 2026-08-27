@@ -576,7 +576,15 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
                                 .redirects
                                 .iter()
                                 .find(|r| matches!(r.operator, RedirectOperator::HereString))
-                                .map(|r| generator.perl_string_literal(&r.target))
+                                .map(|r| match &r.target {
+                                    Word::Literal(_, _) => {
+                                        generator.perl_string_literal(&r.target)
+                                    }
+                                    // interpolations go through word_to_perl
+                                    // so `${map[*]}` becomes join(values)
+                                    // instead of the literal-key $map{'*'}
+                                    other => generator.word_to_perl(other),
+                                })
                                 .unwrap_or_else(|| "''".to_string());
                             // Emit: echo <string> | <cmd>
                             let bash_cmd = format!("echo \"$here_input\" | {}", base_cmd_str);
@@ -2635,6 +2643,14 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
         }
         Word::MapAccess(map_name, key, _) => {
             // Handle array/map access like arr[1] or map[foo]
+            // ${map[*]} / ${map[@]}: ALL values joined — `$map{'*'}` looked
+            // up a literal '*' key (undef).
+            if key == "*" || key == "@" {
+                if generator.associative_arrays.contains(map_name) {
+                    return format!("join(q{{ }}, values %{})", map_name);
+                }
+                return format!("join(q{{ }}, @{})", map_name);
+            }
             // Check if the key is numeric (indexed array) or string (associative array)
             if key.parse::<usize>().is_ok() {
                 // Indexed array access: arr[1] -> $arr[1]
@@ -3070,7 +3086,18 @@ pub fn convert_string_interpolation_to_perl_impl(
                 }
             }
             StringPart::MapAccess(map_name, key) => {
-                if generator.associative_arrays.contains(map_name) {
+                if key == "*" || key == "@" {
+                    // ${map[*]}: ALL values joined — `$map{'*'}` was a
+                    // literal-key lookup (undef).
+                    if !current_string.is_empty() {
+                        push_string_expr(&mut parts, &mut current_string);
+                    }
+                    if generator.associative_arrays.contains(map_name) {
+                        parts.push(format!("join(q{{ }}, values %{})", map_name));
+                    } else {
+                        parts.push(format!("join(q{{ }}, @{})", map_name));
+                    }
+                } else if generator.associative_arrays.contains(map_name) {
                     // Associative array access: map[foo] -> $map{'foo'}
                     // or map[$k] -> $map{$k}
                     if key.starts_with('$') {
@@ -3116,6 +3143,25 @@ pub fn convert_string_interpolation_to_perl_impl(
                 // First, add any accumulated string as a quoted part
                 if !current_string.is_empty() {
                     push_string_expr(&mut parts, &mut current_string);
+                }
+
+                // ${map[*]} / ${arr[@]} with the subscript kept in the NAME
+                // (operator None): all elements joined — the generic path
+                // emitted the literal-key lookup $map{'*'}.
+                if matches!(pe.operator, ParameterExpansionOperator::None)
+                    && (pe.variable.ends_with("[*]") || pe.variable.ends_with("[@]"))
+                {
+                    let base = pe
+                        .variable
+                        .trim_end_matches("[*]")
+                        .trim_end_matches("[@]")
+                        .to_string();
+                    if generator.associative_arrays.contains(&base) {
+                        parts.push(format!("join(q{{ }}, values %{})", base));
+                    } else {
+                        parts.push(format!("join(q{{ }}, @{})", base));
+                    }
+                    continue;
                 }
 
                 // Check for special array operations first
