@@ -740,10 +740,13 @@ pub fn generate_while_loop_impl(generator: &mut Generator, while_loop: &WhileLoo
                     }
                 }
                 // The last expression in the do block must be truthy when the
-                // command succeeds (exit code 0). $main_exit_code holds the
-                // exit code from the system() call generated above; use it.
+                // command succeeds (exit code 0). $CHILD_ERROR carries the
+                // condition command's status in every generated form —
+                // including `!` negation, which flips $CHILD_ERROR but never
+                // touches $main_exit_code (the old $main_exit_code check spun
+                // `while ! cmd` forever).
                 output.push_str(&generator.indent());
-                output.push_str("$main_exit_code == 0\n");
+                output.push_str("$CHILD_ERROR == 0\n");
                 generator.indent_level -= 1;
                 output.push_str(&generator.indent());
                 output.push_str("}) {\n");

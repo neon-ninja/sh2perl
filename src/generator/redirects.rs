@@ -511,6 +511,22 @@ pub fn generate_bash_command_string(cmd: &Command) -> String {
             }
         }
         Command::Pipeline(pipeline) => {
+            // The parser keeps the ORIGINAL pipeline text — for stages the
+            // per-command serializer can't reconstruct (a while loop headed
+            // into `| head`), the verbatim source is the faithful shell-out.
+            if let Some(src) = &pipeline.source_text {
+                let needs_source = pipeline.commands.iter().any(|c| match c {
+                    Command::Simple(_) | Command::BuiltinCommand(_) => false,
+                    Command::Redirect(rc) => !matches!(
+                        &*rc.command,
+                        Command::Simple(_) | Command::BuiltinCommand(_)
+                    ),
+                    _ => true,
+                });
+                if needs_source {
+                    return src.clone();
+                }
+            }
             let commands: Vec<String> = pipeline
                 .commands
                 .iter()
@@ -1589,12 +1605,12 @@ pub fn generate_builtin_command_impl(generator: &mut Generator, cmd: &BuiltinCom
                     }
                 }
                 let concat_expr = parts_perl.join(" . ");
-                // Note: we pass $eval_input directly to bash -c rather than
-                // wrapping it in "eval \"...\"" because the latter triggers
-                // Perl::Critic's "Expression form of eval" false positive.
-                // bash -c "..." is semantically equivalent to eval "...".
+                // Execute the eval text in a bash child (stdout inherits so
+                // echo-evals print), then import the resulting environment so
+                // variable assignments land in this process — the previous
+                // emission built $eval_input and DID NOTHING with it.
                 output.push_str(&format!(
-                    "do {{ my $eval_input = {}; $CHILD_ERROR = 0; }};  # native Perl\n",
+                    "do {{ my $eval_input = {}; my $__envf = \"/tmp/__sh2_eval_env_$$\"; my $__sh = 'bash'; system($__sh, '-c', qq{{set -a; eval \"\\$1\"; env -0 > $__envf}}, $__sh, $eval_input); $CHILD_ERROR = $? >> 8; if (open my $__efh, '<', $__envf) {{ my $__envs = do {{ local $/; <$__efh> }} // q{{}}; close $__efh; unlink $__envf; for my $__kv (split /\\0/, $__envs) {{ my ($__k, $__v) = split /=/, $__kv, 2; next unless defined $__v && $__k =~ /^[A-Za-z_][A-Za-z0-9_]*$/; $ENV{{$__k}} = $__v; }} }} }};\n",
                     concat_expr
                 ));
             }
