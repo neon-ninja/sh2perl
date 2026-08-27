@@ -993,8 +993,9 @@ pub fn generate_generic_builtin(
             )
         }
         "gzip" => {
-            // For now, use the existing signature but we should standardize this
-            crate::generator::commands::gzip::generate_gzip_command(generator, cmd, input_var)
+            crate::generator::commands::gzip::generate_gzip_command_with_output(
+                generator, cmd, input_var, output_var,
+            )
         }
         "zcat" => {
             // For now, use the existing signature but we should standardize this

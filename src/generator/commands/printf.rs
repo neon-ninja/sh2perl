@@ -156,8 +156,13 @@ pub fn generate_printf_command(
             // For printf, format string and arguments should be separate
             if args.is_empty() {
                 if let Some(var) = output_var {
-                    // Capture printf output to variable
-                    output.push_str(&format!("my ${};\n", var));
+                    // Capture printf output to variable. The pipeline
+                    // machinery may have declared the buffer already —
+                    // re-declaring shadows it and warns on stderr.
+                    if !generator.declared_locals.contains(var) {
+                        output.push_str(&format!("my ${};\n", var));
+                        generator.declared_locals.insert(var.to_string());
+                    }
                     output.push_str(&format!("{{\n"));
                     output.push_str(&format!("    local *STDOUT;\n"));
                     output.push_str(&format!(
@@ -286,7 +291,10 @@ pub fn generate_printf_command(
                     printf_call.push_str(");\n");
 
                     if let Some(var) = output_var {
-                        output.push_str(&format!("my ${};\n", var));
+                        if !generator.declared_locals.contains(var) {
+                            output.push_str(&format!("my ${};\n", var));
+                            generator.declared_locals.insert(var.to_string());
+                        }
                         output.push_str(&format!("{{\n"));
                         output.push_str(&format!("    local *STDOUT;\n"));
                         output.push_str(&format!(

@@ -36081,8 +36081,9 @@ if printf "%s\n" "$x" | grep world > /dev/null; then echo yes; fi"#;
         let cmds = crate::Parser::new(src).parse().expect("parse");
         let prog = ast_to_ir(&cmds);
         let perl = crate::ir::shir_to_perl(&prog);
+        let differ_word = crate::generator::commands::cmp::cmp_differ_word();
         assert!(
-            perl.contains("differ: byte")
+            perl.contains(&format!("differ: {differ_word}"))
                 && perl.contains("%s %s differ")
                 && !perl.contains("system('bash'"),
             "bare cmp should lower to a native differ compare: {perl}"

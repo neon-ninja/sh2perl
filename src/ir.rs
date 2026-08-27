@@ -2363,11 +2363,20 @@ pub(crate) fn emit_stmt(out: &mut String, stmt: &IrStmt, indent: usize) {
                     }
                 }
                 let full_cmd = arg_parts.join(" ");
+                // Export the Perl vars the command references into the bash
+                // child's environment (localized to the capture block) —
+                // otherwise `"$file1"` inside the single-quoted bash -c text
+                // is unset in the child. Mirrors emit_shell_cmd.
+                let exports: String = var_exports_str(&full_cmd)
+                    .lines()
+                    .map(|l| format!("local {} ", l))
+                    .collect();
                 // Use open()-based capture with safe quoting
                 emit_indent(out, indent);
                 out.push_str(&format!(
-                    "my ${} = do {{ open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }};\n",
+                    "my ${} = do {{ {}open(my $__fh, \'-|\', \'bash\', \'-c\', {}) or die \"cmd failed: $!\\n\"; my $_r = do {{ local $/; <$__fh> }}; close $__fh; chomp $_r; $CHILD_ERROR = $? >> 8; $_r; }};\n",
                     var,
+                    exports,
                     safe_perl_q_string(&full_cmd)
                 ));
             } else {

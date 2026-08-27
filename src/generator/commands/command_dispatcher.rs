@@ -1525,11 +1525,25 @@ pub fn generate_command_impl_with_input(
                         // bash commands newline-terminate their output (grep,
                         // ls, basename …); the expression-valued snippet often
                         // lacks the trailing newline, so add it unless already
-                        // present.  Empty output stays empty.
-                        result.push_str(&generator.indent());
-                        result.push_str(
-                            "if ($tmp ne q{} && !($tmp =~ m{\\n\\z})) { print \"\\n\"; }\n",
-                        );
+                        // present.  Empty output stays empty. Binary-output
+                        // commands (gzip compressing) must NOT get a newline
+                        // appended — it corrupts the stream on disk.
+                        let binary_output = if let Word::Literal(name, _) = &cmd.name {
+                            name == "gzip"
+                                && !cmd.args.iter().any(|a| {
+                                    matches!(a, Word::Literal(s, _)
+                                        if s == "-d" || s == "--decompress"
+                                        || (s.starts_with('-') && !s.starts_with("--") && s.contains('d')))
+                                })
+                        } else {
+                            false
+                        };
+                        if !binary_output {
+                            result.push_str(&generator.indent());
+                            result.push_str(
+                                "if ($tmp ne q{} && !($tmp =~ m{\\n\\z})) { print \"\\n\"; }\n",
+                            );
+                        }
 
                         // If the generated snippet actually populated the pipeline
                         // output buffer (eg. $output_<id>) but returned an empty

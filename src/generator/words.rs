@@ -819,10 +819,34 @@ pub fn word_to_perl_impl(generator: &mut Generator, word: &Word) -> String {
                             // Previously force_interp was used, but after the $ENV{var}
                             // conversion for undeclared / env-style variables, a bare
                             // $LOG_FILE in a double-quoted string would be undef.
+                            // Perl `my` locals are NOT in %ENV, so export any the
+                            // command references (localized) before the shell-out —
+                            // otherwise `"$file1"` in the bash child is unset.
+                            let mut exports = String::new();
+                            {
+                                let re = Regex::new(r"\$([a-z_][a-zA-Z0-9_]*)").unwrap();
+                                let mut seen = std::collections::HashSet::new();
+                                for cap in re.captures_iter(&command_str) {
+                                    let name = cap[1].to_string();
+                                    if seen.insert(name.clone())
+                                        && (generator.declared_locals.contains(&name)
+                                            || generator.function_level_vars.contains(&name))
+                                    {
+                                        exports.push_str(&format!(
+                                            "local $ENV{{{name}}} = ${name}; "
+                                        ));
+                                    }
+                                }
+                            }
                             let command_lit = generator
                                 .perl_string_literal_no_interp(&Word::literal(command_str));
 
-                            crate::ir::expr_to_open_perl(&command_lit, true)
+                            let open_code = crate::ir::expr_to_open_perl(&command_lit, true);
+                            if exports.is_empty() {
+                                open_code
+                            } else {
+                                format!("do {{ {}{} }}", exports, open_code)
+                            }
                         }
                     }
                 }
@@ -3352,6 +3376,18 @@ pub fn convert_string_interpolation_to_perl_impl(
                     }
                 }
             }
+            StringPart::Arithmetic(expr) => {
+                // Arithmetic expansion inside a double-quoted string, e.g.
+                // echo "$(( a + b ))" — evaluate as a concatenated expression
+                // part (like command substitution), never interpolate.
+                if !current_string.is_empty() {
+                    push_string_expr(&mut parts, &mut current_string);
+                }
+                parts.push(format!(
+                    "({})",
+                    generator.convert_arithmetic_to_perl(&expr.expression)
+                ));
+            }
             _ => {
                 // Handle other StringPart variants by converting them to debug format for now
                 current_string.push_str(&format!("{:?}", part));
@@ -3447,6 +3483,42 @@ pub fn convert_arithmetic_to_perl_impl(generator: &Generator, expr: &str) -> Str
     // runs the command via qx{} and captures its output.
 
     let mut result = expr.to_string();
+
+    // Phase -3: bash rejects two adjacent operands with no operator between
+    // them ("$((echo \"test\"))" → `echo test: syntax error in expression`);
+    // the assignment yields nothing and the script continues. Emitting the
+    // bogus tokens as Perl would be a compile error killing the whole
+    // program, so mirror bash: warn on stderr, evaluate to empty.
+    {
+        let re_adjacent =
+            regex::Regex::new(r#"[A-Za-z0-9_"')\]]\s+["'A-Za-z_(]"#).unwrap();
+        // Strip $(...) command substitutions first — their contents are
+        // commands, not arithmetic operands (handled later by extraction).
+        let mut probe = String::new();
+        let mut depth = 0usize;
+        let mut chars = expr.chars().peekable();
+        while let Some(c) = chars.next() {
+            if depth == 0 && c == '$' && chars.peek() == Some(&'(') {
+                chars.next();
+                depth = 1;
+            } else if depth > 0 {
+                if c == '(' {
+                    depth += 1;
+                } else if c == ')' {
+                    depth -= 1;
+                }
+            } else {
+                probe.push(c);
+            }
+        }
+        if re_adjacent.is_match(&probe) {
+            let msg = expr.trim().replace('"', "").replace('\'', "");
+            return format!(
+                "do {{ print STDERR \"{}: syntax error in expression\\n\"; q{{}} }}",
+                msg.replace('\\', "\\\\").replace('"', "\\\"")
+            );
+        }
+    }
 
     // Phase -1: replace bash base-notation N#value with just value.
     // In bash arithmetic, `10#x` means "x interpreted in base 10"; since
