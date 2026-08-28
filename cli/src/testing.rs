@@ -2354,7 +2354,9 @@ pub fn test_all_examples_next_fail(
             println!("{}", "=".repeat(80));
             println!("FAILED TESTS:");
             for f in &failed_tests {
-                println!("  FAIL: {}", f);
+                // one line per failure — a multiline reason (perl-critic
+                // reports) belongs in the per-test detail above, not here
+                println!("  FAIL: {}", f.lines().next().unwrap_or("failed"));
             }
             println!("{}", "=".repeat(80));
         }
@@ -3011,16 +3013,23 @@ pub fn test_all_examples_next_fail_unlimited(
             println!("Successfully wrote total test count {} and perfect match (y99999) to first_n_tests_passed.txt", passed_tests);
         }
     } else {
+        // Failed-test list FIRST, counts line LAST — the counts are what a
+        // reader (and CI log tail) looks for at the very end of the run.
+        // Reasons are truncated to their first line: with --perl-critic the
+        // stored reason embeds the full critic report including the entire
+        // generated program, which buried the summary under thousands of
+        // lines (the per-test detail above already printed it in full).
+        println!("FAILED TESTS:");
+        for (example, generator, reason) in &failure_summaries {
+            let brief = reason.lines().next().unwrap_or("failed");
+            println!("  FAIL: {} [{}] — {}", example, generator, brief);
+        }
+        println!("{}", "=".repeat(80));
         println!(
             "TESTS COMPLETED: {} passed, {} failed out of {}",
             passed_tests, failed_tests, total_tests
         );
         println!("{}", "=".repeat(80));
-        println!("\nFAILED TESTS:");
-        for (example, generator, reason) in &failure_summaries {
-            println!("  FAIL: {} [{}] — {}", example, generator, reason);
-        }
-        println!();
 
         // Write the first failed test info to first_n_tests_passed.txt
         if let Some((first_fail, _, _)) = failure_summaries.first() {
