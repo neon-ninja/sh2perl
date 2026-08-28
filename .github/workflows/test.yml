@@ -186,30 +186,35 @@ jobs:
         # green run's numbers.
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
+          set -eu
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Move generated badges out of the way so checkout won't fail due to
-          # untracked files that would be overwritten by switching branches.
-          TMPDIR=$(mktemp -d)
-          mv .github/badges/*.json "$TMPDIR/" || true
 
-          # Fetch remote gh-pages if it exists and create/update local branch
+          # The test steps dirty the main checkout (regenerated
+          # examples.out/*.pl, debug_perl_code.pl, …) and gh-pages carries
+          # some of those same paths, so switching branches in this tree
+          # aborts with "local changes would be overwritten". Commit from a
+          # separate WORKTREE instead — the dirty checkout is never touched.
           git fetch origin gh-pages || true
+          WT=$(mktemp -d)
           if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
-            git checkout -B gh-pages origin/gh-pages
+            git worktree add --force "$WT" -B gh-pages origin/gh-pages
           else
-            git checkout -B gh-pages
+            git worktree add --force --detach "$WT"
+            git -C "$WT" checkout --orphan gh-pages
+            git -C "$WT" rm -rf --quiet . || true
           fi
 
-          # Restore badges and commit if they changed
-          mkdir -p .github/badges
-          mv "$TMPDIR"/*.json .github/badges/ || true
-          rm -rf "$TMPDIR" || true
+          mkdir -p "$WT/.github/badges"
+          cp .github/badges/*.json "$WT/.github/badges/"
 
+          cd "$WT"
           git add .github/badges/*.json
           if git diff --cached --quiet; then
             echo "No changes to badges, nothing to commit"
           else
             git commit -m "Update test badges"
-            git push --set-upstream origin gh-pages
+            git push origin gh-pages
           fi
+          cd - >/dev/null
+          git worktree remove --force "$WT" || true
